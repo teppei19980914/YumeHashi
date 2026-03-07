@@ -1,0 +1,68 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:study_planner/pages/book_page.dart';
+import 'package:study_planner/providers/book_providers.dart';
+
+import '../helpers/test_helpers.dart';
+
+void main() {
+  final setup = TestSetup();
+
+  setUp(() => setup.setUp());
+  tearDown(() => setup.tearDown());
+
+  Future<SharedPreferences> getPrefs() async =>
+      SharedPreferences.getInstance();
+
+  testWidgets('書籍ページが正常にレンダリングされる', (tester) async {
+    final prefs = await getPrefs();
+    await tester.pumpWidget(
+      wrapWithProviders(const BookPage(), prefs: prefs, db: setup.db),
+    );
+    await tester.pumpAndSettle();
+
+    // タイトル入力欄が表示される
+    expect(find.byType(TextField), findsOneWidget);
+    // 追加ボタン
+    expect(find.byIcon(Icons.add), findsOneWidget);
+  });
+
+  testWidgets('サンプル書籍が表示される', (tester) async {
+    final prefs = await getPrefs();
+    await tester.pumpWidget(
+      wrapWithProviders(
+        const BookPage(),
+        prefs: prefs,
+        db: setup.db,
+        customOverrides: [
+          bookListProvider
+              .overrideWith(() => SampleBookListNotifier()),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Flutter実践入門'), findsOneWidget);
+    expect(find.text('Dart言語ガイド'), findsOneWidget);
+  });
+
+  testWidgets('読書中ステータスバッジが表示される', (tester) async {
+    final prefs = await getPrefs();
+    await tester.pumpWidget(
+      wrapWithProviders(
+        const BookPage(),
+        prefs: prefs,
+        db: setup.db,
+        customOverrides: [
+          bookListProvider
+              .overrideWith(() => SampleBookListNotifier()),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('読書中'), findsOneWidget);
+    expect(find.text('未読'), findsOneWidget);
+  });
+}

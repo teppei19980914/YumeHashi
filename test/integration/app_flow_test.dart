@@ -1,0 +1,154 @@
+/// アプリ全体の主要フロー統合テスト.
+///
+/// ページ遷移、目標作成、設定変更などの主要操作フローをテストする.
+library;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:study_planner/app.dart';
+
+import '../helpers/test_helpers.dart';
+
+void main() {
+  final setup = TestSetup();
+
+  setUp(() => setup.setUp());
+  tearDown(() => setup.tearDown());
+
+  Future<Widget> buildApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    return ProviderScope(
+      overrides: createTestOverrides(prefs: prefs, db: setup.db),
+      child: const StudyPlannerApp(),
+    );
+  }
+
+  testWidgets('全ページに遷移できる', (tester) async {
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    // ダッシュボード（初期ページ）
+    expect(find.text('ダッシュボード'), findsWidgets);
+
+    // 夢ページ
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('夢').last);
+    await tester.pumpAndSettle();
+    expect(find.text('夢'), findsWidgets);
+
+    // 目標ページ
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('3W1H 目標').last);
+    await tester.pumpAndSettle();
+    expect(find.text('3W1H 目標'), findsWidgets);
+
+    // ガントチャートページ
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ガントチャート').last);
+    await tester.pumpAndSettle();
+    expect(find.text('ガントチャート'), findsWidgets);
+
+    // 書籍ページ
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('書籍').last);
+    await tester.pumpAndSettle();
+    expect(find.text('書籍'), findsWidgets);
+
+    // 星座ページ
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('星座').last);
+    await tester.pumpAndSettle();
+    expect(find.text('星座'), findsWidgets);
+
+    // 統計ページ
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('統計').last);
+    await tester.pumpAndSettle();
+    expect(find.text('統計'), findsWidgets);
+
+    // 設定ページ
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('設定').last);
+    await tester.pumpAndSettle();
+    expect(find.text('設定'), findsWidgets);
+  });
+
+  testWidgets('目標ページで夢なし時にSnackBarが表示される', (tester) async {
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    // 目標ページに遷移
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('3W1H 目標').last);
+    await tester.pumpAndSettle();
+
+    // 追加ボタンをタップ（夢がないのでSnackBarが表示される）
+    await tester.tap(find.byIcon(Icons.add));
+    await tester.pumpAndSettle();
+
+    expect(find.text('先に「夢」を登録してください'), findsOneWidget);
+  });
+
+  testWidgets('設定ページでテーマ切替ができる', (tester) async {
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    // 設定ページに遷移
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('設定').last);
+    await tester.pumpAndSettle();
+
+    // ダークモード（初期状態）
+    expect(find.text('Catppuccin Mocha'), findsOneWidget);
+
+    // テーマトグル
+    await tester.tap(find.byType(Switch).first);
+    await tester.pumpAndSettle();
+
+    // ライトモードに切替
+    expect(find.text('Catppuccin Latte'), findsOneWidget);
+
+    // もう一度トグルして戻る
+    await tester.tap(find.byType(Switch).first);
+    await tester.pumpAndSettle();
+    expect(find.text('Catppuccin Mocha'), findsOneWidget);
+  });
+
+  testWidgets('統計ページに遷移してセクションが表示される', (tester) async {
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    // 統計ページに遷移
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('統計').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('統計'), findsWidgets);
+    expect(find.text('サマリー'), findsOneWidget);
+  });
+
+  testWidgets('書籍ページに遷移できる', (tester) async {
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    // 書籍ページに遷移
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('書籍').last);
+    await tester.pumpAndSettle();
+
+    expect(find.text('書籍'), findsWidgets);
+  });
+}

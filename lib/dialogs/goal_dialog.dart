@@ -1,0 +1,320 @@
+/// 目標の追加・編集ダイアログ.
+///
+/// 3W1Hフォーム（What, Why, When, How）を表示し、
+/// ユーザーに目標情報を入力させる.
+library;
+
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import '../models/dream.dart';
+import '../models/goal.dart';
+
+/// GoalDialog の入力結果.
+class GoalDialogResult {
+  /// GoalDialogResultを作成する.
+  const GoalDialogResult({
+    required this.dreamId,
+    required this.what,
+    required this.why,
+    required this.whenType,
+    required this.whenTarget,
+    required this.how,
+  });
+
+  /// 紐づく夢のID.
+  final String dreamId;
+
+  /// 何を学習するか.
+  final String what;
+
+  /// なぜ学習するか.
+  final String why;
+
+  /// When指定タイプ.
+  final WhenType whenType;
+
+  /// いつまでに.
+  final String whenTarget;
+
+  /// どうやって学習するか.
+  final String how;
+}
+
+/// 目標ダイアログを表示する.
+///
+/// [goal]が指定された場合は編集モード、nullの場合は新規作成モード.
+/// [dreams]は紐づける夢の選択肢.
+/// [initialDreamId]は新規作成時のデフォルト夢ID.
+/// 結果は[GoalDialogResult]として返される（キャンセル時はnull）.
+Future<GoalDialogResult?> showGoalDialog(
+  BuildContext context, {
+  Goal? goal,
+  required List<Dream> dreams,
+  String? initialDreamId,
+}) {
+  return showDialog<GoalDialogResult>(
+    context: context,
+    builder: (_) => _GoalDialogContent(
+      goal: goal,
+      dreams: dreams,
+      initialDreamId: initialDreamId,
+    ),
+  );
+}
+
+class _GoalDialogContent extends StatefulWidget {
+  const _GoalDialogContent({
+    this.goal,
+    required this.dreams,
+    this.initialDreamId,
+  });
+
+  final Goal? goal;
+  final List<Dream> dreams;
+  final String? initialDreamId;
+
+  @override
+  State<_GoalDialogContent> createState() => _GoalDialogContentState();
+}
+
+class _GoalDialogContentState extends State<_GoalDialogContent> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _whatController;
+  late final TextEditingController _whyController;
+  late final TextEditingController _whenTargetController;
+  late final TextEditingController _howController;
+  late WhenType _whenType;
+  late String? _selectedDreamId;
+  DateTime? _selectedDate;
+
+  bool get _isEdit => widget.goal != null;
+
+  @override
+  void initState() {
+    super.initState();
+    final goal = widget.goal;
+    _whatController = TextEditingController(text: goal?.what ?? '');
+    _whyController = TextEditingController(text: goal?.why ?? '');
+    _howController = TextEditingController(text: goal?.how ?? '');
+    _whenType = goal?.whenType ?? WhenType.date;
+    _selectedDreamId =
+        goal?.dreamId ?? widget.initialDreamId ?? widget.dreams.firstOrNull?.id;
+
+    if (goal != null && goal.whenType == WhenType.date) {
+      _selectedDate = goal.getTargetDate();
+      _whenTargetController = TextEditingController(
+        text: _selectedDate != null
+            ? DateFormat('yyyy-MM-dd').format(_selectedDate!)
+            : goal.whenTarget,
+      );
+    } else {
+      _whenTargetController = TextEditingController(
+        text: goal?.whenTarget ?? '',
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _whatController.dispose();
+    _whyController.dispose();
+    _whenTargetController.dispose();
+    _howController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? now,
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now.add(const Duration(days: 365 * 10)),
+    );
+    if (picked != null) {
+      setState(() {
+        _selectedDate = picked;
+        _whenTargetController.text = DateFormat('yyyy-MM-dd').format(picked);
+      });
+    }
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+
+    Navigator.of(context).pop(
+      GoalDialogResult(
+        dreamId: _selectedDreamId!,
+        what: _whatController.text.trim(),
+        why: _whyController.text.trim(),
+        whenType: _whenType,
+        whenTarget: _whenTargetController.text.trim(),
+        how: _howController.text.trim(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AlertDialog(
+      title: Text(_isEdit ? '目標を編集' : '新しい目標を追加'),
+      content: SizedBox(
+        width: 480,
+        child: Form(
+          key: _formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Dream — 紐づく夢
+                Text(
+                  '紐づく夢',
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                DropdownButtonFormField<String>(
+                  value: _selectedDreamId,
+                  decoration: const InputDecoration(
+                    hintText: '夢を選択してください',
+                  ),
+                  items: widget.dreams
+                      .map((d) => DropdownMenuItem(
+                            value: d.id,
+                            child: Text(d.title),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() => _selectedDreamId = value);
+                  },
+                  validator: (v) =>
+                      v == null || v.isEmpty ? '夢を選択してください' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // What — 何を
+                Text(
+                  'What（何を学習するか）',
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  controller: _whatController,
+                  decoration: const InputDecoration(
+                    hintText: '例: TOEIC 900点',
+                  ),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? '必須項目です' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // Why — なぜ
+                Text(
+                  'Why（なぜ学習するか）',
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  controller: _whyController,
+                  decoration: const InputDecoration(
+                    hintText: '例: 海外赴任に備えて英語力を高めたい',
+                  ),
+                  maxLines: 3,
+                  minLines: 2,
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? '必須項目です' : null,
+                ),
+                const SizedBox(height: 16),
+
+                // When — いつまでに
+                Text(
+                  'When（いつまでに）',
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                SegmentedButton<WhenType>(
+                  segments: const [
+                    ButtonSegment(
+                      value: WhenType.date,
+                      label: Text('日付指定'),
+                      icon: Icon(Icons.calendar_today, size: 16),
+                    ),
+                    ButtonSegment(
+                      value: WhenType.period,
+                      label: Text('期間指定'),
+                      icon: Icon(Icons.schedule, size: 16),
+                    ),
+                  ],
+                  selected: {_whenType},
+                  onSelectionChanged: (selection) {
+                    setState(() {
+                      _whenType = selection.first;
+                      _whenTargetController.clear();
+                      _selectedDate = null;
+                    });
+                  },
+                ),
+                const SizedBox(height: 8),
+                if (_whenType == WhenType.date)
+                  TextFormField(
+                    controller: _whenTargetController,
+                    decoration: InputDecoration(
+                      hintText: 'yyyy-MM-dd',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.calendar_month),
+                        onPressed: _pickDate,
+                      ),
+                    ),
+                    readOnly: true,
+                    onTap: _pickDate,
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? '日付を選択してください' : null,
+                  )
+                else
+                  TextFormField(
+                    controller: _whenTargetController,
+                    decoration: const InputDecoration(
+                      hintText: '例: 3ヶ月以内',
+                    ),
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? '期間を入力してください' : null,
+                  ),
+                const SizedBox(height: 16),
+
+                // How — どうやって
+                Text(
+                  'How（どうやって学習するか）',
+                  style: theme.textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                TextFormField(
+                  controller: _howController,
+                  decoration: const InputDecoration(
+                    hintText: '例: 公式問題集を毎日1セット解く',
+                  ),
+                  maxLines: 3,
+                  minLines: 2,
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? '必須項目です' : null,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('キャンセル'),
+        ),
+        ElevatedButton(
+          onPressed: _submit,
+          child: Text(_isEdit ? '更新' : '追加'),
+        ),
+      ],
+    );
+  }
+}
