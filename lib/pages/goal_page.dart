@@ -8,10 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../dialogs/goal_dialog.dart';
+import '../dialogs/trial_limit_dialog.dart';
 import '../models/dream.dart';
 import '../models/goal.dart';
 import '../providers/dream_providers.dart';
 import '../providers/goal_providers.dart';
+import '../services/trial_limit_service.dart';
 import '../theme/app_theme.dart';
 
 /// 目標ページ.
@@ -127,6 +129,21 @@ class GoalPage extends ConsumerWidget {
       );
       return;
     }
+
+    // 体験版: 目標数の制限チェック
+    final goals = ref.read(goalListProvider).valueOrNull ?? [];
+    final totalMax = trialMaxDreams * trialMaxGoalsPerDream;
+    if (!canAddGoal(currentGoalCountForDream: goals.length) &&
+        goals.length >= totalMax) {
+      await showTrialLimitDialog(
+        context,
+        itemName: '目標',
+        currentCount: goals.length,
+        maxCount: totalMax,
+      );
+      return;
+    }
+
     final result = await showGoalDialog(context, dreams: dreams);
     if (result == null) return;
 

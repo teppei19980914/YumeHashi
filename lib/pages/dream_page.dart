@@ -9,9 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../dialogs/dream_dialog.dart';
+import '../dialogs/trial_limit_dialog.dart';
 import '../models/dream.dart';
 import '../providers/dream_providers.dart';
 import '../providers/goal_providers.dart';
+import '../services/trial_limit_service.dart';
 import '../theme/app_theme.dart';
 
 /// 夢ページ.
@@ -121,6 +123,18 @@ class DreamPage extends ConsumerWidget {
   }
 
   Future<void> _addDream(BuildContext context, WidgetRef ref) async {
+    final currentCount =
+        ref.read(dreamListProvider).valueOrNull?.length ?? 0;
+    if (!canAddDream(currentCount: currentCount)) {
+      await showTrialLimitDialog(
+        context,
+        itemName: '夢',
+        currentCount: currentCount,
+        maxCount: trialMaxDreams,
+      );
+      return;
+    }
+
     final result = await showDreamDialog(context);
     if (result == null) return;
 

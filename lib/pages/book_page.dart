@@ -9,9 +9,11 @@ import 'package:intl/intl.dart';
 
 import '../dialogs/book_review_dialog.dart';
 import '../dialogs/book_schedule_dialog.dart';
+import '../dialogs/trial_limit_dialog.dart';
 import '../models/book.dart';
 import '../providers/book_providers.dart';
 import '../providers/service_providers.dart';
+import '../services/trial_limit_service.dart';
 import '../theme/app_theme.dart';
 import '../theme/catppuccin_colors.dart';
 
@@ -36,6 +38,18 @@ class _BookPageState extends ConsumerState<BookPage> {
   Future<void> _addBook() async {
     final title = _titleController.text.trim();
     if (title.isEmpty) return;
+
+    final currentCount =
+        ref.read(bookListProvider).valueOrNull?.length ?? 0;
+    if (!canAddBook(currentCount: currentCount)) {
+      await showTrialLimitDialog(
+        context,
+        itemName: '書籍',
+        currentCount: currentCount,
+        maxCount: trialMaxBooks,
+      );
+      return;
+    }
 
     await ref.read(bookListProvider.notifier).createBook(title);
     _titleController.clear();

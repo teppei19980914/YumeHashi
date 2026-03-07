@@ -8,10 +8,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dialogs/book_schedule_dialog.dart';
 import '../dialogs/task_dialog.dart';
+import '../dialogs/trial_limit_dialog.dart';
 import '../models/goal.dart';
 import '../models/task.dart';
 import '../providers/gantt_providers.dart';
 import '../providers/service_providers.dart';
+import '../services/trial_limit_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/gantt/gantt_chart.dart';
 
@@ -153,6 +155,19 @@ class GanttPage extends ConsumerWidget {
     WidgetRef ref,
     String goalId,
   ) async {
+    // 体験版: タスク数の制限チェック
+    final allTasks = ref.read(ganttTasksProvider).valueOrNull ?? [];
+    final tasksForGoal = allTasks.where((t) => t.goalId == goalId).length;
+    if (!canAddTask(currentTaskCountForGoal: tasksForGoal)) {
+      await showTrialLimitDialog(
+        context,
+        itemName: 'タスク（この目標）',
+        currentCount: tasksForGoal,
+        maxCount: trialMaxTasksPerGoal,
+      );
+      return;
+    }
+
     final books = await ref.read(bookServiceProvider).getAllBooks();
     if (!context.mounted) return;
 

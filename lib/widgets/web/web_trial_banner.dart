@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../services/trial_limit_service.dart';
+
 const _webBannerDismissedKey = 'web_trial_banner_dismissed';
 const _webDialogShownKey = 'web_trial_dialog_shown';
 
@@ -76,8 +78,9 @@ class _WebTrialBannerState extends State<WebTrialBanner> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'ブラウザのデータを削除すると学習記録が消えます。'
-                  '別端末・別ブラウザとのデータ共有はできません。',
+                  '夢$trialMaxDreams個・目標$trialMaxGoalsPerDream個/夢・'
+                  'タスク$trialMaxTasksPerGoal個/目標・書籍$trialMaxBooks冊まで。'
+                  'デスクトップ版なら無制限です。',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -126,31 +129,38 @@ Future<void> showWebTrialDialogIfNeeded(
           Text('Web体験版について'),
         ],
       ),
-      content: const Column(
+      content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'このアプリはWeb体験版です。デスクトップ版のインストール前に'
             '機能をお試しいただけます。',
           ),
-          SizedBox(height: 16),
-          _NoticeItem(
+          const SizedBox(height: 16),
+          const _NoticeItem(
             icon: Icons.warning_amber_outlined,
             text: 'ブラウザのキャッシュ/データを削除すると、'
                 '全ての学習記録が消えます。',
           ),
-          SizedBox(height: 8),
-          _NoticeItem(
+          const SizedBox(height: 8),
+          const _NoticeItem(
             icon: Icons.devices_outlined,
             text: '別の端末や別のブラウザからアクセスすると、'
                 'データは引き継がれません。\n'
                 '(設定画面のエクスポート/インポート機能で移行可能)',
           ),
-          SizedBox(height: 16),
-          Text(
-            '安定してご利用いただくには、デスクトップ版のインストールを'
-            'おすすめします。',
+          const SizedBox(height: 12),
+          _NoticeItem(
+            icon: Icons.lock_outline,
+            text: '体験版の登録上限: '
+                '夢$trialMaxDreams個、目標$trialMaxGoalsPerDream個/夢、'
+                'タスク$trialMaxTasksPerGoal個/目標、書籍$trialMaxBooks冊',
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'デスクトップ版をインストールすると、全機能を制限なく'
+            'ご利用いただけます。',
             style: TextStyle(fontWeight: FontWeight.w500),
           ),
         ],
