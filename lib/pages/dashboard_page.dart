@@ -15,6 +15,7 @@ import '../widgets/constellation/constellation_painter.dart';
 import '../widgets/web/web_trial_banner.dart';
 import '../providers/service_providers.dart';
 import '../services/dashboard_layout_service.dart';
+import '../services/remote_config_service.dart';
 import '../services/study_stats_types.dart';
 import '../theme/app_theme.dart';
 import '../theme/catppuccin_colors.dart';
@@ -31,6 +32,7 @@ class DashboardPage extends ConsumerStatefulWidget {
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   bool _editMode = false;
   bool _webDialogChecked = false;
+  bool _resetChecked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +40,19 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final theme = Theme.of(context);
     final colors = theme.appColors;
     final prefs = ref.watch(sharedPreferencesProvider);
+
+    // resetOnAccess: データベースリセット処理
+    if (!_resetChecked) {
+      _resetChecked = true;
+      if (prefs.getBool(resetPendingKey) ?? false) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) return;
+          final service = ref.read(dataExportServiceProvider);
+          await service.clearAllData();
+          await prefs.remove(resetPendingKey);
+        });
+      }
+    }
 
     // Web体験版の初回ダイアログ表示
     if (!_webDialogChecked) {

@@ -11,6 +11,7 @@ import '../services/dream_service.dart';
 import '../services/feedback_service.dart';
 import '../services/goal_service.dart';
 import '../services/notification_service.dart';
+import '../services/remote_config_service.dart';
 import '../services/study_log_service.dart';
 import '../services/task_service.dart';
 import '../services/tutorial_service.dart';
@@ -89,9 +90,24 @@ final feedbackServiceProvider = Provider<FeedbackService>((ref) {
   return FeedbackService(prefs);
 });
 
+/// リモートユーザー設定のProvider.
+///
+/// main()でoverrideして使用する.
+final remoteConfigProvider = Provider<UserConfig>((ref) {
+  return UserConfig.defaultConfig;
+});
+
 /// 現在の解除レベルのProvider.
+///
+/// リモート設定でunlimitedの場合はfeedbackMaxLevelを返す.
+/// それ以外はリモート設定のunlockLevelとフィードバックの大きい方を返す.
 final unlockLevelProvider = Provider<int>((ref) {
-  return ref.watch(feedbackServiceProvider).unlockLevel;
+  final remoteConfig = ref.watch(remoteConfigProvider);
+  if (remoteConfig.unlimited) return feedbackMaxLevel;
+
+  final feedbackLevel = ref.watch(feedbackServiceProvider).unlockLevel;
+  final remoteLevel = remoteConfig.unlockLevel;
+  return remoteLevel > feedbackLevel ? remoteLevel : feedbackLevel;
 });
 
 /// TutorialServiceのProvider.
