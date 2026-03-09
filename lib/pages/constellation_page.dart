@@ -139,88 +139,157 @@ class _ConstellationCard extends StatelessWidget {
     final colors = theme.appColors;
     final constellation = progress.constellation;
     final isDark = theme.brightness == Brightness.dark;
+    final hasDescription = constellation.description.isNotEmpty;
 
     return Card(
       clipBehavior: Clip.antiAlias,
       color: isDark
           ? const Color(0xFF1A1A2E)
           : const Color(0xFFF0F4F8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // タイトル行
-            Row(
-              children: [
-                Text(
-                  constellation.symbol,
-                  style: const TextStyle(fontSize: 20),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    constellation.jaName,
-                    style: theme.textTheme.titleSmall,
-                    overflow: TextOverflow.ellipsis,
+      child: InkWell(
+        onTap: progress.isComplete && hasDescription
+            ? () => _showDescriptionDialog(context)
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // タイトル行
+              Row(
+                children: [
+                  Text(
+                    constellation.symbol,
+                    style: const TextStyle(fontSize: 20),
                   ),
-                ),
-                if (progress.isComplete)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFD700).withAlpha(30),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  const SizedBox(width: 8),
+                  Expanded(
                     child: Text(
-                      '完成',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: const Color(0xFFFFD700),
-                        fontWeight: FontWeight.bold,
+                      constellation.jaName,
+                      style: theme.textTheme.titleSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (progress.isComplete)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFD700).withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '完成',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: const Color(0xFFFFD700),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
+              // 星座描画エリア
+              Expanded(
+                child: ConstellationWidget(progress: progress),
+              ),
+
+              const SizedBox(height: 8),
+
+              // 進捗バー
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress.completionRate,
+                  minHeight: 4,
+                  backgroundColor: isDark
+                      ? Colors.white.withAlpha(15)
+                      : Colors.black.withAlpha(10),
+                  valueColor: AlwaysStoppedAnimation(
+                    progress.isComplete
+                        ? const Color(0xFFFFD700)
+                        : theme.colorScheme.primary,
                   ),
-              ],
-            ),
-            const SizedBox(height: 8),
-
-            // 星座描画エリア
-            Expanded(
-              child: ConstellationWidget(progress: progress),
-            ),
-
-            const SizedBox(height: 8),
-
-            // 進捗バー
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: LinearProgressIndicator(
-                value: progress.completionRate,
-                minHeight: 4,
-                backgroundColor: isDark
-                    ? Colors.white.withAlpha(15)
-                    : Colors.black.withAlpha(10),
-                valueColor: AlwaysStoppedAnimation(
-                  progress.isComplete
-                      ? const Color(0xFFFFD700)
-                      : theme.colorScheme.primary,
                 ),
               ),
-            ),
-            const SizedBox(height: 4),
+              const SizedBox(height: 4),
 
-            // 統計行
+              // 統計行
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${progress.litStarCount}/${constellation.starCount} 星',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colors.textMuted,
+                    ),
+                  ),
+                  if (progress.isComplete && hasDescription)
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: colors.textMuted,
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showDescriptionDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final constellation = progress.constellation;
+    final isDark = theme.brightness == Brightness.dark;
+
+    showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
             Text(
-              '${progress.litStarCount}/${constellation.starCount} 星',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: colors.textMuted,
+              constellation.symbol,
+              style: const TextStyle(fontSize: 28),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    constellation.jaName,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  Text(
+                    constellation.name,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark
+                          ? Colors.white60
+                          : Colors.black54,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
+        content: Text(
+          constellation.description,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            height: 1.6,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('閉じる'),
+          ),
+        ],
       ),
     );
   }

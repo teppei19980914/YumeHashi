@@ -35,6 +35,7 @@ class ConstellationDef {
     required this.stars,
     required this.connections,
     required this.symbol,
+    this.description = '',
   });
 
   /// 一意識別子.
@@ -48,6 +49,9 @@ class ConstellationDef {
 
   /// シンボル文字.
   final String symbol;
+
+  /// 星座の説明文.
+  final String description;
 
   /// 星の位置一覧.
   final List<StarPosition> stars;

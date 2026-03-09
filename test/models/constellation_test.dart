@@ -42,6 +42,12 @@ void main() {
         }
       }
     });
+
+    test('全星座に説明文がある', () {
+      for (final c in constellations) {
+        expect(c.description, isNotEmpty, reason: '${c.id}に説明がない');
+      }
+    });
   });
 
   group('getConstellationForIndex', () {
