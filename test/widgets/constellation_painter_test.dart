@@ -41,10 +41,7 @@ void main() {
   group('ConstellationWidget', () {
     testWidgets('有効なデータでエラーなく描画される', (tester) async {
       const progress = ConstellationProgress(
-        dreamId: 'dream_1',
-        dreamTitle: 'テスト目標',
         constellation: _testConstellation,
-        totalMinutes: 120,
         litStarCount: 2,
       );
 
@@ -57,10 +54,7 @@ void main() {
 
     testWidgets('コンパクトモードで描画される', (tester) async {
       const progress = ConstellationProgress(
-        dreamId: 'dream_1',
-        dreamTitle: 'テスト目標',
         constellation: _testConstellation,
-        totalMinutes: 60,
         litStarCount: 1,
       );
 
@@ -72,10 +66,7 @@ void main() {
 
     testWidgets('全星が点灯した完成状態で描画される', (tester) async {
       const progress = ConstellationProgress(
-        dreamId: 'dream_1',
-        dreamTitle: 'テスト目標',
         constellation: _testConstellation,
-        totalMinutes: 600,
         litStarCount: 4, // 全4つの星が点灯
       );
 
@@ -88,10 +79,7 @@ void main() {
 
     testWidgets('部分的な進捗で描画される', (tester) async {
       const progress = ConstellationProgress(
-        dreamId: 'dream_1',
-        dreamTitle: 'テスト目標',
         constellation: _testConstellation,
-        totalMinutes: 180,
         litStarCount: 3,
       );
 
@@ -105,10 +93,7 @@ void main() {
 
     testWidgets('星が0個点灯でも描画される', (tester) async {
       const progress = ConstellationProgress(
-        dreamId: 'dream_1',
-        dreamTitle: 'テスト目標',
         constellation: _testConstellation,
-        totalMinutes: 0,
         litStarCount: 0,
       );
 

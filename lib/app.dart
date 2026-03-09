@@ -15,7 +15,9 @@ import 'pages/gantt_page.dart';
 import 'pages/goal_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/stats_page.dart';
+import 'providers/service_providers.dart';
 import 'providers/theme_provider.dart';
+import 'services/remote_config_service.dart';
 import 'theme/app_theme.dart';
 import 'widgets/navigation/app_drawer.dart';
 import 'widgets/milestone/milestone_button.dart';
@@ -84,17 +86,38 @@ class YumeLogApp extends ConsumerWidget {
 }
 
 /// アプリケーションシェル（Scaffold + AppBar + Drawer）.
-class _AppShell extends StatelessWidget {
+class _AppShell extends ConsumerStatefulWidget {
   const _AppShell({required this.title, required this.child});
 
   final String title;
   final Widget child;
 
   @override
+  ConsumerState<_AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<_AppShell> {
+  bool _resetChecked = false;
+
+  @override
   Widget build(BuildContext context) {
+    // resetOnAccess: データベースリセット処理（どのルートでも実行）
+    if (!_resetChecked) {
+      _resetChecked = true;
+      final prefs = ref.read(sharedPreferencesProvider);
+      if (prefs.getBool(resetPendingKey) ?? false) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) return;
+          final service = ref.read(dataExportServiceProvider);
+          await service.clearAllData();
+          await prefs.remove(resetPendingKey);
+        });
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(widget.title),
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu),
@@ -111,7 +134,7 @@ class _AppShell extends StatelessWidget {
       body: Column(
         children: [
           const TutorialBanner(),
-          Expanded(child: child),
+          Expanded(child: widget.child),
         ],
       ),
     );

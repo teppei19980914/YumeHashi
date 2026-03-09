@@ -363,11 +363,12 @@ void main() {
       expect(service, isNotNull);
     });
 
-    test('constellationProgressProvider は空リストを返す', () async {
-      // dreamListProviderが空なので空リスト
+    test('constellationProgressProvider は全星座の進捗を返す', () async {
+      // 学習ログがないので全星座0個
       final progress =
           await container.read(constellationProgressProvider.future);
-      expect(progress, isEmpty);
+      expect(progress.constellations.length, 36);
+      expect(progress.totalLitStars, 0);
     });
   });
 

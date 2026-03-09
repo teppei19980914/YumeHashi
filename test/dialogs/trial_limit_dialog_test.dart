@@ -1,5 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yume_log/dialogs/trial_limit_dialog.dart';
 import 'package:yume_log/services/feedback_service.dart';
@@ -7,10 +11,16 @@ import 'package:yume_log/services/feedback_service.dart';
 void main() {
   late FeedbackService feedbackService;
 
+  http.Client createMockClient() {
+    return MockClient((request) async {
+      return http.Response(jsonEncode({'success': true}), 200);
+    });
+  }
+
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    feedbackService = FeedbackService(prefs);
+    feedbackService = FeedbackService(prefs, httpClient: createMockClient());
   });
 
   Widget buildApp({
@@ -147,7 +157,7 @@ void main() {
   testWidgets('最大レベル時はフィードバックボタンが非表示', (tester) async {
     SharedPreferences.setMockInitialValues({'feedback_unlock_level': 3});
     final prefs = await SharedPreferences.getInstance();
-    final maxService = FeedbackService(prefs);
+    final maxService = FeedbackService(prefs, httpClient: createMockClient());
 
     await tester.pumpWidget(buildApp(
       itemName: '夢',
@@ -160,5 +170,27 @@ void main() {
 
     expect(find.text('フィードバックを送信'), findsNothing);
     expect(find.textContaining('完全に解除'), findsOneWidget);
+  });
+
+  testWidgets('フィードバック上限到達時は課金案内ボタンが表示される', (tester) async {
+    SharedPreferences.setMockInitialValues({'feedback_unlock_level': 2});
+    final prefs = await SharedPreferences.getInstance();
+    final level2Service =
+        FeedbackService(prefs, httpClient: createMockClient());
+
+    await tester.pumpWidget(buildApp(
+      itemName: '夢',
+      currentCount: 6,
+      maxCount: 6,
+      fbService: level2Service,
+    ));
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    // フィードバックボタンではなく課金案内ボタンが表示
+    expect(find.text('フィードバックを送信'), findsNothing);
+    expect(find.text('無制限プランを見る'), findsOneWidget);
+    expect(find.textContaining('フィードバックによる解除は上限に達しました'),
+        findsOneWidget);
   });
 }

@@ -1,7 +1,6 @@
 /// 星座ページ.
 ///
-/// 夢ごとの星座進捗を一覧表示する.
-/// 学習時間が増えると星が灯り、星座が完成していく.
+/// 総合学習時間に応じて12星座が順番に完成していく.
 library;
 
 import 'package:flutter/material.dart';
@@ -37,15 +36,20 @@ class ConstellationPage extends ConsumerWidget {
               color: colors.textSecondary,
             ),
           ),
+          const SizedBox(height: 8),
+
+          // 総合進捗
+          progressAsync.when(
+            data: (overall) => _OverallProgressBar(overall: overall),
+            loading: () => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
+          ),
           const SizedBox(height: 16),
 
           // 星座リスト
           Expanded(
             child: progressAsync.when(
-              data: (progressList) {
-                if (progressList.isEmpty) {
-                  return _buildEmptyState(theme, colors);
-                }
+              data: (overall) {
                 return GridView.builder(
                   gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                     maxCrossAxisExtent: 400,
@@ -53,9 +57,10 @@ class ConstellationPage extends ConsumerWidget {
                     crossAxisSpacing: 12,
                     childAspectRatio: 0.85,
                   ),
-                  itemCount: progressList.length,
-                  itemBuilder: (_, index) =>
-                      _ConstellationCard(progress: progressList[index]),
+                  itemCount: overall.constellations.length,
+                  itemBuilder: (_, index) => _ConstellationCard(
+                    progress: overall.constellations[index],
+                  ),
                 );
               },
               loading: () =>
@@ -69,27 +74,55 @@ class ConstellationPage extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildEmptyState(ThemeData theme, dynamic colors) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.stars_outlined, size: 64, color: colors.textMuted),
-          const SizedBox(height: 16),
-          Text(
-            '星座がまだありません',
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: colors.textMuted,
+/// 総合進捗バー.
+class _OverallProgressBar extends StatelessWidget {
+  const _OverallProgressBar({required this.overall});
+
+  final ConstellationOverallProgress overall;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.appColors;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '${overall.completedCount}/${constellations.length} 星座完成'
+              '　${overall.totalLitStars}/${overall.totalStars} 星',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
+            ),
+            Text(
+              '${overall.totalHours.toStringAsFixed(1)}h',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: colors.textSecondary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: overall.overallCompletionRate,
+            minHeight: 6,
+            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            valueColor: AlwaysStoppedAnimation(
+              overall.completedCount >= constellations.length
+                  ? const Color(0xFFFFD700)
+                  : theme.colorScheme.primary,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            '「夢」を追加すると星座が割り当てられます',
-            style: theme.textTheme.bodySmall,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -126,21 +159,10 @@ class _ConstellationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        progress.dreamTitle,
-                        style: theme.textTheme.titleSmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      Text(
-                        constellation.jaName,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colors.textMuted,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    constellation.jaName,
+                    style: theme.textTheme.titleSmall,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (progress.isComplete)
@@ -191,22 +213,11 @@ class _ConstellationCard extends StatelessWidget {
             const SizedBox(height: 4),
 
             // 統計行
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${progress.litStarCount}/${constellation.starCount} 星',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colors.textMuted,
-                  ),
-                ),
-                Text(
-                  '${progress.totalHours.toStringAsFixed(1)}h',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: colors.textMuted,
-                  ),
-                ),
-              ],
+            Text(
+              '${progress.litStarCount}/${constellation.starCount} 星',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colors.textMuted,
+              ),
             ),
           ],
         ),

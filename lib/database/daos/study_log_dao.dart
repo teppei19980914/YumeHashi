@@ -54,4 +54,12 @@ class StudyLogDao extends DatabaseAccessor<AppDatabase>
   /// Task IDに紐づくStudyLogを全削除する.
   Future<int> deleteByTaskId(String taskId) =>
       (delete(studyLogs)..where((t) => t.taskId.equals(taskId))).go();
+
+  /// 全学習ログの合計時間（分）を取得する.
+  Future<int> getTotalMinutes() async {
+    final sum = studyLogs.durationMinutes.sum();
+    final query = selectOnly(studyLogs)..addColumns([sum]);
+    final result = await query.getSingle();
+    return result.read(sum) ?? 0;
+  }
 }

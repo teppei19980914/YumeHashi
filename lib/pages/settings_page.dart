@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../dialogs/feedback_dialog.dart';
+import '../dialogs/upgrade_dialog.dart';
 import '../providers/service_providers.dart';
 import '../providers/theme_provider.dart';
 import '../services/feedback_service.dart';
@@ -371,27 +372,47 @@ class _FeedbackCard extends StatelessWidget {
     final feedbackService = ref.watch(feedbackServiceProvider);
     final level = feedbackService.unlockLevel;
     final isMax = feedbackService.isMaxLevel;
+    final isFeedbackMax = feedbackService.isFeedbackMaxLevel;
     final theme = Theme.of(context);
 
     return Card(
       child: Column(
         children: [
-          ListTile(
-            leading: Icon(
-              isMax ? Icons.lock_open : Icons.rate_review_outlined,
-              color: isMax ? colors.success : colors.accent,
+          // フィードバック送信ボタン
+          if (!isFeedbackMax)
+            ListTile(
+              leading: Icon(Icons.rate_review_outlined, color: colors.accent),
+              title: const Text('フィードバックを送信'),
+              subtitle: Text(
+                'ご意見を送信すると制限が解除されます'
+                '（レベル$level / $feedbackUnlockableLevel）',
+              ),
+              onTap: () {
+                final userKey = ref.read(remoteConfigProvider).name;
+                showFeedbackDialog(
+                  context,
+                  feedbackService,
+                  userKey: userKey.isNotEmpty ? userKey : null,
+                );
+              },
+            )
+          else if (isMax)
+            ListTile(
+              leading: Icon(Icons.lock_open, color: colors.success),
+              title: const Text('無制限プラン利用中'),
+              subtitle: const Text('制限は完全に解除されています'),
+            )
+          else
+            ListTile(
+              leading: Icon(Icons.star, color: colors.accent),
+              title: const Text('無制限プランのご案内'),
+              subtitle: const Text(
+                'フィードバックによる解除は上限に達しました。\n'
+                '無制限プランで全機能をご利用いただけます。',
+              ),
+              onTap: () => showUpgradeDialog(context),
             ),
-            title: Text(isMax ? 'フィードバック送信済み' : 'フィードバックを送信'),
-            subtitle: Text(
-              isMax
-                  ? '制限は完全に解除されています'
-                  : 'ご意見を送信すると制限が解除されます'
-                      '（レベル$level / $feedbackMaxLevel）',
-            ),
-            onTap: isMax
-                ? null
-                : () => showFeedbackDialog(context, feedbackService),
-          ),
+          // プログレスバー
           if (!isMax) ...[
             const Divider(height: 1),
             Padding(
@@ -406,13 +427,15 @@ class _FeedbackCard extends StatelessWidget {
                         minHeight: 6,
                         backgroundColor:
                             theme.colorScheme.surfaceContainerHighest,
-                        valueColor: AlwaysStoppedAnimation(colors.accent),
+                        valueColor: AlwaysStoppedAnimation(
+                          isFeedbackMax ? colors.success : colors.accent,
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    'レベル$level',
+                    'レベル$level / $feedbackMaxLevel',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: theme.hintColor,
                     ),

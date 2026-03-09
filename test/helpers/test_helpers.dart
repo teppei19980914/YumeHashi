@@ -114,8 +114,14 @@ List<Override> createTestOverrides({
         achieved: [],
       ),
     ),
-    constellationProgressProvider
-        .overrideWith((ref) async => <ConstellationProgress>[]),
+    constellationProgressProvider.overrideWith(
+      (ref) async => const ConstellationOverallProgress(
+        constellations: [],
+        totalMinutes: 0,
+        totalLitStars: 0,
+        totalStars: 0,
+      ),
+    ),
     activityChartProvider.overrideWith(
       (ref) async => ActivityChartData(
         buckets: const [],

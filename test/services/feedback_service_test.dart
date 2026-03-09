@@ -1,9 +1,20 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yume_log/services/feedback_service.dart';
 
 void main() {
   late FeedbackService service;
+
+  /// 常に成功を返すモックHTTPクライアント.
+  http.Client createMockClient({int statusCode = 200}) {
+    return MockClient((request) async {
+      return http.Response(jsonEncode({'success': true}), statusCode);
+    });
+  }
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -11,10 +22,11 @@ void main() {
 
   Future<FeedbackService> createService([
     Map<String, Object> initialValues = const {},
+    http.Client? httpClient,
   ]) async {
     SharedPreferences.setMockInitialValues(initialValues);
     final prefs = await SharedPreferences.getInstance();
-    return FeedbackService(prefs);
+    return FeedbackService(prefs, httpClient: httpClient ?? createMockClient());
   }
 
   group('validateFeedback', () {
@@ -124,6 +136,94 @@ void main() {
       );
       expect(service.feedbackCount, 1);
     });
+
+    test('HTTP送信にカテゴリとテキストが含まれる', () async {
+      Map<String, dynamic>? sentBody;
+      final mockClient = MockClient((request) async {
+        sentBody = jsonDecode(request.body) as Map<String, dynamic>;
+        return http.Response(jsonEncode({'success': true}), 200);
+      });
+
+      service = await createService({}, mockClient);
+
+      final text =
+          'このアプリは学習管理にとても役立っています。特にガントチャート機能が便利です。'
+          '改善点としては、カレンダー表示があるとさらに使いやすくなると思います。'
+          'また、通知機能の時間指定ができると嬉しいです。全体的に満足しています。';
+
+      await service.submitFeedback(
+        category: FeedbackCategory.bugReport,
+        text: text,
+        userKey: 'test-user',
+      );
+
+      expect(sentBody, isNotNull);
+      expect(sentBody!['category'], '不具合報告');
+      expect(sentBody!['text'], text);
+      expect(sentBody!['userKey'], 'test-user');
+    });
+
+    test('HTTP送信失敗でもレベルアップする', () async {
+      final mockClient = MockClient((request) async {
+        throw Exception('Network error');
+      });
+
+      service = await createService({}, mockClient);
+
+      final text =
+          'このアプリは学習管理にとても役立っています。特にガントチャート機能が便利です。'
+          '改善点としては、カレンダー表示があるとさらに使いやすくなると思います。'
+          'また、通知機能の時間指定ができると嬉しいです。全体的に満足しています。';
+
+      final result = await service.submitFeedback(
+        category: FeedbackCategory.improvement,
+        text: text,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.newLevel, 1);
+    });
+
+    test('userKeyなしでも送信できる', () async {
+      Map<String, dynamic>? sentBody;
+      final mockClient = MockClient((request) async {
+        sentBody = jsonDecode(request.body) as Map<String, dynamic>;
+        return http.Response(jsonEncode({'success': true}), 200);
+      });
+
+      service = await createService({}, mockClient);
+
+      final text =
+          'このアプリは学習管理にとても役立っています。特にガントチャート機能が便利です。'
+          '改善点としては、カレンダー表示があるとさらに使いやすくなると思います。'
+          'また、通知機能の時間指定ができると嬉しいです。全体的に満足しています。';
+
+      await service.submitFeedback(
+        category: FeedbackCategory.other,
+        text: text,
+      );
+
+      expect(sentBody, isNotNull);
+      expect(sentBody!['userKey'], '');
+    });
+
+    test('フィードバックではレベル2までしか上がらない', () async {
+      service = await createService({'feedback_unlock_level': 2});
+
+      final text =
+          'アプリの使い勝手について感想を述べます。UIデザインが洗練されていて使いやすいです。'
+          'データ管理機能が充実しています。改善点としては検索機能の追加を希望します。'
+          'タスク管理やガントチャートの表示も分かりやすく、全体的に満足度が高いアプリだと感じました。';
+
+      final result = await service.submitFeedback(
+        category: FeedbackCategory.improvement,
+        text: text,
+      );
+
+      expect(result.success, isTrue);
+      expect(result.newLevel, 2); // レベル2のまま
+      expect(service.unlockLevel, 2);
+    });
   });
 
   group('unlockLevel', () {
@@ -131,6 +231,16 @@ void main() {
       service = await createService();
       expect(service.unlockLevel, 0);
       expect(service.isMaxLevel, isFalse);
+      expect(service.isFeedbackMaxLevel, isFalse);
+    });
+
+    test('レベル2でフィードバック上限', () async {
+      service = await createService({
+        'feedback_unlock_level': 2,
+      });
+      expect(service.unlockLevel, 2);
+      expect(service.isMaxLevel, isFalse);
+      expect(service.isFeedbackMaxLevel, isTrue);
     });
 
     test('レベル3で最大', () async {
@@ -139,6 +249,7 @@ void main() {
       });
       expect(service.unlockLevel, 3);
       expect(service.isMaxLevel, isTrue);
+      expect(service.isFeedbackMaxLevel, isTrue);
     });
   });
 
@@ -151,6 +262,17 @@ void main() {
           'タスク管理やガントチャートの表示も分かりやすく、全体的に満足度が高いアプリだと感じました。';
       final result = service.validateFeedback(text);
       expect(result.isValid, isTrue);
+    });
+  });
+
+  group('定数', () {
+    test('feedbackEndpointUrlが定義されている', () {
+      expect(feedbackEndpointUrl, contains('script.google.com'));
+    });
+
+    test('feedbackUnlockableLevelはfeedbackMaxLevel未満', () {
+      expect(feedbackUnlockableLevel, lessThan(feedbackMaxLevel));
+      expect(feedbackUnlockableLevel, 2);
     });
   });
 }

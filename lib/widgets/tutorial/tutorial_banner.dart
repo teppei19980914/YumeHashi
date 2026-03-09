@@ -48,14 +48,11 @@ class _TutorialBannerState extends ConsumerState<TutorialBanner> {
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
+        color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.primary.withAlpha(60),
-        ),
         boxShadow: [
           BoxShadow(
-            color: theme.colorScheme.primary.withAlpha(20),
+            color: theme.colorScheme.primary.withAlpha(40),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -70,13 +67,13 @@ class _TutorialBannerState extends ConsumerState<TutorialBanner> {
               Icon(
                 Icons.school,
                 size: 20,
-                color: theme.colorScheme.onPrimaryContainer,
+                color: theme.colorScheme.onPrimary,
               ),
               const SizedBox(width: 8),
               Text(
                 'チュートリアル',
                 style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer,
+                  color: theme.colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -84,7 +81,7 @@ class _TutorialBannerState extends ConsumerState<TutorialBanner> {
               Text(
                 'ステップ ${stepIndex + 1} / $totalSteps',
                 style: theme.textTheme.labelSmall?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer.withAlpha(180),
+                  color: theme.colorScheme.onPrimary.withAlpha(200),
                 ),
               ),
               const Spacer(),
@@ -99,7 +96,7 @@ class _TutorialBannerState extends ConsumerState<TutorialBanner> {
                   'スキップ',
                   style: TextStyle(
                     fontSize: 12,
-                    color: theme.colorScheme.onPrimaryContainer.withAlpha(180),
+                    color: theme.colorScheme.onPrimary.withAlpha(200),
                   ),
                 ),
               ),
@@ -112,10 +109,9 @@ class _TutorialBannerState extends ConsumerState<TutorialBanner> {
             child: LinearProgressIndicator(
               value: (stepIndex + 1) / totalSteps,
               minHeight: 3,
-              backgroundColor:
-                  theme.colorScheme.onPrimaryContainer.withAlpha(30),
+              backgroundColor: theme.colorScheme.onPrimary.withAlpha(50),
               valueColor: AlwaysStoppedAnimation(
-                theme.colorScheme.primary,
+                theme.colorScheme.onPrimary,
               ),
             ),
           ),
@@ -126,14 +122,14 @@ class _TutorialBannerState extends ConsumerState<TutorialBanner> {
               Icon(
                 Icons.arrow_forward_ios,
                 size: 14,
-                color: theme.colorScheme.primary,
+                color: theme.colorScheme.onPrimary,
               ),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
                   step.instruction,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onPrimaryContainer,
+                    color: theme.colorScheme.onPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -146,7 +142,7 @@ class _TutorialBannerState extends ConsumerState<TutorialBanner> {
             child: Text(
               step.hint,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer.withAlpha(160),
+                color: theme.colorScheme.onPrimary.withAlpha(200),
               ),
             ),
           ),
@@ -158,11 +154,14 @@ class _TutorialBannerState extends ConsumerState<TutorialBanner> {
   void _checkRouteAdvance(TutorialStep step) {
     final path = GoRouterState.of(context).uri.path;
 
-    if (step == TutorialStep.goToDreams && path == '/dreams') {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(tutorialStateProvider.notifier).advanceStep();
-      });
-    } else if (step == TutorialStep.goToGoals && path == '/goals') {
+    final routeMap = {
+      TutorialStep.goToDreams: '/dreams',
+      TutorialStep.goToGoals: '/goals',
+      TutorialStep.goToGantt: '/gantt',
+    };
+
+    final expectedPath = routeMap[step];
+    if (expectedPath != null && path == expectedPath) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         ref.read(tutorialStateProvider.notifier).advanceStep();
       });
@@ -221,11 +220,8 @@ class _CompletedBanner extends ConsumerWidget {
       margin: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
+        color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: theme.colorScheme.primary.withAlpha(60),
-        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -233,13 +229,13 @@ class _CompletedBanner extends ConsumerWidget {
           Icon(
             Icons.check_circle,
             size: 32,
-            color: theme.colorScheme.primary,
+            color: theme.colorScheme.onPrimary,
           ),
           const SizedBox(height: 8),
           Text(
             'チュートリアル完了！',
             style: theme.textTheme.titleMedium?.copyWith(
-              color: theme.colorScheme.onPrimaryContainer,
+              color: theme.colorScheme.onPrimary,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -249,7 +245,7 @@ class _CompletedBanner extends ConsumerWidget {
             'チュートリアルで作成したデータをどうしますか？',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onPrimaryContainer.withAlpha(180),
+              color: theme.colorScheme.onPrimary.withAlpha(200),
             ),
           ),
           const SizedBox(height: 12),

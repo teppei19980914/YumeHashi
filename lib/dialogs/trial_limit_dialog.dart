@@ -1,6 +1,6 @@
 /// 体験版の制限到達ダイアログ.
 ///
-/// 制限に達した際にフィードバック送信による解除を案内する.
+/// 制限に達した際にフィードバック送信による解除または課金を案内する.
 library;
 
 import 'package:flutter/material.dart';
@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import '../services/feedback_service.dart';
 import '../services/trial_limit_service.dart';
 import 'feedback_dialog.dart';
+import 'upgrade_dialog.dart';
 
 /// 体験版の制限到達ダイアログを表示する.
 ///
@@ -51,6 +52,7 @@ class _TrialLimitDialog extends StatelessWidget {
     final theme = Theme.of(context);
     final level = feedbackService?.unlockLevel ?? 0;
     final isMaxLevel = feedbackService?.isMaxLevel ?? false;
+    final isFeedbackMax = feedbackService?.isFeedbackMaxLevel ?? false;
 
     return AlertDialog(
       title: Row(
@@ -75,7 +77,8 @@ class _TrialLimitDialog extends StatelessWidget {
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 12),
-          if (!isMaxLevel) ...[
+          if (!isMaxLevel && !isFeedbackMax) ...[
+            // フィードバックで解除可能
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -103,6 +106,36 @@ class _TrialLimitDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
+          ] else if (!isMaxLevel && isFeedbackMax) ...[
+            // フィードバック上限到達 → 課金案内
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.tertiary.withAlpha(15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: theme.colorScheme.tertiary.withAlpha(40),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'さらに制限を解除するには',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.tertiary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text('フィードバックによる解除は上限に達しました。\n'
+                      'すべての機能を無制限で使うには、\n'
+                      '有料プランをご検討ください。'),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
           ],
           Text(
             trialLimitDescription(unlockLevel: level),
@@ -118,15 +151,26 @@ class _TrialLimitDialog extends StatelessWidget {
           child: const Text('閉じる'),
         ),
         if (!isMaxLevel && feedbackService != null)
-          FilledButton.icon(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              if (!context.mounted) return;
-              await showFeedbackDialog(context, feedbackService!);
-            },
-            icon: const Icon(Icons.rate_review, size: 18),
-            label: const Text('フィードバックを送信'),
-          ),
+          if (!isFeedbackMax)
+            FilledButton.icon(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                if (!context.mounted) return;
+                await showFeedbackDialog(context, feedbackService!);
+              },
+              icon: const Icon(Icons.rate_review, size: 18),
+              label: const Text('フィードバックを送信'),
+            )
+          else
+            FilledButton.icon(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                if (!context.mounted) return;
+                await showUpgradeDialog(context);
+              },
+              icon: const Icon(Icons.star, size: 18),
+              label: const Text('無制限プランを見る'),
+            ),
       ],
     );
   }

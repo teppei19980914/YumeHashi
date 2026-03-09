@@ -2,9 +2,17 @@
 ///
 /// フィードバックのバリデーション、送信履歴管理、
 /// 段階的な制限解除レベルの管理を行う.
+/// Google Apps Script 経由でスプレッドシート記録・メール通知を行う.
 library;
 
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+
+/// Google Apps Script のウェブアプリURL.
+const feedbackEndpointUrl =
+    'https://script.google.com/macros/s/AKfycby_LUvrzEkm-Yh6DuwAHOsTopLoHjyb525-3krxjQWiEn57WXw7htbMij6YfWccmgLmBw/exec';
 
 /// フィードバックカテゴリ.
 enum FeedbackCategory {
@@ -61,8 +69,13 @@ class FeedbackResult {
 /// フィードバックの最低文字数.
 const feedbackMinLength = 100;
 
-/// 最大解除レベル.
+/// 最大解除レベル（課金で到達）.
 const feedbackMaxLevel = 3;
+
+/// フィードバックで解除可能な最大レベル.
+///
+/// レベル3（無制限）は課金でのみ到達可能.
+const feedbackUnlockableLevel = 2;
 
 const _levelKey = 'feedback_unlock_level';
 const _historyKey = 'feedback_history';
@@ -70,15 +83,20 @@ const _historyKey = 'feedback_history';
 /// フィードバック管理サービス.
 class FeedbackService {
   /// FeedbackServiceを作成する.
-  FeedbackService(this._prefs);
+  FeedbackService(this._prefs, {http.Client? httpClient})
+      : _httpClient = httpClient ?? http.Client();
 
   final SharedPreferences _prefs;
+  final http.Client _httpClient;
 
   /// 現在の解除レベル（0-3）を取得する.
   int get unlockLevel => _prefs.getInt(_levelKey) ?? 0;
 
-  /// 最大レベルに達しているか.
+  /// 最大レベル（無制限）に達しているか.
   bool get isMaxLevel => unlockLevel >= feedbackMaxLevel;
+
+  /// フィードバックで解除可能な上限に達しているか.
+  bool get isFeedbackMaxLevel => unlockLevel >= feedbackUnlockableLevel;
 
   /// 送信済みフィードバック数.
   int get feedbackCount => _getHistory().length;
@@ -113,9 +131,13 @@ class FeedbackService {
   }
 
   /// フィードバックを送信する.
+  ///
+  /// Google Apps Script にPOST送信し、ローカル履歴にも保存する.
+  /// 通信エラー時もローカル保存・レベルアップは実行する.
   Future<FeedbackResult> submitFeedback({
     required FeedbackCategory category,
     required String text,
+    String? userKey,
   }) async {
     final validation = validateFeedback(text);
     if (!validation.isValid) {
@@ -126,20 +148,49 @@ class FeedbackService {
       );
     }
 
+    // Google Apps Script に送信（エラーでもレベルアップは続行）
+    await _sendToRemote(
+      category: category,
+      text: text.trim(),
+      userKey: userKey,
+    );
+
     // 履歴に保存
     final history = _getHistory();
     history.add(text.trim());
     await _prefs.setStringList(_historyKey, history);
 
-    // レベルアップ
+    // レベルアップ（フィードバックではfeedbackUnlockableLevelまで）
     final currentLevel = unlockLevel;
-    if (currentLevel < feedbackMaxLevel) {
+    if (currentLevel < feedbackUnlockableLevel) {
       final newLevel = currentLevel + 1;
       await _prefs.setInt(_levelKey, newLevel);
       return FeedbackResult(success: true, newLevel: newLevel);
     }
 
     return FeedbackResult(success: true, newLevel: currentLevel);
+  }
+
+  /// Google Apps Script にフィードバックをPOST送信する.
+  Future<void> _sendToRemote({
+    required FeedbackCategory category,
+    required String text,
+    String? userKey,
+  }) async {
+    if (feedbackEndpointUrl.isEmpty) return;
+    try {
+      await _httpClient.post(
+        Uri.parse(feedbackEndpointUrl),
+        headers: {'Content-Type': 'text/plain'},
+        body: jsonEncode({
+          'category': category.label,
+          'text': text,
+          'userKey': userKey ?? '',
+        }),
+      );
+    } on Exception {
+      // 通信エラーは無視（レベルアップに影響しない）
+    }
   }
 
   /// 同一文字の繰り返しを検出する.

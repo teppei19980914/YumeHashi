@@ -14,8 +14,10 @@ import '../models/task.dart';
 import '../providers/gantt_providers.dart';
 import '../providers/service_providers.dart';
 import '../services/trial_limit_service.dart';
+import '../services/tutorial_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/gantt/gantt_chart.dart';
+import '../widgets/tutorial/tutorial_banner.dart';
 
 /// ガントチャートページ.
 class GanttPage extends ConsumerWidget {
@@ -155,20 +157,27 @@ class GanttPage extends ConsumerWidget {
     WidgetRef ref,
     String goalId,
   ) async {
+    // チュートリアル中はタスク制限をバイパス
+    final tutorialState = ref.read(tutorialStateProvider);
+    final isTutorial = tutorialState.isActive &&
+        tutorialState.step == TutorialStep.addTask;
+
     // 体験版: タスク数の制限チェック
-    final allTasks = ref.read(ganttTasksProvider).valueOrNull ?? [];
-    final tasksForGoal = allTasks.where((t) => t.goalId == goalId).length;
-    final level = ref.read(unlockLevelProvider);
-    if (!canAddTask(
-        currentTaskCountForGoal: tasksForGoal, unlockLevel: level)) {
-      await showTrialLimitDialog(
-        context,
-        itemName: 'タスク（この目標）',
-        currentCount: tasksForGoal,
-        maxCount: maxTasksPerGoal(level),
-        feedbackService: ref.read(feedbackServiceProvider),
-      );
-      return;
+    if (!isTutorial) {
+      final allTasks = ref.read(ganttTasksProvider).valueOrNull ?? [];
+      final tasksForGoal = allTasks.where((t) => t.goalId == goalId).length;
+      final level = ref.read(unlockLevelProvider);
+      if (!canAddTask(
+          currentTaskCountForGoal: tasksForGoal, unlockLevel: level)) {
+        await showTrialLimitDialog(
+          context,
+          itemName: 'タスク（この目標）',
+          currentCount: tasksForGoal,
+          maxCount: maxTasksPerGoal(level),
+          feedbackService: ref.read(feedbackServiceProvider),
+        );
+        return;
+      }
     }
 
     final books = await ref.read(bookServiceProvider).getAllBooks();
@@ -185,6 +194,11 @@ class GanttPage extends ConsumerWidget {
           memo: result.memo,
           bookId: result.bookId,
         );
+
+    // チュートリアル: タスク追加後にステップを進める
+    if (isTutorial) {
+      await ref.read(tutorialStateProvider.notifier).advanceStep();
+    }
     ref.invalidate(ganttTasksProvider);
   }
 

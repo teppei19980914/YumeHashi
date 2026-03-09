@@ -11,22 +11,28 @@ import '../services/feedback_service.dart';
 /// フィードバックダイアログを表示する.
 ///
 /// 送信成功時は true を返す.
+/// [userKey] はリモート設定のユーザーキー（任意）.
 Future<bool> showFeedbackDialog(
   BuildContext context,
-  FeedbackService feedbackService,
-) async {
+  FeedbackService feedbackService, {
+  String? userKey,
+}) async {
   final result = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (context) => _FeedbackDialog(feedbackService: feedbackService),
+    builder: (context) => _FeedbackDialog(
+      feedbackService: feedbackService,
+      userKey: userKey,
+    ),
   );
   return result ?? false;
 }
 
 class _FeedbackDialog extends StatefulWidget {
-  const _FeedbackDialog({required this.feedbackService});
+  const _FeedbackDialog({required this.feedbackService, this.userKey});
 
   final FeedbackService feedbackService;
+  final String? userKey;
 
   @override
   State<_FeedbackDialog> createState() => _FeedbackDialogState();
@@ -219,6 +225,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
     final result = await widget.feedbackService.submitFeedback(
       category: _category!,
       text: _controller.text,
+      userKey: widget.userKey,
     );
 
     if (!mounted) return;

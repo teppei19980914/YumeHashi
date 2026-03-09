@@ -83,8 +83,14 @@ List<Override> _testOverrides(
     ),
     dreamListProvider.overrideWith(() => _ImmediateDreamListNotifier()),
     bookListProvider.overrideWith(() => _ImmediateBookListNotifier()),
-    constellationProgressProvider
-        .overrideWith((ref) async => <ConstellationProgress>[]),
+    constellationProgressProvider.overrideWith(
+      (ref) async => const ConstellationOverallProgress(
+        constellations: [],
+        totalMinutes: 0,
+        totalLitStars: 0,
+        totalStars: 0,
+      ),
+    ),
     dreamCountProvider.overrideWith((ref) async => 0),
     goalCountProvider.overrideWith((ref) async => 0),
     // 通知ボタンの非同期DBアクセスを回避

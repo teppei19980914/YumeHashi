@@ -1,12 +1,14 @@
 /// Web体験版の注意バナー.
 ///
 /// Web版アプリでのみ表示し、データの取り扱いに関する注意事項を表示する.
+/// 現在の解除レベルに応じた制限値を表示する.
 library;
 
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../services/feedback_service.dart';
 import '../../services/trial_limit_service.dart';
 
 const _webBannerDismissedKey = 'web_trial_banner_dismissed';
@@ -39,6 +41,8 @@ class _WebTrialBannerState extends State<WebTrialBanner> {
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final level = FeedbackService(widget.prefs).unlockLevel;
+    final isUnlimited = level >= feedbackMaxLevel;
 
     return Container(
       width: double.infinity,
@@ -78,9 +82,14 @@ class _WebTrialBannerState extends State<WebTrialBanner> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '夢$trialMaxDreams個・目標$trialMaxGoalsPerDream個/夢・'
-                  'タスク$trialMaxTasksPerGoal個/目標・書籍$trialMaxBooks冊まで。'
-                  'デスクトップ版なら無制限です。',
+                  isUnlimited
+                      ? '制限は完全に解除されています。'
+                      : '夢${maxDreams(level)}個・'
+                          '目標${maxGoalsPerDream(level)}個/夢・'
+                          'タスク${maxTasksPerGoal(level)}個/目標・'
+                          '書籍${maxBooks(level)}冊まで'
+                          '（レベル$level / $feedbackMaxLevel）。'
+                          'デスクトップ版なら無制限です。',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -109,7 +118,8 @@ Future<void> showWebTrialDialog(
   BuildContext context,
   SharedPreferences prefs,
 ) async {
-  await _showTrialDialog(context, barrierDismissible: true);
+  final level = FeedbackService(prefs).unlockLevel;
+  await _showTrialDialog(context, unlockLevel: level, barrierDismissible: true);
 }
 
 /// Web体験版の初回ダイアログを表示する.
@@ -126,13 +136,21 @@ Future<void> showWebTrialDialogIfNeeded(
 
   if (!context.mounted) return;
 
-  await _showTrialDialog(context, barrierDismissible: false);
+  final level = FeedbackService(prefs).unlockLevel;
+  await _showTrialDialog(
+    context,
+    unlockLevel: level,
+    barrierDismissible: false,
+  );
 }
 
 Future<void> _showTrialDialog(
   BuildContext context, {
+  required int unlockLevel,
   required bool barrierDismissible,
 }) async {
+  final isUnlimited = unlockLevel >= feedbackMaxLevel;
+
   await showDialog<void>(
     context: context,
     barrierDismissible: barrierDismissible,
@@ -168,9 +186,13 @@ Future<void> _showTrialDialog(
           const SizedBox(height: 12),
           _NoticeItem(
             icon: Icons.lock_outline,
-            text: '体験版の登録上限: '
-                '夢$trialMaxDreams個、目標$trialMaxGoalsPerDream個/夢、'
-                'タスク$trialMaxTasksPerGoal個/目標、書籍$trialMaxBooks冊',
+            text: isUnlimited
+                ? '制限は完全に解除されています。'
+                : '体験版の登録上限（レベル$unlockLevel / $feedbackMaxLevel）: '
+                    '夢${maxDreams(unlockLevel)}個、'
+                    '目標${maxGoalsPerDream(unlockLevel)}個/夢、'
+                    'タスク${maxTasksPerGoal(unlockLevel)}個/目標、'
+                    '書籍${maxBooks(unlockLevel)}冊',
           ),
           const SizedBox(height: 16),
           const Text(

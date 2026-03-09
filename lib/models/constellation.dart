@@ -59,34 +59,19 @@ class ConstellationDef {
   int get starCount => stars.length;
 }
 
-/// Dream別の星座進捗状態.
+/// 個別星座の進捗状態.
 class ConstellationProgress {
   /// ConstellationProgressを作成する.
   const ConstellationProgress({
-    required this.dreamId,
-    required this.dreamTitle,
     required this.constellation,
-    required this.totalMinutes,
     required this.litStarCount,
   });
-
-  /// 紐づくDreamのID.
-  final String dreamId;
-
-  /// Dreamのタイトル.
-  final String dreamTitle;
 
   /// 割り当てられた星座.
   final ConstellationDef constellation;
 
-  /// 累計学習時間（分）.
-  final int totalMinutes;
-
   /// 点灯済みの星の数.
   final int litStarCount;
-
-  /// 合計学習時間（時間）.
-  double get totalHours => totalMinutes / 60.0;
 
   /// 完成率（0.0〜1.0）.
   double get completionRate =>
@@ -96,4 +81,38 @@ class ConstellationProgress {
 
   /// 星座が完成しているか.
   bool get isComplete => litStarCount >= constellation.starCount;
+}
+
+/// 全星座の総合進捗.
+class ConstellationOverallProgress {
+  /// ConstellationOverallProgressを作成する.
+  const ConstellationOverallProgress({
+    required this.constellations,
+    required this.totalMinutes,
+    required this.totalLitStars,
+    required this.totalStars,
+  });
+
+  /// 各星座の進捗リスト.
+  final List<ConstellationProgress> constellations;
+
+  /// 累計学習時間（分）.
+  final int totalMinutes;
+
+  /// 点灯済みの星の総数.
+  final int totalLitStars;
+
+  /// 全星座の星の総数.
+  final int totalStars;
+
+  /// 合計学習時間（時間）.
+  double get totalHours => totalMinutes / 60.0;
+
+  /// 全体完成率（0.0〜1.0）.
+  double get overallCompletionRate =>
+      totalStars == 0 ? 0.0 : (totalLitStars / totalStars).clamp(0.0, 1.0);
+
+  /// 完成した星座の数.
+  int get completedCount =>
+      constellations.where((c) => c.isComplete).length;
 }

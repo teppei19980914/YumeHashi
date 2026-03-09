@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../data/constellations.dart';
 import '../models/book.dart';
 import '../providers/constellation_providers.dart';
 import '../providers/dashboard_providers.dart';
@@ -15,7 +16,6 @@ import '../widgets/constellation/constellation_painter.dart';
 import '../widgets/web/web_trial_banner.dart';
 import '../providers/service_providers.dart';
 import '../services/dashboard_layout_service.dart';
-import '../services/remote_config_service.dart';
 import '../services/study_stats_types.dart';
 import '../theme/app_theme.dart';
 
@@ -32,7 +32,6 @@ class DashboardPage extends ConsumerStatefulWidget {
 class _DashboardPageState extends ConsumerState<DashboardPage> {
   bool _editMode = false;
   bool _webDialogChecked = false;
-  bool _resetChecked = false;
 
   @override
   Widget build(BuildContext context) {
@@ -40,19 +39,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final theme = Theme.of(context);
     final colors = theme.appColors;
     final prefs = ref.watch(sharedPreferencesProvider);
-
-    // resetOnAccess: データベースリセット処理
-    if (!_resetChecked) {
-      _resetChecked = true;
-      if (prefs.getBool(resetPendingKey) ?? false) {
-        WidgetsBinding.instance.addPostFrameCallback((_) async {
-          if (!mounted) return;
-          final service = ref.read(dataExportServiceProvider);
-          await service.clearAllData();
-          await prefs.remove(resetPendingKey);
-        });
-      }
-    }
 
     // Web体験版の初回ダイアログ表示
     if (!_webDialogChecked) {
@@ -851,18 +837,11 @@ class _ConstellationPreviewContent extends ConsumerWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     return progressAsync.when(
-      data: (progressList) {
-        if (progressList.isEmpty) {
-          return Center(
-            child: Text(
-              '夢を追加すると星座が表示されます',
-              style: theme.textTheme.bodySmall,
-            ),
-          );
-        }
-        // 最も進捗が高い星座を表示
-        final best = progressList.reduce(
-          (a, b) => a.completionRate >= b.completionRate ? a : b,
+      data: (overall) {
+        // 進行中または最後に完成した星座を表示
+        final current = overall.constellations.lastWhere(
+          (c) => c.litStarCount > 0,
+          orElse: () => overall.constellations.first,
         );
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -870,21 +849,21 @@ class _ConstellationPreviewContent extends ConsumerWidget {
             Row(
               children: [
                 Text(
-                  best.constellation.symbol,
+                  current.constellation.symbol,
                   style: const TextStyle(fontSize: 16),
                 ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    best.dreamTitle,
+                    '${overall.completedCount}/${constellations.length} 星座完成',
                     style: theme.textTheme.labelMedium,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 Text(
-                  '${best.litStarCount}/${best.constellation.starCount}',
+                  '${overall.totalLitStars}/${overall.totalStars}',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: best.isComplete
+                    color: current.isComplete
                         ? const Color(0xFFFFD700)
                         : theme.colorScheme.primary,
                   ),
@@ -901,7 +880,7 @@ class _ConstellationPreviewContent extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: ConstellationWidget(
-                  progress: best,
+                  progress: current,
                   compact: true,
                 ),
               ),
