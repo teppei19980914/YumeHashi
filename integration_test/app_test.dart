@@ -3,6 +3,7 @@
 /// アプリ全体のナビゲーションフローとウィジェット表示を検証する.
 library;
 
+import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +14,10 @@ import 'package:yume_log/app.dart';
 import 'package:yume_log/database/app_database.dart'
     hide Book, Dream, Goal, Task;
 import 'package:yume_log/models/book.dart';
+import 'package:yume_log/models/constellation.dart'
+    show ConstellationOverallProgress;
 import 'package:yume_log/models/dream.dart';
-import 'package:yume_log/models/goal.dart';
+import 'package:yume_log/models/goal.dart' show Goal, WhenType;
 import 'package:yume_log/models/task.dart';
 import 'package:yume_log/pages/stats_page.dart';
 import 'package:yume_log/providers/book_providers.dart';
@@ -25,8 +28,16 @@ import 'package:yume_log/providers/dream_providers.dart';
 import 'package:yume_log/providers/gantt_providers.dart';
 import 'package:yume_log/providers/goal_providers.dart';
 import 'package:yume_log/providers/service_providers.dart';
+import 'package:yume_log/providers/theme_provider.dart'
+    show sharedPreferencesProvider;
 import 'package:yume_log/services/remote_config_service.dart';
 import 'package:yume_log/services/study_stats_types.dart';
+import 'package:yume_log/services/feedback_service.dart'
+    show FeedbackCategory;
+import 'package:yume_log/services/trial_limit_service.dart'
+    show setTrialModeForTest;
+import 'package:yume_log/widgets/notification/notification_button.dart'
+    show allNotificationsProvider, unreadCountProvider;
 import 'package:yume_log/widgets/stats/goal_stats_section.dart';
 
 class _ImmediateDreamListNotifier extends DreamListNotifier {
@@ -42,6 +53,36 @@ class _ImmediateGoalListNotifier extends GoalListNotifier {
 class _ImmediateBookListNotifier extends BookListNotifier {
   @override
   Future<List<Book>> build() async => [];
+}
+
+/// テスト用に夢1件を返すNotifier.
+const _testDreamId = 'test-dream-id-01';
+
+class _SingleDreamListNotifier extends DreamListNotifier {
+  @override
+  Future<List<Dream>> build() async => [
+        Dream(
+          id: _testDreamId,
+          title: 'テスト夢',
+          description: 'テスト説明',
+          why: 'テスト理由',
+        ),
+      ];
+}
+
+/// テスト用に目標1件を返すNotifier.
+class _SingleGoalListNotifier extends GoalListNotifier {
+  @override
+  Future<List<Goal>> build() async => [
+        Goal(
+          id: 'test-goal-id-01',
+          dreamId: _testDreamId,
+          what: 'テスト目標',
+          how: 'テスト方法',
+          whenType: WhenType.date,
+          whenTarget: '2026-12-31',
+        ),
+      ];
 }
 
 class _ImmediateDashboardLayoutNotifier extends DashboardLayoutNotifier {
@@ -70,7 +111,7 @@ void main() {
     await db.close();
   });
 
-  Future<Widget> _buildApp() async {
+  Future<Widget> buildApp() async {
     final prefs = await SharedPreferences.getInstance();
     return ProviderScope(
       overrides: [
@@ -173,9 +214,212 @@ void main() {
     );
   }
 
+  /// 夢1件・目標1件を持つアプリを構築する（カード操作テスト用）.
+  Future<Widget> buildAppWithData() async {
+    final prefs = await SharedPreferences.getInstance();
+    return ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        databaseProvider.overrideWithValue(db),
+        remoteConfigProvider.overrideWithValue(UserConfig.defaultConfig),
+        dreamListProvider.overrideWith(() => _SingleDreamListNotifier()),
+        goalListProvider.overrideWith(() => _SingleGoalListNotifier()),
+        bookListProvider.overrideWith(() => _ImmediateBookListNotifier()),
+        dashboardLayoutProvider
+            .overrideWith(() => _ImmediateDashboardLayoutNotifier()),
+        todayStudyProvider.overrideWith(
+          (ref) async => const TodayStudyData(
+            totalMinutes: 60,
+            sessionCount: 2,
+            studied: true,
+          ),
+        ),
+        streakProvider.overrideWith(
+          (ref) async => const StreakData(
+            currentStreak: 3,
+            longestStreak: 7,
+            studiedToday: true,
+          ),
+        ),
+        personalRecordProvider.overrideWith(
+          (ref) async => const PersonalRecordData(
+            bestDayMinutes: 120,
+            bestWeekMinutes: 300,
+            longestStreak: 7,
+            totalHours: 10.5,
+            totalStudyDays: 14,
+          ),
+        ),
+        consistencyProvider.overrideWith(
+          (ref) async => const ConsistencyData(
+            thisWeekDays: 3,
+            thisWeekTotal: 5,
+            thisWeekMinutes: 180,
+            thisMonthDays: 10,
+            thisMonthTotal: 15,
+            thisMonthMinutes: 600,
+            overallRate: 0.7,
+            overallStudyDays: 14,
+            overallTotalDays: 20,
+          ),
+        ),
+        bookshelfProvider.overrideWith(
+          (ref) async => const BookshelfData(
+            totalCount: 0,
+            completedCount: 0,
+            readingCount: 0,
+            recentCompleted: [],
+          ),
+        ),
+        dreamCountProvider.overrideWith((ref) async => 1),
+        goalCountProvider.overrideWith((ref) async => 1),
+        unreadCountProvider.overrideWith((ref) async => 0),
+        allNotificationsProvider.overrideWith((ref) async => []),
+        dailyActivityProvider.overrideWith(
+          (ref) async => DailyActivityData(
+            days: const [],
+            maxMinutes: 0,
+            periodStart: DateTime(2026),
+            periodEnd: DateTime(2026),
+          ),
+        ),
+        allLogsProvider.overrideWith((ref) async => []),
+        ganttTasksProvider.overrideWith((ref) async => <Task>[]),
+        ganttGoalListProvider.overrideWith((ref) async => <Goal>[]),
+        goalStatsProvider
+            .overrideWith((ref) async => <GoalStatsDisplayData>[]),
+        bookStatsProvider
+            .overrideWith((ref) async => <GoalStatsDisplayData>[]),
+        milestoneDataProvider.overrideWith(
+          (ref) async => const MilestoneData(
+            totalHours: 0,
+            studyDays: 0,
+            currentStreak: 0,
+            achieved: [],
+          ),
+        ),
+        constellationProgressProvider.overrideWith(
+          (ref) async => const ConstellationOverallProgress(
+            constellations: [],
+            totalMinutes: 0,
+            totalLitStars: 0,
+            totalStars: 0,
+          ),
+        ),
+        activityChartProvider.overrideWith(
+          (ref) async => ActivityChartData(
+            buckets: const [],
+            maxMinutes: 0,
+            periodType: ActivityPeriodType.monthly,
+          ),
+        ),
+      ],
+      child: const YumeLogApp(),
+    );
+  }
+
+  /// 夢/目標/タスクプロバイダーをモックせずにアプリを構築する（CRUD操作テスト用）.
+  Future<Widget> buildRealApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    return ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        databaseProvider.overrideWithValue(db),
+        remoteConfigProvider.overrideWithValue(UserConfig.defaultConfig),
+        dashboardLayoutProvider
+            .overrideWith(() => _ImmediateDashboardLayoutNotifier()),
+        todayStudyProvider.overrideWith(
+          (ref) async => const TodayStudyData(
+            totalMinutes: 0,
+            sessionCount: 0,
+            studied: false,
+          ),
+        ),
+        streakProvider.overrideWith(
+          (ref) async => const StreakData(
+            currentStreak: 0,
+            longestStreak: 0,
+            studiedToday: false,
+          ),
+        ),
+        personalRecordProvider.overrideWith(
+          (ref) async => const PersonalRecordData(
+            bestDayMinutes: 0,
+            bestWeekMinutes: 0,
+            longestStreak: 0,
+            totalHours: 0,
+            totalStudyDays: 0,
+          ),
+        ),
+        consistencyProvider.overrideWith(
+          (ref) async => const ConsistencyData(
+            thisWeekDays: 0,
+            thisWeekTotal: 7,
+            thisWeekMinutes: 0,
+            thisMonthDays: 0,
+            thisMonthTotal: 30,
+            thisMonthMinutes: 0,
+            overallRate: 0,
+            overallStudyDays: 0,
+            overallTotalDays: 0,
+          ),
+        ),
+        bookshelfProvider.overrideWith(
+          (ref) async => const BookshelfData(
+            totalCount: 0,
+            completedCount: 0,
+            readingCount: 0,
+            recentCompleted: [],
+          ),
+        ),
+        dreamCountProvider.overrideWith((ref) async => 0),
+        goalCountProvider.overrideWith((ref) async => 0),
+        unreadCountProvider.overrideWith((ref) async => 0),
+        allNotificationsProvider.overrideWith((ref) async => []),
+        dailyActivityProvider.overrideWith(
+          (ref) async => DailyActivityData(
+            days: const [],
+            maxMinutes: 0,
+            periodStart: DateTime(2026),
+            periodEnd: DateTime(2026),
+          ),
+        ),
+        allLogsProvider.overrideWith((ref) async => []),
+        goalStatsProvider
+            .overrideWith((ref) async => <GoalStatsDisplayData>[]),
+        bookStatsProvider
+            .overrideWith((ref) async => <GoalStatsDisplayData>[]),
+        milestoneDataProvider.overrideWith(
+          (ref) async => const MilestoneData(
+            totalHours: 0,
+            studyDays: 0,
+            currentStreak: 0,
+            achieved: [],
+          ),
+        ),
+        constellationProgressProvider.overrideWith(
+          (ref) async => const ConstellationOverallProgress(
+            constellations: [],
+            totalMinutes: 0,
+            totalLitStars: 0,
+            totalStars: 0,
+          ),
+        ),
+        activityChartProvider.overrideWith(
+          (ref) async => ActivityChartData(
+            buckets: const [],
+            maxMinutes: 0,
+            periodType: ActivityPeriodType.monthly,
+          ),
+        ),
+      ],
+      child: const YumeLogApp(),
+    );
+  }
+
   // GoRouterはモジュールレベルのシングルトンのため、全ナビゲーションを1テストで実行する.
   testWidgets('アプリ全体のUIナビゲーションフロー', (tester) async {
-    await tester.pumpWidget(await _buildApp());
+    await tester.pumpWidget(await buildApp());
     await tester.pumpAndSettle();
 
     // ─── ダッシュボード ───────────────────────────────
@@ -227,7 +471,7 @@ void main() {
   });
 
   testWidgets('ドロワーメニューが開く', (tester) async {
-    await tester.pumpWidget(await _buildApp());
+    await tester.pumpWidget(await buildApp());
     await tester.pumpAndSettle();
 
     // ハンバーガーアイコンをタップ
@@ -238,5 +482,670 @@ void main() {
     expect(find.text('ガントチャート'), findsOneWidget);
     expect(find.text('書籍'), findsOneWidget);
     expect(find.text('設定'), findsOneWidget);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 各種ボタン操作テスト（体験版で操作可能な範囲）
+  // ─────────────────────────────────────────────────────────────────────────
+
+  testWidgets('実績ボタンをタップすると実績ポップアップが開く', (tester) async {
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.emoji_events_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('実績'), findsOneWidget);
+  });
+
+  testWidgets('通知ボタンをタップすると通知パネルが開く', (tester) async {
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.notifications_outlined));
+    await tester.pumpAndSettle();
+
+    expect(find.text('通知'), findsOneWidget);
+    expect(find.text('通知はありません'), findsOneWidget);
+  });
+
+  testWidgets('夢カードの編集メニューをタップすると編集ダイアログが開く', (tester) async {
+    await tester.pumpWidget(await buildAppWithData());
+    await tester.pumpAndSettle();
+
+    // 夢ページへ移動
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+    await tester.pumpAndSettle();
+
+    // 夢カードが表示される
+    expect(find.text('テスト夢'), findsOneWidget);
+
+    // PopupMenuを開く
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    // 「編集」を選択
+    await tester.tap(find.text('編集'));
+    await tester.pumpAndSettle();
+
+    // 夢編集ダイアログが開く
+    expect(find.text('夢を編集'), findsOneWidget);
+    expect(find.text('テスト夢'), findsWidgets); // タイトルフィールドに値が入っている
+  });
+
+  testWidgets('夢カードの削除メニューをタップすると削除確認ダイアログが開く', (tester) async {
+    await tester.pumpWidget(await buildAppWithData());
+    await tester.pumpAndSettle();
+
+    // 夢ページへ移動
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+    await tester.pumpAndSettle();
+
+    // PopupMenuを開く
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    // 「削除」を選択
+    await tester.tap(find.text('削除'));
+    await tester.pumpAndSettle();
+
+    // 削除確認ダイアログが開く
+    expect(find.text('夢を削除'), findsOneWidget);
+    expect(find.textContaining('削除しますか'), findsOneWidget);
+    expect(find.text('キャンセル'), findsOneWidget);
+
+    // キャンセルで閉じる
+    await tester.tap(find.text('キャンセル'));
+    await tester.pumpAndSettle();
+    expect(find.text('夢を削除'), findsNothing);
+  });
+
+  testWidgets('目標カードの編集メニューをタップすると編集ダイアログが開く', (tester) async {
+    await tester.pumpWidget(await buildAppWithData());
+    await tester.pumpAndSettle();
+
+    // 目標ページへ移動
+    await tester.tap(find.byIcon(Icons.flag_outlined));
+    await tester.pumpAndSettle();
+
+    // 目標カードが表示される
+    expect(find.text('テスト目標'), findsOneWidget);
+
+    // PopupMenuを開く
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    // 「編集」を選択
+    await tester.tap(find.text('編集'));
+    await tester.pumpAndSettle();
+
+    // 目標編集ダイアログが開く
+    expect(find.text('目標を編集'), findsOneWidget);
+    expect(find.text('テスト目標'), findsWidgets); // Whatフィールドに値が入っている
+  });
+
+  testWidgets('目標カードの削除メニューをタップすると削除確認ダイアログが開く', (tester) async {
+    await tester.pumpWidget(await buildAppWithData());
+    await tester.pumpAndSettle();
+
+    // 目標ページへ移動
+    await tester.tap(find.byIcon(Icons.flag_outlined));
+    await tester.pumpAndSettle();
+
+    // PopupMenuを開く
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+
+    // 「削除」を選択
+    await tester.tap(find.text('削除'));
+    await tester.pumpAndSettle();
+
+    // 削除確認ダイアログが開く
+    expect(find.text('目標を削除'), findsOneWidget);
+    expect(find.textContaining('削除しますか'), findsOneWidget);
+
+    // キャンセルで閉じる
+    await tester.tap(find.text('キャンセル'));
+    await tester.pumpAndSettle();
+    expect(find.text('目標を削除'), findsNothing);
+  });
+
+  testWidgets('統計ページのアクティビティ期間切替ボタンが機能する', (tester) async {
+    await tester.pumpWidget(await buildApp());
+    await tester.pumpAndSettle();
+
+    // 統計ページへ移動
+    await tester.tap(find.byIcon(Icons.bar_chart_outlined));
+    await tester.pumpAndSettle();
+
+    // アクティビティセクションまでスクロール
+    await tester.scrollUntilVisible(
+      find.byType(SegmentedButton<ActivityPeriodType>),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
+    // 日次に切替
+    await tester.tap(find.text('日'));
+    await tester.pumpAndSettle();
+
+    // 週次に切替
+    await tester.tap(find.text('週'));
+    await tester.pumpAndSettle();
+
+    // 年次に切替
+    await tester.tap(find.text('年'));
+    await tester.pumpAndSettle();
+
+    // 月次に戻す
+    await tester.tap(find.text('月'));
+    await tester.pumpAndSettle();
+
+    // セグメントボタン自体が存在し続けることを確認
+    expect(find.byType(SegmentedButton<ActivityPeriodType>), findsOneWidget);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 体験版制限フロー: ?key=dev-reset 相当のシナリオ
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /// フィードバックダイアログを操作するヘルパー.
+  ///
+  /// カテゴリ選択 → テキスト入力 → 送信 の一連操作を行う.
+  Future<void> submitFeedback(WidgetTester tester, String feedbackText) async {
+    // カテゴリを選択
+    await tester.tap(find.byType(DropdownButtonFormField<FeedbackCategory>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('改善要望').last);
+    await tester.pumpAndSettle();
+
+    // フィードバックテキストを入力（TextField はフィードバックダイアログ固有）
+    await tester.enterText(
+      find.byWidgetPredicate(
+        (w) =>
+            w is TextField &&
+            (w.decoration?.hintText?.contains('アプリの改善点') ?? false),
+      ),
+      feedbackText,
+    );
+    await tester.pumpAndSettle();
+
+    // 送信
+    await tester.tap(find.text('送信する'));
+    await tester.pumpAndSettle();
+  }
+
+  /// 目標追加ダイアログを操作するヘルパー（夢が登録済みであること）.
+  ///
+  /// 期間指定モードでWhen/How/Whatを入力して追加する.
+  Future<void> addGoal(WidgetTester tester, String what) async {
+    await tester.tap(find.text('目標を追加'));
+    await tester.pumpAndSettle();
+
+    // 期間指定に切り替え（日付ピッカー不要）
+    await tester.tap(find.text('期間指定'));
+    await tester.pumpAndSettle();
+
+    // What フィールド（TextFormField内部のTextFieldを検索）
+    await tester.enterText(
+      find.byWidgetPredicate(
+        (w) =>
+            w is TextField &&
+            (w.decoration?.hintText?.contains('TOEIC') ?? false),
+      ),
+      what,
+    );
+
+    // When フィールド（期間指定）
+    await tester.enterText(
+      find.byWidgetPredicate(
+        (w) =>
+            w is TextField &&
+            (w.decoration?.hintText?.contains('3ヶ月以内') ?? false),
+      ),
+      '3ヶ月以内',
+    );
+
+    // How フィールド
+    await tester.enterText(
+      find.byWidgetPredicate(
+        (w) =>
+            w is TextField &&
+            (w.decoration?.hintText?.contains('公式問題集') ?? false),
+      ),
+      'テスト方法',
+    );
+
+    await tester.tap(find.text('追加'));
+    await tester.pumpAndSettle();
+  }
+
+  /// タスク追加ダイアログを操作するヘルパー（「タスクを追加」ボタンが表示済みであること）.
+  Future<void> addTask(WidgetTester tester, String title) async {
+    await tester.tap(find.text('タスクを追加'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(
+      find.byWidgetPredicate(
+        (w) =>
+            w is TextField &&
+            (w.decoration?.hintText?.contains('第1章を読む') ?? false),
+      ),
+      title,
+    );
+
+    await tester.tap(find.text('追加'));
+    await tester.pumpAndSettle();
+  }
+
+  /// 夢追加ダイアログを操作するヘルパー.
+  Future<void> addDream(WidgetTester tester, String title) async {
+    await tester.tap(find.text('夢を追加'));
+    await tester.pumpAndSettle();
+
+    // タイトル入力（最初のTextFormField）
+    await tester.enterText(find.byType(TextFormField).first, title);
+    await tester.pumpAndSettle();
+
+    // 追加ボタン
+    await tester.tap(find.text('追加'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets(
+    '体験版: 夢を制限いっぱいまで登録しフィードバックで解除を2回実施し最終制限ポップアップを確認',
+    (tester) async {
+      // テスト終了時に必ずリセット
+      addTearDown(() => setTrialModeForTest(enabled: false));
+      setTrialModeForTest(enabled: true);
+
+      // 体験版テスト用: dashboardプロバイダーのみモックし、
+      // 夢/目標プロバイダーは実DBを使用してカウントを追跡する
+      final prefs = await SharedPreferences.getInstance();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            sharedPreferencesProvider.overrideWithValue(prefs),
+            databaseProvider.overrideWithValue(db),
+            remoteConfigProvider.overrideWithValue(UserConfig.defaultConfig),
+            todayStudyProvider.overrideWith(
+              (ref) async => const TodayStudyData(
+                totalMinutes: 0,
+                sessionCount: 0,
+                studied: false,
+              ),
+            ),
+            streakProvider.overrideWith(
+              (ref) async => const StreakData(
+                currentStreak: 0,
+                longestStreak: 0,
+                studiedToday: false,
+              ),
+            ),
+            personalRecordProvider.overrideWith(
+              (ref) async => const PersonalRecordData(
+                bestDayMinutes: 0,
+                bestWeekMinutes: 0,
+                longestStreak: 0,
+                totalHours: 0,
+                totalStudyDays: 0,
+              ),
+            ),
+            consistencyProvider.overrideWith(
+              (ref) async => const ConsistencyData(
+                thisWeekDays: 0,
+                thisWeekTotal: 7,
+                thisWeekMinutes: 0,
+                thisMonthDays: 0,
+                thisMonthTotal: 30,
+                thisMonthMinutes: 0,
+                overallRate: 0,
+                overallStudyDays: 0,
+                overallTotalDays: 0,
+              ),
+            ),
+            bookshelfProvider.overrideWith(
+              (ref) async => const BookshelfData(
+                totalCount: 0,
+                completedCount: 0,
+                readingCount: 0,
+                recentCompleted: [],
+              ),
+            ),
+            dreamCountProvider.overrideWith((ref) async => 0),
+            goalCountProvider.overrideWith((ref) async => 0),
+            unreadCountProvider.overrideWith((ref) async => 0),
+            allNotificationsProvider.overrideWith((ref) async => []),
+            dailyActivityProvider.overrideWith(
+              (ref) async => DailyActivityData(
+                days: const [],
+                maxMinutes: 0,
+                periodStart: DateTime(2026),
+                periodEnd: DateTime(2026),
+              ),
+            ),
+            allLogsProvider.overrideWith((ref) async => []),
+            ganttTasksProvider.overrideWith((ref) async => <Task>[]),
+            ganttGoalListProvider.overrideWith((ref) async => <Goal>[]),
+            goalStatsProvider
+                .overrideWith((ref) async => <GoalStatsDisplayData>[]),
+            bookStatsProvider
+                .overrideWith((ref) async => <GoalStatsDisplayData>[]),
+            milestoneDataProvider.overrideWith(
+              (ref) async => const MilestoneData(
+                totalHours: 0,
+                studyDays: 0,
+                currentStreak: 0,
+                achieved: [],
+              ),
+            ),
+            constellationProgressProvider.overrideWith(
+              (ref) async => const ConstellationOverallProgress(
+                constellations: [],
+                totalMinutes: 0,
+                totalLitStars: 0,
+                totalStars: 0,
+              ),
+            ),
+            activityChartProvider.overrideWith(
+              (ref) async => ActivityChartData(
+                buckets: const [],
+                maxMinutes: 0,
+                periodType: ActivityPeriodType.monthly,
+              ),
+            ),
+          ],
+          child: const YumeLogApp(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // 夢ページへ移動
+      await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+      await tester.pumpAndSettle();
+      expect(find.text('夢がまだありません'), findsOneWidget);
+
+      // ── 初期状態（レベル0: 夢1個まで）──────────────────────────────────
+      // 夢1個目を追加（制限内）
+      await addDream(tester, 'テスト夢1');
+      expect(find.text('テスト夢1'), findsOneWidget);
+
+      // ── 1回目: 制限ポップアップ → フィードバック送信 ─────────────────────
+      // 夢2個目を追加しようとすると制限ポップアップが表示される（1/1）
+      await tester.tap(find.text('夢を追加'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('夢の上限に達しました'), findsOneWidget);
+      expect(find.text('フィードバックを送信'), findsOneWidget);
+
+      // フィードバックを送信してレベル1に解除
+      await tester.tap(find.text('フィードバックを送信'));
+      await tester.pumpAndSettle();
+
+      const feedback1 =
+          'テスト用フィードバック（1回目）: このアプリは夢の実現を支援するための優れたツールです。'
+          '目標管理とタスク管理の連携が特に便利で、日々の学習計画を立てやすくなっています。'
+          'さらなる改善として、リマインダー機能の充実や統計グラフの多様化を期待しています。';
+
+      await submitFeedback(tester, feedback1);
+
+      // 送信成功スナックバー確認（レベル1へ解除）
+      expect(find.textContaining('レベル1に解除'), findsOneWidget);
+
+      // ── レベル1（夢2個まで）: 夢2個目を追加 ──────────────────────────────
+      await addDream(tester, 'テスト夢2');
+      expect(find.text('テスト夢2'), findsOneWidget);
+
+      // ── 2回目: 制限ポップアップ → フィードバック送信 ─────────────────────
+      // 夢3個目を追加しようとすると制限ポップアップが表示される（2/2）
+      await tester.tap(find.text('夢を追加'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('夢の上限に達しました'), findsOneWidget);
+      expect(find.text('フィードバックを送信'), findsOneWidget);
+
+      await tester.tap(find.text('フィードバックを送信'));
+      await tester.pumpAndSettle();
+
+      const feedback2 =
+          'テスト用フィードバック（2回目）: ダッシュボードの統計表示が非常に参考になります。'
+          '学習時間の推移が一目でわかり、モチベーション維持に役立っています。'
+          'ガントチャート機能との連携があると学習計画をより効率的に管理できると思います。';
+
+      await submitFeedback(tester, feedback2);
+
+      // 送信成功スナックバー確認（レベル2へ解除）
+      expect(find.textContaining('レベル2に解除'), findsOneWidget);
+
+      // ── レベル2（夢3個まで）: 夢3個目を追加 ──────────────────────────────
+      await addDream(tester, 'テスト夢3');
+      expect(find.text('テスト夢3'), findsOneWidget);
+
+      // ── 最終確認: フィードバック上限到達の制限ポップアップが表示される ────
+      // 夢4個目を追加しようとすると制限ポップアップが表示される（3/3、レベル2上限）
+      await tester.tap(find.text('夢を追加'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('夢の上限に達しました'), findsOneWidget);
+      // フィードバック上限到達のため、課金プランへの誘導ボタンが表示される
+      expect(find.text('無制限プランを見る'), findsOneWidget);
+    },
+  );
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 目標 CRUD テスト
+  // ─────────────────────────────────────────────────────────────────────────
+
+  testWidgets('目標を追加できる', (tester) async {
+    await tester.pumpWidget(await buildRealApp());
+    await tester.pumpAndSettle();
+
+    // 夢を先に登録
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+    await tester.pumpAndSettle();
+    await addDream(tester, '夢テスト');
+
+    // 目標ページへ移動
+    await tester.tap(find.byIcon(Icons.flag_outlined));
+    await tester.pumpAndSettle();
+
+    // 目標を追加
+    await addGoal(tester, 'テスト追加目標');
+
+    // 追加した目標が一覧に表示される
+    expect(find.text('テスト追加目標'), findsOneWidget);
+  });
+
+  testWidgets('目標を編集できる', (tester) async {
+    await tester.pumpWidget(await buildRealApp());
+    await tester.pumpAndSettle();
+
+    // 夢と目標を追加
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+    await tester.pumpAndSettle();
+    await addDream(tester, '夢テスト');
+    await tester.tap(find.byIcon(Icons.flag_outlined));
+    await tester.pumpAndSettle();
+    await addGoal(tester, '編集前の目標');
+    expect(find.text('編集前の目標'), findsOneWidget);
+
+    // PopupMenuから編集を選択
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('編集'));
+    await tester.pumpAndSettle();
+    expect(find.text('目標を編集'), findsOneWidget);
+
+    // Whatフィールドを書き換え（インデックス0: What）
+    await tester.enterText(find.byType(TextFormField).first, '編集後の目標');
+    await tester.pumpAndSettle();
+
+    // 更新
+    await tester.tap(find.text('更新'));
+    await tester.pumpAndSettle();
+
+    // 更新後のテキストが表示され、古いテキストが消える
+    expect(find.text('編集後の目標'), findsOneWidget);
+    expect(find.text('編集前の目標'), findsNothing);
+  });
+
+  testWidgets('目標を削除できる', (tester) async {
+    await tester.pumpWidget(await buildRealApp());
+    await tester.pumpAndSettle();
+
+    // 夢と目標を追加
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+    await tester.pumpAndSettle();
+    await addDream(tester, '夢テスト');
+    await tester.tap(find.byIcon(Icons.flag_outlined));
+    await tester.pumpAndSettle();
+    await addGoal(tester, '削除対象の目標');
+    expect(find.text('削除対象の目標'), findsOneWidget);
+
+    // PopupMenuから削除を選択
+    await tester.tap(find.byIcon(Icons.more_vert));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('削除'));
+    await tester.pumpAndSettle();
+    expect(find.text('目標を削除'), findsOneWidget);
+
+    // 削除を確認
+    await tester.tap(
+      find.widgetWithText(ElevatedButton, '削除'),
+    );
+    await tester.pumpAndSettle();
+
+    // 目標が削除されて空状態が表示される
+    expect(find.text('削除対象の目標'), findsNothing);
+    expect(find.text('目標がまだありません'), findsOneWidget);
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // タスク CRUD テスト（ガントチャート経由）
+  // ─────────────────────────────────────────────────────────────────────────
+
+  testWidgets('タスクを追加できる', (tester) async {
+    await tester.pumpWidget(await buildRealApp());
+    await tester.pumpAndSettle();
+
+    // 夢と目標を追加
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+    await tester.pumpAndSettle();
+    await addDream(tester, '夢テスト');
+    await tester.tap(find.byIcon(Icons.flag_outlined));
+    await tester.pumpAndSettle();
+    await addGoal(tester, 'タスク用目標');
+
+    // ドロワー経由でガントチャートへ移動
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ガントチャート'));
+    await tester.pumpAndSettle();
+
+    // 目標ドロップダウンで目標を選択
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('タスク用目標').last);
+    await tester.pumpAndSettle();
+
+    // 「タスクを追加」ボタンが表示される
+    expect(find.text('タスクを追加'), findsOneWidget);
+
+    // タスクを追加
+    await addTask(tester, 'テスト追加タスク');
+
+    // ガントチャートが表示される（空状態が消える）
+    expect(find.text('タスクがありません'), findsNothing);
+  });
+
+  testWidgets('タスクを編集できる', (tester) async {
+    await tester.pumpWidget(await buildRealApp());
+    await tester.pumpAndSettle();
+
+    // 夢・目標・タスクを追加
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+    await tester.pumpAndSettle();
+    await addDream(tester, '夢テスト');
+    await tester.tap(find.byIcon(Icons.flag_outlined));
+    await tester.pumpAndSettle();
+    await addGoal(tester, 'タスク用目標');
+
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ガントチャート'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('タスク用目標').last);
+    await tester.pumpAndSettle();
+
+    await addTask(tester, '編集前タスク');
+
+    // ガントチャート上の行0をタップして編集ダイアログを開く
+    final customPaint = find.byType(CustomPaint).last;
+    final chartRect = tester.getRect(customPaint);
+    // headerHeight=70, rowHeight=40 → 行0中央 y=90
+    await tester.tapAt(Offset(chartRect.left + 100, chartRect.top + 90));
+    await tester.pumpAndSettle();
+
+    // 編集ダイアログが開く
+    expect(find.text('タスクを編集'), findsOneWidget);
+
+    // タスク名フィールドを更新
+    await tester.enterText(find.byType(TextFormField).first, '編集後タスク');
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('更新'));
+    await tester.pumpAndSettle();
+
+    // ダイアログが閉じてチャートが再描画される（エラーなく完了）
+    expect(find.text('タスクを編集'), findsNothing);
+  });
+
+  testWidgets('タスクを削除できる', (tester) async {
+    await tester.pumpWidget(await buildRealApp());
+    await tester.pumpAndSettle();
+
+    // 夢・目標・タスクを追加
+    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
+    await tester.pumpAndSettle();
+    await addDream(tester, '夢テスト');
+    await tester.tap(find.byIcon(Icons.flag_outlined));
+    await tester.pumpAndSettle();
+    await addGoal(tester, 'タスク用目標');
+
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('ガントチャート'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byType(DropdownButton<String>));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('タスク用目標').last);
+    await tester.pumpAndSettle();
+
+    await addTask(tester, '削除対象タスク');
+
+    // ガントチャート上の行0をタップして編集ダイアログを開く
+    final customPaint = find.byType(CustomPaint).last;
+    final chartRect = tester.getRect(customPaint);
+    await tester.tapAt(Offset(chartRect.left + 100, chartRect.top + 90));
+    await tester.pumpAndSettle();
+
+    expect(find.text('タスクを編集'), findsOneWidget);
+
+    // 削除ボタンをタップ
+    await tester.tap(find.widgetWithText(TextButton, '削除'));
+    await tester.pumpAndSettle();
+
+    // 削除確認ダイアログ
+    expect(find.text('タスクを削除'), findsOneWidget);
+    await tester.tap(find.widgetWithText(ElevatedButton, '削除'));
+    await tester.pumpAndSettle();
+
+    // タスクが削除されて空状態が表示される
+    expect(find.text('タスクがありません'), findsOneWidget);
   });
 }

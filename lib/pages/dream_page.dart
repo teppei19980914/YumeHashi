@@ -142,6 +142,7 @@ class DreamPage extends ConsumerWidget {
           maxCount: maxDreams(level),
           feedbackService: ref.read(feedbackServiceProvider),
         );
+        ref.invalidate(feedbackServiceProvider);
         return;
       }
     }

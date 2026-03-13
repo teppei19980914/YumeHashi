@@ -2,6 +2,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yume_log/services/trial_limit_service.dart';
 
 void main() {
+  // setTrialModeForTest が呼ばれた場合に確実にリセットする
+  tearDown(() => setTrialModeForTest(enabled: false));
+
   // テスト環境では kIsWeb == false なので isTrialMode は常に false
   group('TrialLimitService (非Web環境)', () {
     test('isTrialMode はテスト環境で false', () {

@@ -231,6 +231,7 @@ class GanttPage extends ConsumerWidget {
           maxCount: maxTasksPerGoal(level),
           feedbackService: ref.read(feedbackServiceProvider),
         );
+        ref.invalidate(feedbackServiceProvider);
         return;
       }
     }

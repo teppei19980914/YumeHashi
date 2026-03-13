@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/goal.dart';
 import '../models/task.dart';
-import '../services/book_gantt_service.dart' show bookGanttGoalId;
 import 'service_providers.dart';
 
 /// ガントチャートの表示モード.

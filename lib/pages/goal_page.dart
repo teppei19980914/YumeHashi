@@ -150,6 +150,7 @@ class GoalPage extends ConsumerWidget {
           maxCount: totalMax,
           feedbackService: ref.read(feedbackServiceProvider),
         );
+        ref.invalidate(feedbackServiceProvider);
         return;
       }
     }

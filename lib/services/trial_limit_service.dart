@@ -6,9 +6,20 @@
 /// プレミアム機能（ガントチャート・高度な統計等）はネイティブ版専用.
 library;
 
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 
 import 'feedback_service.dart';
+
+/// テスト用トライアルモード上書きフラグ（本番では常にfalse）.
+bool _testTrialMode = false;
+
+/// テスト用にトライアルモードを強制有効化する.
+///
+/// テスト環境でのみ使用する。本番コードでは呼び出してはならない.
+@visibleForTesting
+void setTrialModeForTest({required bool enabled}) {
+  _testTrialMode = enabled;
+}
 
 /// レベル別の制限値.
 ///
@@ -56,7 +67,7 @@ int get trialMaxTasksPerGoal => _levelLimits[0]!.tasksPerGoal;
 int get trialMaxBooks => _levelLimits[0]!.books;
 
 /// Web体験版かどうか.
-bool get isTrialMode => kIsWeb;
+bool get isTrialMode => kIsWeb || _testTrialMode;
 
 /// プレミアム機能が利用可能かどうか.
 ///

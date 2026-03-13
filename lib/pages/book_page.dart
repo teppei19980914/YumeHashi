@@ -50,6 +50,7 @@ class _BookPageState extends ConsumerState<BookPage> {
         maxCount: maxBooks(level),
         feedbackService: ref.read(feedbackServiceProvider),
       );
+      ref.invalidate(feedbackServiceProvider);
       return;
     }
 
