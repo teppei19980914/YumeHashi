@@ -158,6 +158,25 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
               ),
               const SizedBox(height: 8),
 
+              // 匿名性の注記
+              Row(
+                children: [
+                  Icon(Icons.shield_outlined,
+                      size: 14, color: theme.hintColor),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'フィードバックは匿名で送信されます。'
+                      '個人を特定する情報は含まれません。',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
               // 文字数プログレスバー
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),

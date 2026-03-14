@@ -23,6 +23,7 @@ import '../theme/app_theme.dart';
 import '../widgets/gantt/gantt_chart.dart';
 import '../widgets/premium/premium_gate.dart';
 import '../widgets/tutorial/tutorial_banner.dart';
+import '../widgets/tutorial/tutorial_target_keys.dart';
 
 /// ガントチャートページ.
 class GanttPage extends ConsumerWidget {
@@ -85,6 +86,7 @@ class GanttPage extends ConsumerWidget {
               if (viewState.mode == GanttViewMode.byGoal &&
                   viewState.selectedGoalId != null)
                 ElevatedButton.icon(
+                  key: TutorialTargetKeys.addTaskButton,
                   onPressed: () => _addTask(
                     context,
                     ref,
@@ -527,6 +529,7 @@ class _ViewSelector extends StatelessWidget {
     }
 
     return DropdownButton<String>(
+      key: TutorialTargetKeys.ganttDropdown,
       value: currentValue,
       items: items,
       onChanged: (value) {

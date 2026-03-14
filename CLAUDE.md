@@ -40,6 +40,15 @@
 - テストコードの追加・修正を伴わないソースコード変更はコミットしない
 - コミットメッセージは変更内容を端的に記述する
 
+## デプロイ検証ルール
+
+実装修正時は毎回以下のデプロイ検証を実施すること:
+
+1. **`flutter analyze`** をローカルで実行し、静的解析エラーが0件であることを確認する
+2. **インテグレーションテストへの影響確認**: UI変更時は `integration_test/app_test.dart` のテストが既存のFinderやナビゲーションフローに影響しないか確認する
+3. **GoRouterシングルトン注意**: `app.dart` の `_router` はモジュールレベルシングルトンのため、テスト間でルート状態が漏洩する。インテグレーションテストでは `NavigationDestination` のインデックスまたはドロワー経由のナビゲーションを使用し、アイコンによる直接検索を避ける
+4. **AppDrawerアイコン重複注意**: AppDrawerはScaffoldのwidgetツリーに常に存在するため、`find.byIcon()` でNavigationBarとAppDrawerの両方にマッチする。NavigationBar限定の検索には `find.descendant(of: find.byType(NavigationBar), ...)` を使用する
+
 ## テストルール
 
 - 全てのソースコード (生成コード・UI の catch 句等を除く) がテスト対象

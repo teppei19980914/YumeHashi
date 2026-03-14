@@ -17,6 +17,7 @@ import '../services/trial_limit_service.dart';
 import '../services/tutorial_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/tutorial/tutorial_banner.dart';
+import '../widgets/tutorial/tutorial_target_keys.dart';
 
 /// 夢ページ.
 class DreamPage extends ConsumerWidget {
@@ -48,6 +49,7 @@ class DreamPage extends ConsumerWidget {
               ),
               const SizedBox(width: 16),
               ElevatedButton.icon(
+                key: TutorialTargetKeys.addDreamButton,
                 onPressed: () => _addDream(context, ref),
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('夢を追加'),

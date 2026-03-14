@@ -6,6 +6,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../tutorial/tutorial_target_keys.dart';
+
 /// ナビゲーション項目の定義.
 class NavItem {
   /// NavItemを作成する.
@@ -114,6 +116,9 @@ class AppDrawer extends StatelessWidget {
               children: [
                 for (final item in navItems)
                   _NavTile(
+                    key: item.path == '/gantt'
+                        ? TutorialTargetKeys.ganttDrawerItem
+                        : null,
                     item: item,
                     selected: currentPath == item.path,
                     onTap: () => _navigate(context, item.path, currentPath),
@@ -145,6 +150,7 @@ class AppDrawer extends StatelessWidget {
 
 class _NavTile extends StatelessWidget {
   const _NavTile({
+    super.key,
     required this.item,
     required this.selected,
     required this.onTap,

@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 
 import '../models/dream.dart';
 import '../models/goal.dart';
+import '../widgets/tutorial/tutorial_target_keys.dart';
 
 /// GoalDialog の入力結果.
 class GoalDialogResult {
@@ -285,6 +286,7 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
           child: const Text('キャンセル'),
         ),
         ElevatedButton(
+          key: _isEdit ? null : TutorialTargetKeys.goalDialogSubmit,
           onPressed: _submit,
           child: Text(_isEdit ? '更新' : '追加'),
         ),

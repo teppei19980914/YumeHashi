@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../models/dream.dart';
+import '../widgets/tutorial/tutorial_target_keys.dart';
 
 /// DreamDialog の入力結果.
 class DreamDialogResult {
@@ -150,6 +151,7 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
           child: const Text('キャンセル'),
         ),
         ElevatedButton(
+          key: _isEdit ? null : TutorialTargetKeys.dreamDialogSubmit,
           onPressed: _submit,
           child: Text(_isEdit ? '更新' : '追加'),
         ),

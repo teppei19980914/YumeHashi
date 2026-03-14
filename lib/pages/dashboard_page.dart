@@ -41,17 +41,48 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final colors = theme.appColors;
     final prefs = ref.watch(sharedPreferencesProvider);
 
-    // Web体験版の初回ダイアログ表示 → チュートリアル自動開始
+    // Web体験版の初回ダイアログ表示 → チュートリアル確認
     if (!_webDialogChecked) {
       _webDialogChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
         final shown = await showWebTrialDialogIfNeeded(context, prefs);
-        if (!shown || !mounted) return;
-        // 初回表示後、チュートリアルを自動開始
-        final tutorialState = ref.read(tutorialStateProvider);
-        if (!tutorialState.isActive) {
-          await ref.read(tutorialStateProvider.notifier).start();
+        if (!shown || !context.mounted) return;
+
+        // チュートリアル実行の確認ダイアログ
+        final wantTutorial = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Row(
+              children: [
+                Icon(Icons.school, size: 24),
+                SizedBox(width: 8),
+                Text('アプリの使い方'),
+              ],
+            ),
+            content: const Text(
+              'アプリの基本的な使い方を説明しますか？\n'
+              '実際の操作を通じて、夢・目標・タスクの登録方法を体験できます。',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('いいえ'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: const Text('はい'),
+              ),
+            ],
+          ),
+        );
+
+        if (wantTutorial == true && mounted) {
+          final tutorialState = ref.read(tutorialStateProvider);
+          if (!tutorialState.isActive) {
+            await ref.read(tutorialStateProvider.notifier).start();
+          }
         }
       });
     }
@@ -890,7 +921,8 @@ class _ConstellationPreviewContent extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 4),
-            Expanded(
+            SizedBox(
+              height: 120,
               child: Container(
                 decoration: BoxDecoration(
                   color: isDark

@@ -165,7 +165,8 @@ Future<void> _showTrialDialog(
           Text('Web体験版について'),
         ],
       ),
-      content: Column(
+      content: SingleChildScrollView(
+        child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -174,6 +175,14 @@ Future<void> _showTrialDialog(
             '機能をお試しいただけます。',
           ),
           const SizedBox(height: 16),
+          const _NoticeItem(
+            icon: Icons.shield_outlined,
+            text: '完全匿名でご利用いただけます。\n'
+                'ユーザー登録・ログインは不要です。入力したデータは全て'
+                'お使いのブラウザ内にのみ保存され、開発者を含む第三者に'
+                '送信・公開されることはありません。',
+          ),
+          const SizedBox(height: 8),
           const _NoticeItem(
             icon: Icons.warning_amber_outlined,
             text: 'ブラウザのキャッシュ/データを削除すると、'
@@ -212,6 +221,7 @@ Future<void> _showTrialDialog(
             ),
           ),
         ],
+      ),
       ),
       actions: [
         FilledButton(

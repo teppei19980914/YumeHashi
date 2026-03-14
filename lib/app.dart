@@ -22,7 +22,10 @@ import 'theme/app_theme.dart';
 import 'widgets/navigation/app_drawer.dart';
 import 'widgets/milestone/milestone_button.dart';
 import 'widgets/notification/notification_button.dart';
+import 'services/tutorial_service.dart';
 import 'widgets/tutorial/tutorial_banner.dart';
+import 'widgets/tutorial/tutorial_overlay.dart';
+import 'widgets/tutorial/tutorial_target_keys.dart';
 
 /// ページタイトルマップ.
 const _pageTitles = <String, String>{
@@ -38,6 +41,7 @@ const _pageTitles = <String, String>{
 
 /// go_routerの設定.
 final _router = GoRouter(
+  navigatorKey: TutorialTargetKeys.navigatorKey,
   initialLocation: '/',
   routes: [
     ShellRoute(
@@ -82,6 +86,13 @@ class YumeLogApp extends ConsumerWidget {
       themeMode:
           themeType == ThemeType.dark ? ThemeMode.dark : ThemeMode.light,
       routerConfig: _router,
+      // ステータスバー+完了ダイアログをNavigatorの上に配置
+      builder: (context, child) => Stack(
+        children: [
+          child!,
+          const TutorialOverlay(),
+        ],
+      ),
     );
   }
 }
@@ -128,6 +139,26 @@ class _AppShell extends ConsumerStatefulWidget {
 class _AppShellState extends ConsumerState<_AppShell> {
   bool _resetChecked = false;
 
+  /// ルート変更を検知してチュートリアルステップを自動進行する.
+  void _checkTutorialRouteAdvance(TutorialStep step) {
+    final path = GoRouterState.of(context).uri.path;
+
+    const routeMap = {
+      TutorialStep.goToDreams: '/dreams',
+      TutorialStep.goToGoals: '/goals',
+      TutorialStep.goToGantt: '/gantt',
+    };
+
+    final expectedPath = routeMap[step];
+    if (expectedPath != null && path == expectedPath) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(tutorialStateProvider.notifier).advanceStep();
+        }
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // resetOnAccess: データベースリセット処理（どのルートでも実行）
@@ -144,33 +175,43 @@ class _AppShellState extends ConsumerState<_AppShell> {
       }
     }
 
+    // チュートリアル: ルート変更を検知してステップを自動進行
+    final tutorialState = ref.watch(tutorialStateProvider);
+    if (tutorialState.isActive) {
+      _checkTutorialRouteAdvance(tutorialState.step);
+    }
+
     final selectedIndex = _bottomNavItems
         .indexWhere((item) => item.path == widget.currentPath);
     final hasBottomNav = selectedIndex >= 0;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-            tooltip: 'メニュー',
+    // NavigationDestination にチュートリアル用 GlobalKey を付与
+    final navKeyMap = <String, GlobalKey>{
+      '/dreams': TutorialTargetKeys.dreamTab,
+      '/goals': TutorialTargetKeys.goalTab,
+    };
+
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: Text(widget.title),
+            leading: Builder(
+              builder: (context) => IconButton(
+                key: TutorialTargetKeys.menuButton,
+                icon: const Icon(Icons.menu),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                tooltip: 'メニュー',
+              ),
+            ),
+            actions: const [
+              MilestoneButton(),
+              NotificationButton(),
+            ],
           ),
-        ),
-        actions: const [
-          MilestoneButton(),
-          NotificationButton(),
-        ],
-      ),
-      drawer: const AppDrawer(),
-      body: Column(
-        children: [
-          const TutorialBanner(),
-          Expanded(child: widget.child),
-        ],
-      ),
-      bottomNavigationBar: hasBottomNav
+          drawer: const AppDrawer(),
+          body: widget.child,
+          bottomNavigationBar: hasBottomNav
           ? NavigationBar(
               selectedIndex: selectedIndex,
               onDestinationSelected: (index) =>
@@ -178,6 +219,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
               destinations: [
                 for (final item in _bottomNavItems)
                   NavigationDestination(
+                    key: navKeyMap[item.path],
                     icon: Icon(item.icon),
                     selectedIcon: Icon(item.activeIcon),
                     label: item.label,
@@ -185,6 +227,10 @@ class _AppShellState extends ConsumerState<_AppShell> {
               ],
             )
           : null,
+        ),
+        // グレーアウト+スポットライト（Scaffoldの上、ダイアログの下に表示）
+        const TutorialSpotlight(),
+      ],
     );
   }
 }

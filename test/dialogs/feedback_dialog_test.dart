@@ -102,4 +102,13 @@ void main() {
     expect(find.textContaining('レベル1に解除されます'), findsOneWidget);
     expect(find.textContaining('現在: レベル0'), findsOneWidget);
   });
+
+  testWidgets('匿名送信の注記が表示される', (tester) async {
+    await tester.pumpWidget(wrap());
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('匿名で送信されます'), findsOneWidget);
+    expect(find.byIcon(Icons.shield_outlined), findsOneWidget);
+  });
 }

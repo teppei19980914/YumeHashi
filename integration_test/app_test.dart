@@ -417,6 +417,39 @@ void main() {
     );
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // ヘルパー: ボトムナビゲーションタブをインデックスでタップする.
+  // AppDrawerにも同じアイコンが存在するため、アイコン検索ではなく
+  // NavigationDestination のインデックスでタップする.
+  // 0=ホーム, 1=夢, 2=目標, 3=統計
+  // ─────────────────────────────────────────────────────────────────────────
+  Future<void> tapBottomNav(WidgetTester tester, int index) async {
+    await tester.tap(find.byType(NavigationDestination).at(index));
+    await tester.pumpAndSettle();
+  }
+
+  /// ドロワー経由でページに移動するヘルパー.
+  ///
+  /// GoRouterシングルトンの状態に依存せず、どのページからでも遷移できる.
+  /// ボトムナビゲーションが無いページ（ガントチャート等）からも安全に遷移可能.
+  Future<void> navigateViaDrawer(WidgetTester tester, String label) async {
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(
+      of: find.byType(Drawer),
+      matching: find.text(label),
+    ));
+    await tester.pumpAndSettle();
+  }
+
+  /// NavigationBar 内のアイコンを検索するヘルパー（AppDrawerの重複を除外）.
+  Finder findNavBarIcon(IconData icon) {
+    return find.descendant(
+      of: find.byType(NavigationBar),
+      matching: find.byIcon(icon),
+    );
+  }
+
   // GoRouterはモジュールレベルのシングルトンのため、全ナビゲーションを1テストで実行する.
   testWidgets('アプリ全体のUIナビゲーションフロー', (tester) async {
     await tester.pumpWidget(await buildApp());
@@ -425,11 +458,12 @@ void main() {
     // ─── ダッシュボード ───────────────────────────────
     expect(find.text('ダッシュボード'), findsOneWidget);
 
-    // ボトムナビゲーション4タブが表示される
-    expect(find.byIcon(Icons.home), findsOneWidget); // active home
-    expect(find.byIcon(Icons.auto_awesome_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.flag_outlined), findsOneWidget);
-    expect(find.byIcon(Icons.bar_chart_outlined), findsOneWidget);
+    // ボトムナビゲーション4タブが表示される（AppDrawerにも同アイコンがあるため
+    // NavigationBar 内に限定して検索）
+    expect(findNavBarIcon(Icons.home), findsOneWidget); // active home
+    expect(findNavBarIcon(Icons.auto_awesome_outlined), findsOneWidget);
+    expect(findNavBarIcon(Icons.flag_outlined), findsOneWidget);
+    expect(findNavBarIcon(Icons.bar_chart_outlined), findsOneWidget);
 
     // 今日の活動バナーが表示される
     expect(find.text('今日は活動済み!'), findsOneWidget);
@@ -446,27 +480,23 @@ void main() {
     expect(find.byIcon(Icons.tune_outlined), findsOneWidget);
 
     // ─── 夢ページ ───────────────────────────────────
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 1);
     expect(find.text('夢がまだありません'), findsOneWidget);
     // 夢を追加ボタンが表示される
     expect(find.text('夢を追加'), findsOneWidget);
 
     // ─── 目標ページ ──────────────────────────────────
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 2);
     expect(find.text('目標がまだありません'), findsOneWidget);
     // 目標を追加ボタンが表示される
     expect(find.text('目標を追加'), findsOneWidget);
 
     // ─── 統計ページ ──────────────────────────────────
-    await tester.tap(find.byIcon(Icons.bar_chart_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 3);
     expect(find.text('統計'), findsOneWidget);
 
     // ─── ホームへ戻る ────────────────────────────────
-    await tester.tap(find.byIcon(Icons.home_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 0);
     expect(find.text('ダッシュボード'), findsOneWidget);
   });
 
@@ -514,8 +544,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 夢ページへ移動
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 1);
 
     // 夢カードが表示される
     expect(find.text('テスト夢'), findsOneWidget);
@@ -538,8 +567,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 夢ページへ移動
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 1);
 
     // PopupMenuを開く
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -565,8 +593,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 目標ページへ移動
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 2);
 
     // 目標カードが表示される
     expect(find.text('テスト目標'), findsOneWidget);
@@ -589,8 +616,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 目標ページへ移動
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 2);
 
     // PopupMenuを開く
     await tester.tap(find.byIcon(Icons.more_vert));
@@ -615,8 +641,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 統計ページへ移動
-    await tester.tap(find.byIcon(Icons.bar_chart_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 3);
 
     // アクティビティセクションまでスクロール
     await tester.scrollUntilVisible(
@@ -862,8 +887,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 夢ページへ移動
-      await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-      await tester.pumpAndSettle();
+      await tapBottomNav(tester, 1);
       expect(find.text('夢がまだありません'), findsOneWidget);
 
       // ── 初期状態（レベル0: 夢1個まで）──────────────────────────────────
@@ -942,13 +966,11 @@ void main() {
     await tester.pumpAndSettle();
 
     // 夢を先に登録
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 1);
     await addDream(tester, '夢テスト');
 
     // 目標ページへ移動
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 2);
 
     // 目標を追加
     await addGoal(tester, 'テスト追加目標');
@@ -962,11 +984,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // 夢と目標を追加
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 1);
     await addDream(tester, '夢テスト');
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 2);
     await addGoal(tester, '編集前の目標');
     expect(find.text('編集前の目標'), findsOneWidget);
 
@@ -995,11 +1015,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // 夢と目標を追加
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 1);
     await addDream(tester, '夢テスト');
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await tapBottomNav(tester, 2);
     await addGoal(tester, '削除対象の目標');
     expect(find.text('削除対象の目標'), findsOneWidget);
 
@@ -1030,18 +1048,13 @@ void main() {
     await tester.pumpAndSettle();
 
     // 夢と目標を追加
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    await navigateViaDrawer(tester, '夢');
     await addDream(tester, '夢テスト');
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await navigateViaDrawer(tester, '目標');
     await addGoal(tester, 'タスク用目標');
 
     // ドロワー経由でガントチャートへ移動
-    await tester.tap(find.byIcon(Icons.menu));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('ガントチャート'));
-    await tester.pumpAndSettle();
+    await navigateViaDrawer(tester, 'ガントチャート');
 
     // 目標ドロップダウンで目標を選択
     await tester.tap(find.byType(DropdownButton<String>));
@@ -1063,18 +1076,14 @@ void main() {
     await tester.pumpWidget(await buildRealApp());
     await tester.pumpAndSettle();
 
-    // 夢・目標・タスクを追加
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    // 夢・目標・タスクを追加（GoRouterが/ganttに残っている可能性があるため
+    // ドロワー経由で遷移する）
+    await navigateViaDrawer(tester, '夢');
     await addDream(tester, '夢テスト');
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await navigateViaDrawer(tester, '目標');
     await addGoal(tester, 'タスク用目標');
 
-    await tester.tap(find.byIcon(Icons.menu));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('ガントチャート'));
-    await tester.pumpAndSettle();
+    await navigateViaDrawer(tester, 'ガントチャート');
 
     await tester.tap(find.byType(DropdownButton<String>));
     await tester.pumpAndSettle();
@@ -1108,18 +1117,14 @@ void main() {
     await tester.pumpWidget(await buildRealApp());
     await tester.pumpAndSettle();
 
-    // 夢・目標・タスクを追加
-    await tester.tap(find.byIcon(Icons.auto_awesome_outlined));
-    await tester.pumpAndSettle();
+    // 夢・目標・タスクを追加（GoRouterが/ganttに残っている可能性があるため
+    // ドロワー経由で遷移する）
+    await navigateViaDrawer(tester, '夢');
     await addDream(tester, '夢テスト');
-    await tester.tap(find.byIcon(Icons.flag_outlined));
-    await tester.pumpAndSettle();
+    await navigateViaDrawer(tester, '目標');
     await addGoal(tester, 'タスク用目標');
 
-    await tester.tap(find.byIcon(Icons.menu));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('ガントチャート'));
-    await tester.pumpAndSettle();
+    await navigateViaDrawer(tester, 'ガントチャート');
 
     await tester.tap(find.byType(DropdownButton<String>));
     await tester.pumpAndSettle();
