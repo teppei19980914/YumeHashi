@@ -287,7 +287,7 @@ void main() {
         findsOneWidget,
       );
       expect(
-        find.textContaining('サブスクWebアプリまたはネイティブアプリで'),
+        find.textContaining('サブスクプランにアップグレードすると'),
         findsOneWidget,
       );
     });

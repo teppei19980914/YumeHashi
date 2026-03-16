@@ -11,6 +11,8 @@ import 'providers/service_providers.dart';
 import 'providers/theme_provider.dart';
 import 'services/invite_service.dart';
 import 'services/remote_config_service.dart';
+import 'services/stripe_service.dart';
+import 'services/trial_limit_service.dart';
 
 /// アプリケーションのエントリポイント.
 ///
@@ -40,9 +42,10 @@ Future<void> main() async {
     ),
   );
 
-  // リモート設定と招待コードを非同期で処理
+  // リモート設定・招待コード・サブスク状態を非同期で処理
   _initRemoteConfigAsync(prefs, container);
   _initInviteCodeAsync(prefs);
+  _initSubscriptionAsync(prefs);
 }
 
 /// URLキーをSharedPreferencesに保存する（同期的）.
@@ -102,6 +105,27 @@ Future<void> _initInviteCodeAsync(SharedPreferences prefs) async {
   if (inviteConfig == null) return;
 
   await inviteService.activate(inviteCode, inviteConfig);
+}
+
+/// サブスクリプション状態を非同期で処理する.
+///
+/// URLパラメータ `?subscription=success` を検出して有効化するか、
+/// 保存済みのサブスクリプション状態を復元する.
+Future<void> _initSubscriptionAsync(SharedPreferences prefs) async {
+  if (!kIsWeb) return;
+
+  final stripeService = StripeService(prefs);
+
+  // ?subscription=success パラメータの検出
+  final subscriptionParam = _getUrlParam('subscription');
+  if (subscriptionParam == 'success') {
+    await stripeService.activateSubscription();
+  }
+
+  // サブスクリプション有効ならプレミアム機能を解放
+  if (stripeService.isSubscriptionActive) {
+    setSubscriptionPremium(enabled: true);
+  }
 }
 
 /// URLのクエリパラメータを取得する.

@@ -429,7 +429,7 @@ class _TutorialSpotlightState extends ConsumerState<TutorialSpotlight>
   String _getHint(TutorialStep step, GlobalKey? targetKey) {
     if (step == TutorialStep.addTask &&
         _findTargetRectFromKey(targetKey) == null) {
-      return 'サブスクWebアプリまたはネイティブアプリで'
+      return 'サブスクプランにアップグレードすると'
           'タスク管理・進捗トラッキングなど全機能をご利用いただけます';
     }
     return step.hint;

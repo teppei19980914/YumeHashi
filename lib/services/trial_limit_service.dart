@@ -71,10 +71,10 @@ bool get isTrialMode => kIsWeb || _testTrialMode;
 
 /// プレミアム機能が利用可能かどうか.
 ///
-/// ネイティブアプリ（非Web）では常にtrue.
+/// サブスクプラン加入時はtrue.
 /// Web体験版では有料プランへのアップグレードが必要.
 /// 招待コード有効時はプロバイダ経由で判定する.
-bool get isPremium => !isTrialMode || _invitePremium;
+bool get isPremium => !isTrialMode || _invitePremium || _subscriptionPremium;
 
 /// 招待コードによるプレミアム状態（プロバイダから設定される）.
 bool _invitePremium = false;
@@ -82,6 +82,14 @@ bool _invitePremium = false;
 /// 招待コードによるプレミアム状態を設定する.
 void setInvitePremium({required bool enabled}) {
   _invitePremium = enabled;
+}
+
+/// サブスクリプションによるプレミアム状態.
+bool _subscriptionPremium = false;
+
+/// サブスクリプションによるプレミアム状態を設定する.
+void setSubscriptionPremium({required bool enabled}) {
+  _subscriptionPremium = enabled;
 }
 
 /// ガントチャート機能が利用可能か.

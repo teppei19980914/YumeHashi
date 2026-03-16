@@ -91,12 +91,12 @@ class _WebTrialBannerState extends State<WebTrialBanner> {
                           '残り${inviteStatus.remainingDays}日'
                       : isUnlimited
                           ? '基本機能の制限は完全に解除されています。'
-                              'ガントチャート等のプレミアム機能はネイティブアプリをご利用ください。'
+                              'ガントチャート等のプレミアム機能はサブスクプランをご利用ください。'
                           : '夢${maxDreams(level)}個・'
                               '目標${maxGoalsPerDream(level)}個/夢・'
                               '書籍${maxBooks(level)}冊まで'
                               '（レベル$level / $feedbackMaxLevel）。'
-                              'ガントチャート等のプレミアム機能はネイティブアプリをご利用ください。',
+                              'ガントチャート等のプレミアム機能はサブスクプランをご利用ください。',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -213,7 +213,7 @@ Future<void> _showTrialDialog(
           ),
           const SizedBox(height: 16),
           const Text(
-            'ネイティブアプリをインストールすると、ガントチャート・'
+            'サブスクプランにアップグレードすると、ガントチャート・'
             '高度な統計等のプレミアム機能も含め全機能を制限なくご利用いただけます。',
             style: TextStyle(fontWeight: FontWeight.w500),
           ),

@@ -24,20 +24,21 @@ void main() {
     expect(find.text('プレミアムプランのご案内'), findsOneWidget);
   });
 
-  testWidgets('ネイティブアプリ購入オプションが表示される', (tester) async {
+  testWidgets('サブスクプラン情報が表示される', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('ネイティブアプリ（買い切り）'), findsOneWidget);
+    expect(find.text('サブスクプラン'), findsOneWidget);
+    expect(find.text('¥480/月'), findsOneWidget);
   });
 
-  testWidgets('WebプレミアムプランのオプションTが表示される', (tester) async {
+  testWidgets('申し込みボタンが表示される', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Webプレミアムプラン（サブスク）'), findsOneWidget);
+    expect(find.text('サブスクプランに申し込む'), findsOneWidget);
   });
 
   testWidgets('プレミアム機能一覧が表示される', (tester) async {
@@ -48,21 +49,6 @@ void main() {
     expect(find.text('ガントチャート'), findsOneWidget);
     expect(find.text('Excel出力'), findsOneWidget);
     expect(find.text('目標別統計'), findsOneWidget);
-  });
-
-  testWidgets('相互独立の注意書きが表示される', (tester) async {
-    await tester.pumpWidget(buildApp());
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
-
-    expect(
-      find.textContaining('ネイティブアプリとWebプレミアムは別々のサービスです'),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('それぞれ別途ご契約が必要です'),
-      findsOneWidget,
-    );
   });
 
   testWidgets('閉じるボタンでダイアログが閉じる', (tester) async {

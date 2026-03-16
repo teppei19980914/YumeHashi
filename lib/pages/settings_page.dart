@@ -279,7 +279,7 @@ class SettingsPage extends ConsumerWidget {
           title: const Text('インポート不可'),
           content: const Text(
             'Web体験版ではデータのインポートはご利用いただけません。\n'
-            'ネイティブアプリをダウンロードしてご利用ください。',
+            'サブスクプランにアップグレードしてご利用ください。',
           ),
           actions: [
             TextButton(

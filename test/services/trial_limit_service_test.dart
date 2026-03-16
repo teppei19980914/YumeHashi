@@ -2,8 +2,12 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yume_log/services/trial_limit_service.dart';
 
 void main() {
-  // setTrialModeForTest が呼ばれた場合に確実にリセットする
-  tearDown(() => setTrialModeForTest(enabled: false));
+  // setTrialModeForTest / setSubscriptionPremium が呼ばれた場合に確実にリセットする
+  tearDown(() {
+    setTrialModeForTest(enabled: false);
+    setSubscriptionPremium(enabled: false);
+    setInvitePremium(enabled: false);
+  });
 
   // テスト環境では kIsWeb == false なので isTrialMode は常に false
   group('TrialLimitService (非Web環境)', () {
@@ -11,7 +15,7 @@ void main() {
       expect(isTrialMode, isFalse);
     });
 
-    test('isPremium はテスト環境で true（非Web=ネイティブ）', () {
+    test('isPremium はテスト環境で true（非Web）', () {
       expect(isPremium, isTrue);
     });
 
@@ -82,6 +86,31 @@ void main() {
       expect(maxGoalsPerDream(3), 999);
       expect(maxTasksPerGoal(3), 999);
       expect(maxBooks(3), 999);
+    });
+  });
+
+  group('サブスクリプションによるプレミアム解放', () {
+    test('トライアルモードでもサブスクでisPremiumがtrue', () {
+      setTrialModeForTest(enabled: true);
+      expect(isPremium, isFalse);
+
+      setSubscriptionPremium(enabled: true);
+      expect(isPremium, isTrue);
+    });
+
+    test('サブスク解除でisPremiumがfalse', () {
+      setTrialModeForTest(enabled: true);
+      setSubscriptionPremium(enabled: true);
+      expect(isPremium, isTrue);
+
+      setSubscriptionPremium(enabled: false);
+      expect(isPremium, isFalse);
+    });
+
+    test('招待コードでもisPremiumがtrue', () {
+      setTrialModeForTest(enabled: true);
+      setInvitePremium(enabled: true);
+      expect(isPremium, isTrue);
     });
   });
 

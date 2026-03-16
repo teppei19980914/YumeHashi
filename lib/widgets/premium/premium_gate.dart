@@ -2,7 +2,7 @@
 ///
 /// Web体験版ではプレミアム機能をブラーオーバーレイでロックし、
 /// アップグレードへの誘導を表示する.
-/// ネイティブアプリ（isPremium=true）では通常表示する.
+/// サブスクプラン（isPremium=true）では通常表示する.
 library;
 
 import 'dart:ui';
@@ -247,7 +247,7 @@ class _UpgradeCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'ネイティブアプリで利用できます',
+                'サブスクプランで利用できます',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
                 ),

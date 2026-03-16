@@ -2,10 +2,16 @@
 ///
 /// フィードバックによる制限解除が上限に達した後、
 /// プレミアム機能へのアップグレードを案内する.
+/// Stripe Checkout 経由でサブスクリプション契約を行う.
 library;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../services/remote_config_service.dart';
+import '../services/stripe_service.dart';
 import '../theme/app_theme.dart';
 
 /// プレミアム機能の一覧.
@@ -26,8 +32,54 @@ Future<void> showUpgradeDialog(BuildContext context) async {
   );
 }
 
-class _UpgradeDialog extends StatelessWidget {
+class _UpgradeDialog extends StatefulWidget {
   const _UpgradeDialog();
+
+  @override
+  State<_UpgradeDialog> createState() => _UpgradeDialogState();
+}
+
+class _UpgradeDialogState extends State<_UpgradeDialog> {
+  bool _isLoading = false;
+
+  Future<void> _subscribe() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stripeService = StripeService(prefs);
+      final userKey = RemoteConfigService(prefs).savedUserKey;
+      final checkoutUrl = await stripeService.createCheckoutUrl(
+        userKey: userKey,
+      );
+
+      if (!mounted) return;
+
+      if (checkoutUrl != null) {
+        final uri = Uri.parse(checkoutUrl);
+        if (kIsWeb) {
+          await launchUrl(uri, mode: LaunchMode.platformDefault);
+        } else {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+        if (mounted) Navigator.of(context).pop();
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('決済ページの取得に失敗しました。しばらく後にお試しください。')),
+          );
+        }
+      }
+    } on Exception {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('エラーが発生しました。しばらく後にお試しください。')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,66 +144,74 @@ class _UpgradeDialog extends StatelessWidget {
               const Divider(),
               const SizedBox(height: 12),
 
-              // プラン選択
-              Text(
-                'プランを選択',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // ネイティブアプリ
-              _PlanCard(
-                icon: Icons.install_desktop,
-                iconColor: colors.accent,
-                title: 'ネイティブアプリ（買い切り）',
-                description:
-                    'Windows / macOS / Android / iOS 対応。'
-                    'オフライン利用可能。全プレミアム機能が永久利用可能。',
-                badge: '買い切り',
-                badgeColor: colors.success,
-                theme: theme,
-              ),
-              const SizedBox(height: 10),
-
-              // Web有料プラン
-              _PlanCard(
-                icon: Icons.language,
-                iconColor: colors.success,
-                title: 'Webプレミアムプラン（サブスク）',
-                description:
-                    'ブラウザからそのまま全機能を利用可能。'
-                    'どのデバイスからもアクセス可能。',
-                badge: 'サブスク',
-                badgeColor: colors.accent,
-                theme: theme,
-              ),
-              const SizedBox(height: 12),
-
-              // 注意書き
+              // プラン情報
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer.withAlpha(40),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: theme.colorScheme.error.withAlpha(60),
-                  ),
+                  border: Border.all(color: colors.accent.withAlpha(80)),
+                  borderRadius: BorderRadius.circular(12),
+                  color: colors.accent.withAlpha(10),
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Column(
                   children: [
-                    Icon(Icons.info_outline,
-                        size: 18, color: theme.colorScheme.error),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'ネイティブアプリとWebプレミアムは別々のサービスです。\n'
-                        'それぞれ別途ご契約が必要です。',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.error,
+                    Row(
+                      children: [
+                        Icon(Icons.language, size: 28, color: colors.accent),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'サブスクプラン',
+                                style: theme.textTheme.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'ブラウザからそのまま全機能を利用可能',
+                                style: theme.textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.accent.withAlpha(30),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            '¥480/月',
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              color: colors.accent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: _isLoading ? null : _subscribe,
+                        icon: _isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.payment),
+                        label: Text(
+                          _isLoading ? '処理中...' : 'サブスクプランに申し込む',
                         ),
                       ),
                     ),
@@ -168,85 +228,6 @@ class _UpgradeDialog extends StatelessWidget {
           child: const Text('閉じる'),
         ),
       ],
-    );
-  }
-}
-
-/// プランカード.
-class _PlanCard extends StatelessWidget {
-  const _PlanCard({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.description,
-    required this.badge,
-    required this.badgeColor,
-    required this.theme,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String description;
-  final String badge;
-  final Color badgeColor;
-  final ThemeData theme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.dividerColor),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 28, color: iconColor),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: badgeColor.withAlpha(30),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        badge,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: badgeColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
