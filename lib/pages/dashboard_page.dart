@@ -19,6 +19,7 @@ import '../providers/service_providers.dart';
 import '../services/dashboard_layout_service.dart';
 import '../services/study_stats_types.dart';
 import '../theme/app_theme.dart';
+import '../dialogs/onboarding_dialog.dart';
 
 
 /// ダッシュボードページ.
@@ -41,11 +42,16 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final colors = theme.appColors;
     final prefs = ref.watch(sharedPreferencesProvider);
 
-    // Web体験版の初回ダイアログ表示 → チュートリアル確認
+    // 初回アクセス: オンボーディング → 体験版ダイアログ → チュートリアル確認
     if (!_webDialogChecked) {
       _webDialogChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         if (!mounted) return;
+
+        // オンボーディング（初回のみ表示）
+        await showOnboardingDialog(context, prefs);
+        if (!context.mounted) return;
+
         final shown = await showWebTrialDialogIfNeeded(context, prefs);
         if (!shown || !context.mounted) return;
 

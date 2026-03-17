@@ -424,6 +424,19 @@ void main() {
   /// GoRouterシングルトンの状態に依存せず、どのページからでも遷移できる.
   /// ボトムナビゲーションが無いページ（ガントチャート等）からも安全に遷移可能.
   Future<void> navigateViaDrawer(WidgetTester tester, String label) async {
+    // ダイアログが残っている場合は閉じる
+    while (find.byType(AlertDialog).evaluate().isNotEmpty) {
+      final closeButton = find.text('閉じる');
+      if (closeButton.evaluate().isNotEmpty) {
+        await tester.tap(closeButton);
+        await tester.pumpAndSettle();
+      } else {
+        // Escキーまたは戻るボタンで閉じる
+        await tester.tap(find.byType(AlertDialog), warnIfMissed: false);
+        await tester.pumpAndSettle();
+        break;
+      }
+    }
     await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.descendant(
@@ -947,8 +960,8 @@ void main() {
 
       await submitFeedback(tester, feedback2);
 
-      // 送信成功スナックバー確認（レベル2へ解除）
-      expect(find.textContaining('レベル2に解除'), findsOneWidget);
+      // 送信成功スナックバー確認（レベル2でフィードバック上限到達）
+      expect(find.textContaining('フィードバックを送信しました'), findsOneWidget);
 
       // ── レベル2（夢3個まで）: 夢3個目を追加 ──────────────────────────────
       await addDream(tester, 'テスト夢3');

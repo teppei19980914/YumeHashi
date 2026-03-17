@@ -1,168 +1,747 @@
-/// アプリ使い方ガイドダイアログ.
+/// アプリ使い方ガイド & FAQ ダイアログ.
+///
+/// 「使い方」タブと「FAQ」タブを持ち、体験版ではガントチャート等の
+/// プレミアム機能を非表示にする.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// アプリ使い方ガイドダイアログを表示する.
-Future<void> showAppGuideDialog(BuildContext context) async {
+Future<void> showAppGuideDialog(
+  BuildContext context, {
+  bool isPremium = false,
+}) async {
   await showDialog<void>(
     context: context,
-    builder: (context) => const _AppGuideDialog(),
+    builder: (context) => _AppGuideDialog(isPremium: isPremium),
   );
 }
 
 class _AppGuideDialog extends StatefulWidget {
-  const _AppGuideDialog();
+  const _AppGuideDialog({required this.isPremium});
+  final bool isPremium;
 
   @override
   State<_AppGuideDialog> createState() => _AppGuideDialogState();
 }
 
-class _AppGuideDialogState extends State<_AppGuideDialog> {
-  int _currentPage = 0;
+class _AppGuideDialogState extends State<_AppGuideDialog>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
 
-  static const _pages = <_GuidePage>[
-    _GuidePage(
-      icon: Icons.auto_awesome,
-      title: 'ステップ1: 夢を登録',
-      description: 'まずは「夢」ページで、あなたの大きな目標や夢を登録しましょう。\n\n'
-          '例: 「ITエンジニアになる」「資格を取得する」',
-    ),
-    _GuidePage(
-      icon: Icons.flag,
-      title: 'ステップ2: 目標を設定',
-      description: '「目標」ページで、夢を実現するための具体的な目標を設定します。\n\n'
-          '- What（何を）\n'
-          '- When（いつまでに）\n'
-          '- How（どうやって）',
-    ),
-    _GuidePage(
-      icon: Icons.view_timeline,
-      title: 'ステップ3: タスクを管理',
-      description: '「ガントチャート」ページで、目標に紐づくタスクを作成し、'
-          'スケジュールを管理します。\n\n'
-          'タスクをタップすると活動ログの記録やタイマーも使えます。',
-    ),
-    _GuidePage(
-      icon: Icons.menu_book,
-      title: 'ステップ4: 書籍を管理',
-      description: '「書籍」ページで参考書籍を登録できます。\n\n'
-          '読書の進捗管理や、読了時の要約・感想の記録ができます。',
-    ),
-    _GuidePage(
-      icon: Icons.bar_chart,
-      title: 'ステップ5: 統計で振り返り',
-      description: '「統計」ページで活動の実績を確認できます。\n\n'
-          '- 活動時間・日数の推移\n'
-          '- 連続活動ストリーク\n'
-          '- 目標別・書籍別の統計',
-    ),
-    _GuidePage(
-      icon: Icons.stars,
-      title: 'ステップ6: 星座で成長を実感',
-      description: '「星座」ページでは、活動の積み重ねが星座として可視化されます。\n\n'
-          '夢ごとに星座が割り当てられ、活動するほど星が輝きます。',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 3, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final page = _pages[_currentPage];
-    final isFirst = _currentPage == 0;
-    final isLast = _currentPage == _pages.length - 1;
 
     return AlertDialog(
       title: Row(
         children: [
           Icon(Icons.help_outline, size: 24, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          const Expanded(child: Text('ユメログの使い方')),
-          Text(
-            '${_currentPage + 1} / ${_pages.length}',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.hintColor,
-            ),
+          const Expanded(child: Text('ヘルプ')),
+          IconButton(
+            icon: const Icon(Icons.close, size: 20),
+            onPressed: () => Navigator.of(context).pop(),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(),
           ),
         ],
       ),
+      titlePadding: const EdgeInsets.fromLTRB(24, 20, 16, 0),
+      contentPadding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
       content: SizedBox(
-        width: 400,
+        width: 480,
+        height: 420,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              page.icon,
-              size: 48,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              page.title,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              page.description,
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (var i = 0; i < _pages.length; i++)
-                  Container(
-                    width: 8,
-                    height: 8,
-                    margin: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: i == _currentPage
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.surfaceContainerHighest,
-                    ),
-                  ),
+            TabBar(
+              controller: _tabController,
+              tabs: const [
+                Tab(text: '全体像'),
+                Tab(text: '使い方'),
+                Tab(text: 'FAQ'),
               ],
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _OverviewTab(isPremium: widget.isPremium),
+                  _GuideTab(isPremium: widget.isPremium),
+                  const _FaqTab(),
+                ],
+              ),
             ),
           ],
         ),
       ),
       actions: [
-        if (!isFirst)
-          TextButton(
-            onPressed: () => setState(() => _currentPage--),
-            child: const Text('戻る'),
-          ),
-        if (isFirst)
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('閉じる'),
-          ),
-        if (!isLast)
-          FilledButton(
-            onPressed: () => setState(() => _currentPage++),
-            child: const Text('次へ'),
-          ),
-        if (isLast)
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('はじめる'),
-          ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('閉じる'),
+        ),
       ],
     );
   }
 }
 
-class _GuidePage {
-  const _GuidePage({
+// ── 全体像タブ ────────────────────────────────────────────────
+
+class _OverviewTab extends StatelessWidget {
+  const _OverviewTab({required this.isPremium});
+  final bool isPremium;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isTrialWeb = kIsWeb && !isPremium;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // アプリの構造図
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primary.withAlpha(10),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: theme.colorScheme.primary.withAlpha(30)),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'アプリの構造',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '夢 → 目標 → タスク の階層で管理します',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // 各画面の役割
+          _OverviewItem(
+            theme: theme,
+            icon: Icons.dashboard,
+            title: 'ダッシュボード',
+            role: '今日の活動状況を一覧表示',
+            detail: '合計活動時間・連続記録・最近のログなど、'
+                '日々の進捗を一目で把握できます。',
+          ),
+          _OverviewItem(
+            theme: theme,
+            icon: Icons.auto_awesome,
+            title: '夢',
+            role: '最終的に達成したい大きな目標を管理',
+            detail: 'すべての起点となるページです。'
+                '夢を登録すると、目標・タスクの紐づけが可能になります。',
+          ),
+          _OverviewItem(
+            theme: theme,
+            icon: Icons.flag,
+            title: '目標',
+            role: '夢を実現するための具体的なステップを管理',
+            detail: 'What（何を）・When（いつまでに）・How（どうやって）'
+                'を設定し、夢を行動可能な単位に分解します。',
+          ),
+          if (!isTrialWeb)
+            _OverviewItem(
+              theme: theme,
+              icon: Icons.view_timeline,
+              title: 'ガントチャート',
+              role: '目標に紐づくタスクをタイムラインで可視化',
+              detail: 'タスクの作成・スケジュール管理・進捗記録を行います。'
+                  '書籍の読書スケジュールも同じタイムライン上で確認できます。',
+            ),
+          _OverviewItem(
+            theme: theme,
+            icon: Icons.menu_book,
+            title: '書籍',
+            role: '参考書籍のライフサイクルを管理',
+            detail: '書籍の登録、読書ステータス管理（未読→読書中→読了）、'
+                '読了時の要約・感想の記録ができます。',
+          ),
+          _OverviewItem(
+            theme: theme,
+            icon: Icons.bar_chart,
+            title: '統計',
+            role: '活動実績の分析・振り返り',
+            detail: '活動時間の推移、連続活動ストリーク、'
+                '目標別・書籍別の統計を確認できます。',
+          ),
+          _OverviewItem(
+            theme: theme,
+            icon: Icons.stars,
+            title: '星座',
+            role: '活動の積み重ねをゲーミフィケーションで可視化',
+            detail: '夢ごとに星座が割り当てられ、活動するほど星が輝きます。'
+                'モチベーション維持に役立ちます。',
+          ),
+
+          // 補完関係の説明
+          const SizedBox(height: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.hintColor.withAlpha(10),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: theme.hintColor.withAlpha(30)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.lightbulb_outline,
+                        size: 16, color: theme.hintColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      '画面同士の関係',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.hintColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  '• 目標ページは「何を達成するか」を管理し、'
+                  'ガントチャートは「いつ・どのくらいやるか」を可視化します\n'
+                  '• 書籍ページは「何を読むか・どう読んだか」を管理し、'
+                  'ガントチャートは「いつ読むか」をスケジュール管理します\n'
+                  '• 各ページは包含関係ではなく、互いに補完する関係です',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                    height: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OverviewItem extends StatelessWidget {
+  const _OverviewItem({
+    required this.theme,
     required this.icon,
     required this.title,
-    required this.description,
+    required this.role,
+    required this.detail,
   });
 
+  final ThemeData theme;
   final IconData icon;
   final String title;
-  final String description;
+  final String role;
+  final String detail;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: theme.colorScheme.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        role,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  detail,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.hintColor,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 使い方タブ ────────────────────────────────────────────────
+
+class _GuideTab extends StatelessWidget {
+  const _GuideTab({required this.isPremium});
+  final bool isPremium;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isTrialWeb = kIsWeb && !isPremium;
+
+    final steps = <_GuideStep>[
+      const _GuideStep(
+        stepNumber: 1,
+        icon: Icons.auto_awesome,
+        title: '夢を登録する',
+        procedures: [
+          '画面下部の「夢」タブをタップ',
+          '右上の「＋ 夢を追加」ボタンをタップ',
+          '夢のタイトルを入力して「追加」をタップ',
+        ],
+        example: '例: 「ITエンジニアになる」「英語を話せるようになる」',
+      ),
+      const _GuideStep(
+        stepNumber: 2,
+        icon: Icons.flag,
+        title: '目標を設定する',
+        procedures: [
+          '画面下部の「目標」タブをタップ',
+          '「＋ 目標を追加」ボタンをタップ',
+          '紐づける夢を選択',
+          'What（何を）・When（いつまでに）・How（どうやって）を入力',
+          '「追加」をタップ',
+        ],
+        example: '夢を細分化し、具体的な行動目標に落とし込みましょう',
+      ),
+      if (!isTrialWeb)
+        const _GuideStep(
+          stepNumber: 3,
+          icon: Icons.view_timeline,
+          title: 'ガントチャートでタスク管理',
+          procedures: [
+            '画面下部の「ガントチャート」タブをタップ',
+            '上部のドロップダウンで目標を選択',
+            '「＋ タスク追加」ボタンをタップ',
+            'タスク名・開始日・終了日を入力して追加',
+            'チャート上のタスクをタップして進捗を更新',
+          ],
+          example: 'タスクをタップすると活動ログの記録やタイマーも使えます',
+        ),
+      _GuideStep(
+        stepNumber: isTrialWeb ? 3 : 4,
+        icon: Icons.menu_book,
+        title: '書籍を管理する',
+        procedures: const [
+          'ハンバーガーメニューから「書籍」を選択',
+          '「＋ 書籍を追加」ボタンをタップ',
+          'タイトルを入力して追加',
+          'カレンダーアイコンで読書スケジュールを設定',
+          '読了時にチェックアイコンで要約・感想を記録',
+        ],
+        example: '読書の進捗管理と振り返りに活用できます',
+      ),
+      _GuideStep(
+        stepNumber: isTrialWeb ? 4 : 5,
+        icon: Icons.bar_chart,
+        title: '統計で振り返る',
+        procedures: const [
+          'ハンバーガーメニューから「統計」を選択',
+          '期間（週・月・全期間）を切り替えて推移を確認',
+          '活動時間・活動日数・連続記録を把握',
+        ],
+        example: '定期的に振り返ることで、学習習慣を定着させましょう',
+      ),
+      _GuideStep(
+        stepNumber: isTrialWeb ? 5 : 6,
+        icon: Icons.stars,
+        title: '星座で成長を実感',
+        procedures: const [
+          'ハンバーガーメニューから「星座」を選択',
+          '夢ごとに割り当てられた星座を確認',
+          '活動ログを記録して星を輝かせる',
+          '完成した星座をタップすると説明が表示されます',
+        ],
+        example: '活動の積み重ねが星座として可視化されます',
+      ),
+    ];
+
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      itemCount: steps.length,
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) {
+        return _GuideStepItem(step: steps[index], theme: theme);
+      },
+    );
+  }
+}
+
+class _GuideStep {
+  const _GuideStep({
+    required this.stepNumber,
+    required this.icon,
+    required this.title,
+    required this.procedures,
+    required this.example,
+  });
+
+  final int stepNumber;
+  final IconData icon;
+  final String title;
+  final List<String> procedures;
+  final String example;
+}
+
+class _GuideStepItem extends StatelessWidget {
+  const _GuideStepItem({required this.step, required this.theme});
+  final _GuideStep step;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ステップ番号 + アイコン
+          Column(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.colorScheme.primary.withAlpha(25),
+                ),
+                child: Center(
+                  child: Text(
+                    '${step.stepNumber}',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Icon(step.icon, size: 16, color: theme.hintColor),
+            ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  step.title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                // 手順リスト
+                for (var i = 0; i < step.procedures.length; i++)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 3),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${i + 1}. ',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            step.procedures[i],
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 4),
+                // ヒント
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(10),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline,
+                        size: 14,
+                        color: theme.hintColor,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          step.example,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.hintColor,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── FAQ タブ ──────────────────────────────────────────────────
+
+class _FaqTab extends StatefulWidget {
+  const _FaqTab();
+
+  @override
+  State<_FaqTab> createState() => _FaqTabState();
+}
+
+class _FaqTabState extends State<_FaqTab> {
+  String _searchQuery = '';
+
+  static const _faqs = <_FaqItem>[
+    _FaqItem(
+      question: 'データはどこに保存されますか？',
+      answer: 'すべてのデータはお使いのブラウザ内（ローカルストレージ）に保存されます。'
+          'サーバーにデータが送信されることはありません。'
+          'ただし、ブラウザのデータを消去するとアプリのデータも削除されます。',
+      keywords: ['データ', '保存', 'ローカル', 'ブラウザ', '消去', '削除'],
+    ),
+    _FaqItem(
+      question: 'スマートフォンでも使えますか？',
+      answer: 'はい、スマートフォンのブラウザからアクセスできます。'
+          'ホーム画面に追加すると、アプリのように使えます。',
+      keywords: ['スマートフォン', 'スマホ', 'モバイル', '携帯', 'ホーム画面'],
+    ),
+    _FaqItem(
+      question: '夢・目標・タスクの違いは何ですか？',
+      answer: '「夢」は最終的に達成したい大きな目標です。\n'
+          '「目標」は夢を実現するための具体的なステップです。\n'
+          '「タスク」は目標を達成するための日々のアクションです。\n\n'
+          '例: 夢「ITエンジニアになる」→ 目標「基本情報技術者を取得する」'
+          '→ タスク「午前問題を毎日10問解く」',
+      keywords: ['夢', '目標', 'タスク', '違い', '使い分け', '階層'],
+    ),
+    _FaqItem(
+      question: '体験版の制限を解除するには？',
+      answer: 'フィードバックを送信すると段階的に制限が解除されます。'
+          'すべての機能を無制限で使うには、サブスクリプションプランをご検討ください。',
+      keywords: ['制限', '解除', 'フィードバック', 'サブスク', '有料', '無料', '体験版'],
+    ),
+    _FaqItem(
+      question: 'データのバックアップはできますか？',
+      answer: '設定ページの「データ管理」からデータのエクスポート（書き出し）が可能です。'
+          'JSON形式でダウンロードし、別のブラウザにインポートすることもできます。',
+      keywords: ['バックアップ', 'エクスポート', 'インポート', '書き出し', '移行', 'データ管理'],
+    ),
+    _FaqItem(
+      question: '星座はどうすれば完成しますか？',
+      answer: '夢に紐づくタスクの活動ログを記録すると、星座の星が一つずつ輝きます。'
+          '必要な活動時間を積み重ねることで星座が完成します。',
+      keywords: ['星座', '完成', '星', '輝く', '活動ログ'],
+    ),
+    _FaqItem(
+      question: 'ガントチャートとは何ですか？',
+      answer: 'タスクのスケジュールを横棒グラフで表示する機能です。'
+          '各タスクの開始日・終了日・進捗を視覚的に確認でき、'
+          'プロジェクト全体のスケジュール管理に役立ちます。',
+      keywords: ['ガントチャート', 'ガント', 'スケジュール', 'チャート', 'タイムライン'],
+    ),
+    _FaqItem(
+      question: '活動ログはどうやって記録しますか？',
+      answer: 'ガントチャートのタスクをタップすると活動ログの記録画面が開きます。'
+          '手動で時間を入力するか、タイマー機能を使って記録できます。'
+          'ダッシュボードの「活動を記録」ボタンからも記録できます。',
+      keywords: ['活動ログ', 'ログ', '記録', 'タイマー', '時間', '入力'],
+    ),
+    _FaqItem(
+      question: '別のブラウザや端末でデータを使えますか？',
+      answer: 'データはブラウザごとに独立して保存されます。'
+          '別のブラウザで使う場合は、設定ページからデータをエクスポートし、'
+          '新しいブラウザでインポートしてください。',
+      keywords: ['ブラウザ', '端末', '移行', 'エクスポート', 'インポート', '同期', '別'],
+    ),
+    _FaqItem(
+      question: '書籍の読了レビューはどこから入力しますか？',
+      answer: '書籍ページで、読了にしたい書籍のチェックアイコンをタップすると、'
+          '要約・感想の入力画面が表示されます。'
+          '記録した内容は書籍カードに表示されます。',
+      keywords: ['書籍', '読了', 'レビュー', '要約', '感想', '読書'],
+    ),
+  ];
+
+  List<_FaqItem> get _filteredFaqs {
+    if (_searchQuery.isEmpty) return _faqs;
+    final query = _searchQuery.toLowerCase();
+    return _faqs.where((faq) {
+      return faq.question.toLowerCase().contains(query) ||
+          faq.answer.toLowerCase().contains(query) ||
+          faq.keywords.any((k) => k.toLowerCase().contains(query));
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final filtered = _filteredFaqs;
+
+    return Column(
+      children: [
+        // 検索フィールド
+        Padding(
+          padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
+          child: TextField(
+            onChanged: (value) => setState(() => _searchQuery = value),
+            decoration: InputDecoration(
+              hintText: 'キーワードで検索...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear, size: 18),
+                      onPressed: () => setState(() => _searchQuery = ''),
+                    )
+                  : null,
+              isDense: true,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+        ),
+
+        // FAQ リスト
+        Expanded(
+          child: filtered.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.search_off, size: 40, color: theme.hintColor),
+                      const SizedBox(height: 8),
+                      Text(
+                        '該当するFAQが見つかりません',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.hintColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    return _FaqExpansionTile(
+                      faq: filtered[index],
+                      highlightQuery: _searchQuery,
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FaqItem {
+  const _FaqItem({
+    required this.question,
+    required this.answer,
+    required this.keywords,
+  });
+  final String question;
+  final String answer;
+  final List<String> keywords;
+}
+
+class _FaqExpansionTile extends StatelessWidget {
+  const _FaqExpansionTile({
+    required this.faq,
+    this.highlightQuery = '',
+  });
+  final _FaqItem faq;
+  final String highlightQuery;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ExpansionTile(
+      tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+      childrenPadding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+      leading: Icon(Icons.help, size: 20, color: theme.colorScheme.primary),
+      title: Text(
+        faq.question,
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(faq.answer, style: theme.textTheme.bodySmall),
+        ),
+      ],
+    );
+  }
 }
