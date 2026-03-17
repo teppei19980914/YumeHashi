@@ -28,28 +28,43 @@ void main() {
       expect(find.text('FAQ'), findsOneWidget);
     });
 
-    testWidgets('各画面の役割が表示される', (tester) async {
+    testWidgets('メイン階層の図が表示される', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      expect(find.text('ダッシュボード'), findsOneWidget);
+      // メインノード
       expect(find.text('夢'), findsOneWidget);
-      expect(find.text('目標'), findsOneWidget);
-      expect(find.text('アプリの構造'), findsOneWidget);
+      expect(find.text('目標'), findsWidgets);
+      // 矢印ラベル
+      expect(find.text('分解'), findsOneWidget);
     });
 
-    testWidgets('画面同士の関係が表示される', (tester) async {
+    testWidgets('連携する画面の図が表示される', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
       await tester.scrollUntilVisible(
-        find.text('画面同士の関係'),
+        find.text('連携する画面'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
-      expect(find.text('画面同士の関係'), findsOneWidget);
+      expect(find.text('連携する画面'), findsOneWidget);
+    });
+
+    testWidgets('サポート画面のミニノードが表示される', (tester) async {
+      await tester.pumpWidget(wrap());
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('統計'),
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      expect(find.text('統計'), findsOneWidget);
+      expect(find.text('振り返り'), findsOneWidget);
     });
   });
 

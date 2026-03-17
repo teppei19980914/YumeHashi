@@ -108,142 +108,195 @@ class _OverviewTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final primary = theme.colorScheme.primary;
     final isTrialWeb = kIsWeb && !isPremium;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // アプリの構造図
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha(10),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: theme.colorScheme.primary.withAlpha(30)),
-            ),
-            child: Column(
-              children: [
-                Text(
-                  'アプリの構造',
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '夢 → 目標 → タスク の階層で管理します',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // 各画面の役割
-          _OverviewItem(
-            theme: theme,
-            icon: Icons.dashboard,
-            title: 'ダッシュボード',
-            role: '今日の活動状況を一覧表示',
-            detail: '合計活動時間・連続記録・最近のログなど、'
-                '日々の進捗を一目で把握できます。',
-          ),
-          _OverviewItem(
-            theme: theme,
+          // ── メイン階層: 夢 → 目標 → タスク ──────────────────
+          _DiagramNode(
             icon: Icons.auto_awesome,
-            title: '夢',
-            role: '最終的に達成したい大きな目標を管理',
-            detail: 'すべての起点となるページです。'
-                '夢を登録すると、目標・タスクの紐づけが可能になります。',
-          ),
-          _OverviewItem(
+            label: '夢',
+            subtitle: '最終ゴール',
+            color: primary,
             theme: theme,
+          ),
+          _DiagramArrow(label: '分解', theme: theme),
+          _DiagramNode(
             icon: Icons.flag,
-            title: '目標',
-            role: '夢を実現するための具体的なステップを管理',
-            detail: 'What（何を）・When（いつまでに）・How（どうやって）'
-                'を設定し、夢を行動可能な単位に分解します。',
+            label: '目標',
+            subtitle: '具体的なステップ',
+            color: primary,
+            theme: theme,
           ),
-          if (!isTrialWeb)
-            _OverviewItem(
-              theme: theme,
+          if (!isTrialWeb) ...[
+            _DiagramArrow(label: '実行', theme: theme),
+            _DiagramNode(
               icon: Icons.view_timeline,
-              title: 'ガントチャート',
-              role: '目標に紐づくタスクをタイムラインで可視化',
-              detail: 'タスクの作成・スケジュール管理・進捗記録を行います。'
-                  '書籍の読書スケジュールも同じタイムライン上で確認できます。',
+              label: 'ガントチャート',
+              subtitle: 'スケジュール管理・進捗記録',
+              color: primary,
+              theme: theme,
             ),
-          _OverviewItem(
-            theme: theme,
-            icon: Icons.menu_book,
-            title: '書籍',
-            role: '参考書籍のライフサイクルを管理',
-            detail: '書籍の登録、読書ステータス管理（未読→読書中→読了）、'
-                '読了時の要約・感想の記録ができます。',
-          ),
-          _OverviewItem(
-            theme: theme,
-            icon: Icons.bar_chart,
-            title: '統計',
-            role: '活動実績の分析・振り返り',
-            detail: '活動時間の推移、連続活動ストリーク、'
-                '目標別・書籍別の統計を確認できます。',
-          ),
-          _OverviewItem(
-            theme: theme,
-            icon: Icons.stars,
-            title: '星座',
-            role: '活動の積み重ねをゲーミフィケーションで可視化',
-            detail: '夢ごとに星座が割り当てられ、活動するほど星が輝きます。'
-                'モチベーション維持に役立ちます。',
-          ),
+          ],
 
-          // 補完関係の説明
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+
+          // ── 補完関係の横並び図 ────────────────────────────────
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.hintColor.withAlpha(10),
+              color: primary.withAlpha(8),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: theme.hintColor.withAlpha(30)),
+              border: Border.all(color: primary.withAlpha(25)),
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.lightbulb_outline,
-                        size: 16, color: theme.hintColor),
-                    const SizedBox(width: 4),
-                    Text(
-                      '画面同士の関係',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.hintColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
                 Text(
-                  '• 目標ページは「何を達成するか」を管理し、'
-                  'ガントチャートは「いつ・どのくらいやるか」を可視化します\n'
-                  '• 書籍ページは「何を読むか・どう読んだか」を管理し、'
-                  'ガントチャートは「いつ読むか」をスケジュール管理します\n'
-                  '• 各ページは包含関係ではなく、互いに補完する関係です',
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  '連携する画面',
+                  style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.hintColor,
-                    height: 1.6,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // 書籍 ↔ ガントチャート
+                if (!isTrialWeb)
+                  _DiagramRelation(
+                    theme: theme,
+                    leftIcon: Icons.menu_book,
+                    leftLabel: '書籍',
+                    leftSub: '何を読むか\nどう読んだか',
+                    rightIcon: Icons.view_timeline,
+                    rightLabel: 'ガントチャート',
+                    rightSub: 'いつ読むか\nスケジュール管理',
+                    linkLabel: '読書計画',
+                  ),
+                if (!isTrialWeb) const SizedBox(height: 12),
+                // 目標 ↔ ガントチャート
+                if (!isTrialWeb)
+                  _DiagramRelation(
+                    theme: theme,
+                    leftIcon: Icons.flag,
+                    leftLabel: '目標',
+                    leftSub: '何を達成するか',
+                    rightIcon: Icons.view_timeline,
+                    rightLabel: 'ガントチャート',
+                    rightSub: 'いつ・どのくらい\nやるか',
+                    linkLabel: 'タスク管理',
+                  ),
+                if (isTrialWeb)
+                  _DiagramRelation(
+                    theme: theme,
+                    leftIcon: Icons.menu_book,
+                    leftLabel: '書籍',
+                    leftSub: '何を読むか\nどう読んだか',
+                    rightIcon: Icons.flag,
+                    rightLabel: '目標',
+                    rightSub: '何を達成するか',
+                    linkLabel: '紐づけ',
+                  ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // ── サポート画面 ──────────────────────────────────────
+          Row(
+            children: [
+              Expanded(
+                child: _DiagramMiniNode(
+                  icon: Icons.dashboard,
+                  label: 'ダッシュ\nボード',
+                  subtitle: '今日の状況',
+                  theme: theme,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _DiagramMiniNode(
+                  icon: Icons.bar_chart,
+                  label: '統計',
+                  subtitle: '振り返り',
+                  theme: theme,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _DiagramMiniNode(
+                  icon: Icons.stars,
+                  label: '星座',
+                  subtitle: 'モチベーション',
+                  theme: theme,
+                ),
+              ),
+              if (!isTrialWeb) ...[
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _DiagramMiniNode(
+                    icon: Icons.menu_book,
+                    label: '書籍',
+                    subtitle: '読書管理',
+                    theme: theme,
                   ),
                 ),
               ],
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 図のメインノード（夢・目標・ガントチャート）.
+class _DiagramNode extends StatelessWidget {
+  const _DiagramNode({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.color,
+    required this.theme,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final Color color;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withAlpha(15),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withAlpha(60)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 24, color: color),
+          const SizedBox(width: 12),
+          Text(
+            label,
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              subtitle,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.hintColor,
+              ),
+              textAlign: TextAlign.right,
             ),
           ),
         ],
@@ -252,63 +305,193 @@ class _OverviewTab extends StatelessWidget {
   }
 }
 
-class _OverviewItem extends StatelessWidget {
-  const _OverviewItem({
-    required this.theme,
-    required this.icon,
-    required this.title,
-    required this.role,
-    required this.detail,
-  });
-
+/// 図の矢印（ノード間の接続）.
+class _DiagramArrow extends StatelessWidget {
+  const _DiagramArrow({required this.label, required this.theme});
+  final String label;
   final ThemeData theme;
-  final IconData icon;
-  final String title;
-  final String role;
-  final String detail;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+    return SizedBox(
+      height: 32,
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 20, color: theme.colorScheme.primary),
-          const SizedBox(width: 10),
-          Expanded(
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.arrow_downward,
+                size: 16,
+                color: theme.colorScheme.primary.withAlpha(120),
+              ),
+            ],
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.primary.withAlpha(150),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 図の補完関係（2ノード間の双方向リンク）.
+class _DiagramRelation extends StatelessWidget {
+  const _DiagramRelation({
+    required this.theme,
+    required this.leftIcon,
+    required this.leftLabel,
+    required this.leftSub,
+    required this.rightIcon,
+    required this.rightLabel,
+    required this.rightSub,
+    required this.linkLabel,
+  });
+
+  final ThemeData theme;
+  final IconData leftIcon;
+  final String leftLabel;
+  final String leftSub;
+  final IconData rightIcon;
+  final String rightLabel;
+  final String rightSub;
+  final String linkLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = theme.colorScheme.primary;
+    return Row(
+      children: [
+        // 左ノード
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: primary.withAlpha(40)),
+            ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        role,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
+                Icon(leftIcon, size: 18, color: primary),
+                const SizedBox(height: 2),
+                Text(
+                  leftLabel,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  detail,
-                  style: theme.textTheme.bodySmall?.copyWith(
+                  leftSub,
+                  style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.hintColor,
-                    height: 1.4,
+                    fontSize: 9,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
+            ),
+          ),
+        ),
+        // リンク
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Column(
+            children: [
+              Icon(Icons.sync_alt, size: 14, color: primary.withAlpha(100)),
+              Text(
+                linkLabel,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  fontSize: 8,
+                  color: primary.withAlpha(150),
+                ),
+              ),
+            ],
+          ),
+        ),
+        // 右ノード
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: primary.withAlpha(40)),
+            ),
+            child: Column(
+              children: [
+                Icon(rightIcon, size: 18, color: primary),
+                const SizedBox(height: 2),
+                Text(
+                  rightLabel,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  rightSub,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.hintColor,
+                    fontSize: 9,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 図のサポート画面ミニノード（ダッシュボード・統計・星座）.
+class _DiagramMiniNode extends StatelessWidget {
+  const _DiagramMiniNode({
+    required this.icon,
+    required this.label,
+    required this.subtitle,
+    required this.theme,
+  });
+
+  final IconData icon;
+  final String label;
+  final String subtitle;
+  final ThemeData theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        color: theme.hintColor.withAlpha(12),
+        border: Border.all(color: theme.hintColor.withAlpha(25)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, size: 18, color: theme.hintColor),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          Text(
+            subtitle,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.hintColor,
+              fontSize: 8,
             ),
           ),
         ],
