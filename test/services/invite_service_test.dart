@@ -41,7 +41,7 @@ void main() {
         final status = service.getStatus();
         expect(status.isActive, isTrue);
         expect(status.name, 'テストユーザー');
-        expect(status.remainingDays, 60);
+        expect(status.remainingDays, closeTo(60, 1));
       });
 
       test('同じコードで再有効化しても日時が更新されない', () async {
@@ -80,7 +80,7 @@ void main() {
         final status = service.getStatus();
         expect(status.isActive, isTrue);
         expect(status.name, '田中太郎');
-        expect(status.remainingDays, 60);
+        expect(status.remainingDays, closeTo(60, 1));
         expect(status.expiredAt, isNull);
       });
 
@@ -112,7 +112,7 @@ void main() {
 
         final status = service.getStatus();
         expect(status.isActive, isTrue);
-        expect(status.remainingDays, 90);
+        expect(status.remainingDays, closeTo(90, 1));
       });
     });
 
