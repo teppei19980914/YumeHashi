@@ -13,6 +13,7 @@ import '../dialogs/reading_log_dialog.dart';
 import '../dialogs/trial_limit_dialog.dart';
 import '../models/book.dart';
 import '../providers/book_providers.dart';
+import '../providers/dashboard_providers.dart';
 import '../providers/service_providers.dart';
 import '../services/task_study_log_logic.dart';
 import '../services/trial_limit_service.dart';
@@ -272,6 +273,7 @@ class _BookListItem extends ConsumerWidget {
       logic: logic,
       bookTitle: book.title,
     );
+    ref.invalidate(allLogsProvider);
   }
 
   Future<void> _completeBook(

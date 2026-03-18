@@ -126,6 +126,11 @@ Future<void> _initSubscriptionAsync(SharedPreferences prefs) async {
   if (stripeService.isSubscriptionActive) {
     setSubscriptionPremium(enabled: true);
   }
+
+  // 無料トライアル有効ならプレミアム機能を解放
+  if (stripeService.isTrialActive) {
+    setTrialPremium(enabled: true);
+  }
 }
 
 /// URLのクエリパラメータを取得する.

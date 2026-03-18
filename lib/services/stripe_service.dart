@@ -15,6 +15,10 @@ const stripeEndpointUrl =
 
 const _subscriptionActiveKey = 'stripe_subscription_active';
 const _subscriptionActivatedAtKey = 'stripe_subscription_activated_at';
+const _trialStartedAtKey = 'premium_trial_started_at';
+
+/// 無料トライアル期間（日数）.
+const trialDurationDays = 7;
 
 /// Stripe連携サービス.
 class StripeService {
@@ -74,4 +78,48 @@ class StripeService {
     await _prefs.remove(_subscriptionActiveKey);
     await _prefs.remove(_subscriptionActivatedAtKey);
   }
+
+  // ── 無料トライアル ──
+
+  /// 無料トライアルが開始済みかどうか.
+  bool get isTrialStarted => _prefs.getInt(_trialStartedAtKey) != null;
+
+  /// 無料トライアル開始日.
+  DateTime? get trialStartedAt {
+    final ms = _prefs.getInt(_trialStartedAtKey);
+    return ms != null ? DateTime.fromMillisecondsSinceEpoch(ms) : null;
+  }
+
+  /// 無料トライアルが有効（期間内）かどうか.
+  bool get isTrialActive {
+    final start = trialStartedAt;
+    if (start == null) return false;
+    final remaining = _trialRemainingDays(start);
+    return remaining > 0;
+  }
+
+  /// 無料トライアルの残り日数.
+  int get trialRemainingDays {
+    final start = trialStartedAt;
+    if (start == null) return 0;
+    return _trialRemainingDays(start);
+  }
+
+  int _trialRemainingDays(DateTime start) {
+    final elapsed = DateTime.now().difference(start).inDays;
+    final remaining = trialDurationDays - elapsed;
+    return remaining > 0 ? remaining : 0;
+  }
+
+  /// 無料トライアルを開始する.
+  Future<void> startTrial() async {
+    if (isTrialStarted) return; // 二重開始防止
+    await _prefs.setInt(
+      _trialStartedAtKey,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  /// プレミアム機能が利用可能か（サブスク or トライアル）.
+  bool get hasPremiumAccess => isSubscriptionActive || isTrialActive;
 }

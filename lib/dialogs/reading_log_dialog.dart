@@ -18,26 +18,33 @@ String bookLogTaskId(String bookId) => '$bookLogPrefix$bookId';
 /// taskIdが書籍ログかどうかを判定する.
 bool isBookLogTaskId(String taskId) => taskId.startsWith(bookLogPrefix);
 
-/// 読書時間記録ダイアログを表示する.
-Future<void> showReadingLogDialog(
+/// 活動時間記録ダイアログを表示する.
+///
+/// 書籍の読書時間やタスクの活動時間を記録するための共通ダイアログ.
+/// 戻り値が `'back'` の場合、呼び出し元で選択肢画面に戻る.
+Future<String?> showReadingLogDialog(
   BuildContext context, {
   required TaskStudyLogLogic logic,
   required String bookTitle,
+  String? dialogTitle,
 }) {
-  return showDialog<void>(
+  return showDialog<String>(
     context: context,
-    builder: (_) => _ReadingLogDialog(logic: logic, bookTitle: bookTitle),
+    builder: (_) => _ReadingLogDialog(
+      logic: logic,
+      title: dialogTitle ?? '読書時間 - $bookTitle',
+    ),
   );
 }
 
 class _ReadingLogDialog extends StatefulWidget {
   const _ReadingLogDialog({
     required this.logic,
-    required this.bookTitle,
+    required this.title,
   });
 
   final TaskStudyLogLogic logic;
-  final String bookTitle;
+  final String title;
 
   @override
   State<_ReadingLogDialog> createState() => _ReadingLogDialogState();
@@ -129,7 +136,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '読書時間 - ${widget.bookTitle}',
+              widget.title,
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -181,8 +188,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  SizedBox(
-                    width: 70,
+                  Expanded(
                     child: TextField(
                       controller: _hoursController,
                       keyboardType: TextInputType.number,
@@ -190,8 +196,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
                     ),
                   ),
                   const SizedBox(width: 12),
-                  SizedBox(
-                    width: 70,
+                  Expanded(
                     child: TextField(
                       controller: _minutesController,
                       keyboardType: TextInputType.number,
@@ -274,7 +279,12 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
           ),
         ),
       ),
+      actionsAlignment: MainAxisAlignment.spaceBetween,
       actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop('back'),
+          child: const Text('戻る'),
+        ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('閉じる'),

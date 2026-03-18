@@ -12,16 +12,15 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../services/remote_config_service.dart';
 import '../services/stripe_service.dart';
+import '../services/trial_limit_service.dart';
 import '../theme/app_theme.dart';
 
-/// プレミアム機能の一覧.
+/// プレミアム機能の一覧（価値訴求）.
 const _premiumFeatures = [
-  (Icons.view_timeline_outlined, 'ガントチャート', 'タスクの日程をタイムラインでビジュアル管理'),
-  (Icons.file_download_outlined, 'Excel出力', 'ガントチャートをExcelエクスポートして共有'),
-  (Icons.bar_chart, '目標別統計', '目標・タスクごとの活動時間を詳細分析'),
-  (Icons.show_chart, 'アクティビティチャート', '日・週・月・年単位の活動推移をグラフ表示'),
-  (Icons.menu_book, '読書スケジュール', '書籍の読書計画をガントチャートで管理'),
-  (Icons.add_circle_outline, '今後の新機能すべて', '追加される最新機能を最優先で利用可能'),
+  (Icons.all_inclusive, 'やりたいことを、制限なく追いかけられる', '夢・目標・タスク・書籍を好きなだけ登録'),
+  (Icons.view_timeline_outlined, 'やるべきことが一目でわかる', 'ガントチャートで全体像を把握し、迷わず行動できる'),
+  (Icons.insights, '自分の成長が見える', '活動統計で努力の積み重ねを実感できる'),
+  (Icons.campaign_outlined, 'あなたの声が、新機能になる', 'フィードバックで要望した機能を最優先で利用可能'),
 ];
 
 /// 課金案内ダイアログを表示する.
@@ -41,12 +40,53 @@ class _UpgradeDialog extends StatefulWidget {
 
 class _UpgradeDialogState extends State<_UpgradeDialog> {
   bool _isLoading = false;
+  bool _isTrialAvailable = false;
 
-  Future<void> _subscribe() async {
+  @override
+  void initState() {
+    super.initState();
+    _checkTrialAvailability();
+  }
+
+  Future<void> _checkTrialAvailability() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stripeService = StripeService(prefs);
+    if (mounted) {
+      setState(() {
+        _isTrialAvailable = !stripeService.isTrialStarted;
+      });
+    }
+  }
+
+  Future<void> _startTrialOrSubscribe() async {
+    final prefs = await SharedPreferences.getInstance();
+    final stripeService = StripeService(prefs);
+
+    // トライアル未開始 → トライアル開始
+    if (!stripeService.isTrialStarted) {
+      await stripeService.startTrial();
+      setTrialPremium(enabled: true);
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '無料トライアルを開始しました（残り$trialDurationDays日間）',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    // トライアル済み → Stripe決済
+    await _subscribe(prefs);
+  }
+
+  Future<void> _subscribe(SharedPreferences prefs) async {
     setState(() => _isLoading = true);
 
     try {
-      final prefs = await SharedPreferences.getInstance();
       final stripeService = StripeService(prefs);
       final userKey = RemoteConfigService(prefs).savedUserKey;
       final checkoutUrl = await stripeService.createCheckoutUrl(
@@ -91,7 +131,7 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
         children: [
           Icon(Icons.star, size: 24, color: colors.accent),
           const SizedBox(width: 8),
-          const Expanded(child: Text('プレミアムプランのご案内')),
+          const Expanded(child: Text('もっと自由に、もっと先へ')),
         ],
       ),
       content: SizedBox(
@@ -102,7 +142,7 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'プレミアムプランでは以下の機能が全てご利用いただけます。',
+                'ワンコインで、あなたの「やりたい」を全力でサポートします。',
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -164,13 +204,15 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'サブスクプラン',
+                                'プレミアムプラン',
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
-                                'ブラウザからそのまま全機能を利用可能',
+                                _isTrialAvailable
+                                    ? '初回7日間無料 ── まず試してみてください'
+                                    : '月額ワンコインで全機能を利用可能',
                                 style: theme.textTheme.bodySmall,
                               ),
                             ],
@@ -199,7 +241,8 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
-                        onPressed: _isLoading ? null : _subscribe,
+                        onPressed:
+                            _isLoading ? null : _startTrialOrSubscribe,
                         icon: _isLoading
                             ? const SizedBox(
                                 width: 16,
@@ -209,9 +252,13 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Icon(Icons.payment),
+                            : const Icon(Icons.rocket_launch),
                         label: Text(
-                          _isLoading ? '処理中...' : 'サブスクプランに申し込む',
+                          _isLoading
+                              ? '処理中...'
+                              : _isTrialAvailable
+                                  ? '7日間無料で試してみる'
+                                  : 'プレミアムプランに申し込む（¥480/月）',
                         ),
                       ),
                     ),

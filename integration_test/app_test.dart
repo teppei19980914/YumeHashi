@@ -105,7 +105,9 @@ void main() {
 
   setUp(() {
     driftRuntimeOptions.dontWarnAboutMultipleDatabases = true;
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      'onboarding_completed': true,
+    });
     db = AppDatabase(NativeDatabase.memory());
   });
 

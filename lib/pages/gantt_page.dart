@@ -13,6 +13,7 @@ import '../dialogs/trial_limit_dialog.dart';
 import '../models/goal.dart';
 import '../models/task.dart';
 import '../services/book_gantt_service.dart' show bookGanttColor;
+import '../providers/dashboard_providers.dart';
 import '../providers/gantt_providers.dart';
 import '../providers/goal_providers.dart';
 import '../providers/service_providers.dart';
@@ -271,36 +272,90 @@ class GanttPage extends ConsumerWidget {
     WidgetRef ref,
     Task task,
   ) async {
-    final books = await ref.read(bookServiceProvider).getAllBooks();
-    if (!context.mounted) return;
-
-    final result = await showTaskDialog(
-      context,
-      task: task,
-      books: books,
-      studyLogService: ref.read(studyLogServiceProvider),
-    );
-    if (result == null) return;
-
-    if (result.deleteRequested) {
+    while (true) {
       if (!context.mounted) return;
-      final confirmed = await _confirmDelete(context, task.title);
-      if (confirmed != true) return;
-      await ref.read(taskServiceProvider).deleteTask(task.id);
+      final action = await showDialog<String>(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: Text(task.title),
+          children: [
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop('edit'),
+              child: const ListTile(
+                leading: Icon(Icons.edit_outlined),
+                title: Text('タスクを編集'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop('log'),
+              child: const ListTile(
+                leading: Icon(Icons.timer_outlined),
+                title: Text('活動時間を記録'),
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ],
+        ),
+      );
+
+      if (action == null || !context.mounted) return;
+
+      if (action == 'log') {
+        final logic = TaskStudyLogLogic(
+          studyLogService: ref.read(studyLogServiceProvider),
+          taskId: task.id,
+          taskName: task.title,
+        );
+        final result = await showReadingLogDialog(
+          context,
+          logic: logic,
+          bookTitle: task.title,
+          dialogTitle: '活動時間 - ${task.title}',
+        );
+        ref.invalidate(allLogsProvider);
+        if (result != 'back') return;
+        continue; // 選択肢画面に戻る
+      }
+
+      // タスク編集
+      final books = await ref.read(bookServiceProvider).getAllBooks();
+      if (!context.mounted) return;
+
+      final result = await showTaskDialog(
+        context,
+        task: task,
+        books: books,
+        studyLogService: ref.read(studyLogServiceProvider),
+      );
+      if (result == null) {
+        continue; // 選択肢画面に戻る
+      }
+
+      if (result.deleteRequested) {
+        if (!context.mounted) return;
+        final confirmed = await _confirmDelete(context, task.title);
+        if (confirmed != true) return;
+        await ref.read(taskServiceProvider).deleteTask(task.id);
+        ref.invalidate(ganttTasksProvider);
+        return;
+      }
+
+      if (result.studyLogsChanged) {
+        ref.invalidate(allLogsProvider);
+      }
+      await ref.read(taskServiceProvider).updateTask(
+            taskId: task.id,
+            title: result.title,
+            startDate: result.startDate,
+            endDate: result.endDate,
+            progress: result.progress,
+            memo: result.memo,
+            bookId: result.bookId,
+          );
       ref.invalidate(ganttTasksProvider);
       return;
     }
-
-    await ref.read(taskServiceProvider).updateTask(
-          taskId: task.id,
-          title: result.title,
-          startDate: result.startDate,
-          endDate: result.endDate,
-          progress: result.progress,
-          memo: result.memo,
-          bookId: result.bookId,
-        );
-    ref.invalidate(ganttTasksProvider);
   }
 
   Future<void> _addBookSchedule(
@@ -343,64 +398,72 @@ class GanttPage extends ConsumerWidget {
     final book = await bookService.getBook(bookId);
     if (book == null || !context.mounted) return;
 
-    final action = await showDialog<String>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: Text('📖 ${book.title}'),
-        children: [
-          SimpleDialogOption(
-            onPressed: () => Navigator.of(context).pop('schedule'),
-            child: const ListTile(
-              leading: Icon(Icons.calendar_month_outlined),
-              title: Text('スケジュールを編集'),
-              contentPadding: EdgeInsets.zero,
+    while (true) {
+      if (!context.mounted) return;
+      final action = await showDialog<String>(
+        context: context,
+        builder: (context) => SimpleDialog(
+          title: Text('📖 ${book.title}'),
+          children: [
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop('schedule'),
+              child: const ListTile(
+                leading: Icon(Icons.calendar_month_outlined),
+                title: Text('スケジュールを編集'),
+                contentPadding: EdgeInsets.zero,
+              ),
             ),
-          ),
-          SimpleDialogOption(
-            onPressed: () => Navigator.of(context).pop('reading_log'),
-            child: const ListTile(
-              leading: Icon(Icons.timer_outlined),
-              title: Text('読書時間を記録'),
-              contentPadding: EdgeInsets.zero,
+            SimpleDialogOption(
+              onPressed: () => Navigator.of(context).pop('reading_log'),
+              child: const ListTile(
+                leading: Icon(Icons.timer_outlined),
+                title: Text('読書時間を記録'),
+                contentPadding: EdgeInsets.zero,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-
-    if (action == null || !context.mounted) return;
-
-    if (action == 'reading_log') {
-      final logic = TaskStudyLogLogic(
-        studyLogService: ref.read(studyLogServiceProvider),
-        taskId: bookLogTaskId(bookId),
-        taskName: '📖 ${book.title}',
+          ],
+        ),
       );
-      await showReadingLogDialog(
-        context,
-        logic: logic,
-        bookTitle: book.title,
-      );
+
+      if (action == null || !context.mounted) return;
+
+      if (action == 'reading_log') {
+        final logic = TaskStudyLogLogic(
+          studyLogService: ref.read(studyLogServiceProvider),
+          taskId: bookLogTaskId(bookId),
+          taskName: '📖 ${book.title}',
+        );
+        final result = await showReadingLogDialog(
+          context,
+          logic: logic,
+          bookTitle: book.title,
+        );
+        ref.invalidate(allLogsProvider);
+        if (result != 'back') return;
+        continue; // 選択肢画面に戻る
+      }
+
+      // スケジュール編集
+      final ganttService = ref.read(bookGanttServiceProvider);
+      final result = await showBookScheduleDialog(context, book: book);
+      if (result == null) {
+        continue; // 選択肢画面に戻る
+      }
+
+      if (result.deleteRequested) {
+        await ganttService.clearBookSchedule(bookId);
+      } else {
+        await ganttService.updateBookSchedule(
+          bookId: bookId,
+          title: result.title,
+          startDate: result.startDate,
+          endDate: result.endDate,
+          progress: result.progress,
+        );
+      }
+      ref.invalidate(ganttTasksProvider);
       return;
     }
-
-    // スケジュール編集
-    final ganttService = ref.read(bookGanttServiceProvider);
-    final result = await showBookScheduleDialog(context, book: book);
-    if (result == null) return;
-
-    if (result.deleteRequested) {
-      await ganttService.clearBookSchedule(bookId);
-    } else {
-      await ganttService.updateBookSchedule(
-        bookId: bookId,
-        title: result.title,
-        startDate: result.startDate,
-        endDate: result.endDate,
-        progress: result.progress,
-      );
-    }
-    ref.invalidate(ganttTasksProvider);
   }
 
   Future<void> _exportToExcel(BuildContext context, WidgetRef ref) async {

@@ -86,6 +86,53 @@ void main() {
     });
   });
 
+  group('無料トライアル', () {
+    test('初期状態はトライアル未開始', () {
+      final service = StripeService(prefs);
+      expect(service.isTrialStarted, isFalse);
+      expect(service.isTrialActive, isFalse);
+      expect(service.trialRemainingDays, 0);
+    });
+
+    test('startTrialでトライアルが開始される', () async {
+      final service = StripeService(prefs);
+      await service.startTrial();
+      expect(service.isTrialStarted, isTrue);
+      expect(service.isTrialActive, isTrue);
+      expect(service.trialRemainingDays, trialDurationDays);
+    });
+
+    test('二重開始は無視される', () async {
+      final service = StripeService(prefs);
+      await service.startTrial();
+      final firstStart = service.trialStartedAt;
+      await service.startTrial(); // 二重呼び出し
+      expect(service.trialStartedAt, firstStart);
+    });
+
+    test('期限切れ後はisTrialActiveがfalse', () async {
+      SharedPreferences.setMockInitialValues({
+        'premium_trial_started_at': DateTime.now()
+            .subtract(const Duration(days: 10))
+            .millisecondsSinceEpoch,
+      });
+      prefs = await SharedPreferences.getInstance();
+
+      final service = StripeService(prefs);
+      expect(service.isTrialStarted, isTrue);
+      expect(service.isTrialActive, isFalse);
+      expect(service.trialRemainingDays, 0);
+    });
+
+    test('hasPremiumAccessはサブスクまたはトライアルで有効', () async {
+      final service = StripeService(prefs);
+      expect(service.hasPremiumAccess, isFalse);
+
+      await service.startTrial();
+      expect(service.hasPremiumAccess, isTrue);
+    });
+  });
+
   test('定数 stripeEndpointUrlが定義されている', () {
     expect(stripeEndpointUrl, isNotEmpty);
     expect(stripeEndpointUrl, contains('script.google.com'));
