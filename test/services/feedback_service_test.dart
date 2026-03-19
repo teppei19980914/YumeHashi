@@ -30,27 +30,24 @@ void main() {
   }
 
   group('validateFeedback', () {
-    test('100文字未満は無効', () async {
+    test('15文字未満は無効', () async {
       service = await createService();
       final result = service.validateFeedback('短いテキスト');
       expect(result.isValid, isFalse);
-      expect(result.errorMessage, contains('100文字以上'));
+      expect(result.errorMessage, contains('15文字以上'));
     });
 
-    test('100文字以上で有効', () async {
+    test('15文字以上で有効', () async {
       service = await createService();
-      final text = 'あ' * 100;
+      final text = 'あ' * 15;
       final result = service.validateFeedback(text);
-      // 100文字の同一文字は繰り返し検出に引っかかる
+      // 15文字の同一文字は繰り返し検出に引っかかる
       expect(result.isValid, isFalse);
     });
 
-    test('具体的な100文字以上のテキストは有効', () async {
+    test('具体的な15文字以上のテキストは有効', () async {
       service = await createService();
-      final text =
-          'このアプリは活動管理にとても役立っています。特にガントチャート機能が便利です。'
-          '改善点としては、カレンダー表示があるとさらに使いやすくなると思います。'
-          'また、通知機能の時間指定ができると嬉しいです。全体的に満足しています。';
+      final text = 'ガントチャート機能がとても便利です。';
       final result = service.validateFeedback(text);
       expect(result.isValid, isTrue);
     });

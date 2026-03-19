@@ -174,7 +174,31 @@ class DreamPage extends ConsumerWidget {
     }
 
     if (!context.mounted) return;
-    final result = await showDreamDialog(context);
+
+    // チュートリアル中: ガイドを使うか自分で入力するか選択
+    String? guideTitle;
+    String? guideDescription;
+    String? guideWhy;
+    if (isTutorial) {
+      final useGuide = await _showTutorialDreamChoice(context);
+      if (!context.mounted) return;
+      if (useGuide == null) return; // キャンセル
+      if (useGuide) {
+        final guideResult = await showDreamDiscoveryDialog(context);
+        if (guideResult == null || !context.mounted) return;
+        guideTitle = guideResult.title;
+        guideDescription = guideResult.description;
+        guideWhy = guideResult.why;
+      }
+    }
+
+    if (!context.mounted) return;
+    final result = await showDreamDialog(
+      context,
+      initialTitle: guideTitle,
+      initialDescription: guideDescription,
+      initialWhy: guideWhy,
+    );
     if (result == null) return;
 
     final dreamId = await ref.read(dreamListProvider.notifier).createDream(
@@ -189,6 +213,44 @@ class DreamPage extends ConsumerWidget {
       await tutorialService.setTutorialDreamId(dreamId);
       await ref.read(tutorialStateProvider.notifier).advanceStep();
     }
+  }
+
+  /// チュートリアル中の夢追加で、ガイドを使うか自分で入力するかを選択.
+  ///
+  /// 戻り値: true=ガイドを使う, false=自分で入力, null=キャンセル.
+  Future<bool?> _showTutorialDreamChoice(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.lightbulb_outline, size: 24),
+            SizedBox(width: 8),
+            Expanded(child: Text('やりたいことはありますか？')),
+          ],
+        ),
+        content: const Text(
+          'すでにやりたいことがある方はそのまま入力できます。\n'
+          'まだ決まっていない方は、ガイドが一緒に見つけるお手伝いをします。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('キャンセル'),
+          ),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.explore, size: 18),
+            label: const Text('ガイドで見つける'),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+          FilledButton.icon(
+            icon: const Icon(Icons.edit, size: 18),
+            label: const Text('自分で入力する'),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _editDream(

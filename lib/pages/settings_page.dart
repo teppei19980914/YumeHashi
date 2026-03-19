@@ -146,11 +146,13 @@ class SettingsPage extends ConsumerWidget {
           const SizedBox(height: 24),
         ],
 
-        // フィードバック・制限解除
-        _SectionHeader(
-            title: 'フィードバック', icon: Icons.rate_review_outlined),
-        _FeedbackCard(ref: ref, colors: colors),
-        const SizedBox(height: 24),
+        // フィードバック・制限解除（体験版のみ表示）
+        if (isTrialMode && !isPremium) ...[
+          _SectionHeader(
+              title: 'フィードバック', icon: Icons.rate_review_outlined),
+          _FeedbackCard(ref: ref, colors: colors),
+          const SizedBox(height: 24),
+        ],
 
         // お問い合わせ
         _SectionHeader(

@@ -72,7 +72,7 @@ void main() {
     await tester.tap(sendButton);
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('100文字以上'), findsOneWidget);
+    expect(find.textContaining('15文字以上'), findsOneWidget);
   });
 
   testWidgets('キャンセルで閉じる', (tester) async {
@@ -91,7 +91,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('あと100文字'), findsOneWidget);
+    expect(find.text('あと15文字'), findsOneWidget);
   });
 
   testWidgets('解除レベル情報が表示される', (tester) async {

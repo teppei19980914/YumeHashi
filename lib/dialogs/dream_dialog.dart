@@ -31,17 +31,33 @@ class DreamDialogResult {
 Future<DreamDialogResult?> showDreamDialog(
   BuildContext context, {
   Dream? dream,
+  String? initialTitle,
+  String? initialDescription,
+  String? initialWhy,
 }) {
   return showDialog<DreamDialogResult>(
     context: context,
-    builder: (_) => _DreamDialogContent(dream: dream),
+    builder: (_) => _DreamDialogContent(
+      dream: dream,
+      initialTitle: initialTitle,
+      initialDescription: initialDescription,
+      initialWhy: initialWhy,
+    ),
   );
 }
 
 class _DreamDialogContent extends StatefulWidget {
-  const _DreamDialogContent({this.dream});
+  const _DreamDialogContent({
+    this.dream,
+    this.initialTitle,
+    this.initialDescription,
+    this.initialWhy,
+  });
 
   final Dream? dream;
+  final String? initialTitle;
+  final String? initialDescription;
+  final String? initialWhy;
 
   @override
   State<_DreamDialogContent> createState() => _DreamDialogContentState();
@@ -58,10 +74,12 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.dream?.title ?? '');
-    _descriptionController =
-        TextEditingController(text: widget.dream?.description ?? '');
-    _whyController = TextEditingController(text: widget.dream?.why ?? '');
+    _titleController = TextEditingController(
+        text: widget.dream?.title ?? widget.initialTitle ?? '');
+    _descriptionController = TextEditingController(
+        text: widget.dream?.description ?? widget.initialDescription ?? '');
+    _whyController = TextEditingController(
+        text: widget.dream?.why ?? widget.initialWhy ?? '');
   }
 
   @override

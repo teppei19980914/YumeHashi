@@ -64,7 +64,7 @@ class FeedbackResult {
 }
 
 /// フィードバックの最低文字数.
-const feedbackMinLength = 100;
+const feedbackMinLength = 15;
 
 /// 最大解除レベル（課金で到達）.
 const feedbackMaxLevel = 3;

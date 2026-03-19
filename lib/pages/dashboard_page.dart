@@ -5,10 +5,9 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-
 import '../data/constellations.dart';
 import '../models/book.dart';
+import '../providers/book_providers.dart';
 import '../providers/constellation_providers.dart';
 import '../providers/dashboard_providers.dart';
 import '../providers/theme_provider.dart';
@@ -515,78 +514,144 @@ class _StreakContent extends ConsumerWidget {
   }
 }
 
-/// 本棚ウィジェット.
+/// 本棚ウィジェット（読了・読書中の本を横並びで表示）.
 class _BookshelfContent extends ConsumerWidget {
   const _BookshelfContent({required this.colors});
   final AppColors colors;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final shelfAsync = ref.watch(bookshelfProvider);
+    final booksAsync = ref.watch(bookListProvider);
     final theme = Theme.of(context);
 
-    return shelfAsync.when(
-      data: (data) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.menu_book_outlined, size: 20, color: colors.accent),
-              const SizedBox(width: 8),
-              Text('本棚', style: theme.textTheme.titleSmall),
-              const Spacer(),
-              Text(
-                '${data.completedCount}/${data.totalCount}冊 読了',
-                style: theme.textTheme.labelSmall,
-              ),
-            ],
-          ),
-          if (data.readingCount > 0) ...[
-            const SizedBox(height: 4),
-            Text(
-              '読書中: ${data.readingCount}冊',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: colors.textSecondary,
-              ),
-            ),
-          ],
-          if (data.recentCompleted.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            ...data.recentCompleted.take(3).map((book) {
-              final b = book as Book;
-              final dateStr = b.completedDate != null
-                  ? DateFormat('yyyy/MM/dd').format(b.completedDate!)
-                  : '';
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 2),
-                child: Row(
-                  children: [
-                    Icon(Icons.check, size: 14, color: colors.success),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        b.title,
-                        style: theme.textTheme.bodySmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (dateStr.isNotEmpty)
-                      Text(
-                        dateStr,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: colors.textMuted,
-                        ),
-                      ),
-                  ],
+    return booksAsync.when(
+      data: (books) {
+        // 読了・読書中の本のみ（読了を先に表示）
+        final displayBooks = books
+            .where((b) =>
+                b.status == BookStatus.completed ||
+                b.status == BookStatus.reading)
+            .toList()
+          ..sort((a, b) {
+            if (a.status == b.status) return 0;
+            return a.status == BookStatus.completed ? -1 : 1;
+          });
+        final completedCount =
+            books.where((b) => b.status == BookStatus.completed).length;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.menu_book_outlined, size: 20, color: colors.accent),
+                const SizedBox(width: 8),
+                Text('本棚', style: theme.textTheme.titleSmall),
+                const Spacer(),
+                Text(
+                  '$completedCount/${books.length}冊 読了',
+                  style: theme.textTheme.labelSmall,
                 ),
-              );
-            }),
+              ],
+            ),
+            const SizedBox(height: 12),
+            if (displayBooks.isEmpty)
+              Text(
+                '読書を始めると本棚に並びます',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colors.textMuted,
+                ),
+              )
+            else
+              SizedBox(
+                height: 100,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: displayBooks.length,
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
+                  itemBuilder: (_, index) =>
+                      _MiniBookCover(book: displayBooks[index], colors: colors),
+                ),
+              ),
           ],
-        ],
-      ),
+        );
+      },
       loading: () => const _WidgetLoading(),
       error: (_, _) => const _WidgetError(),
+    );
+  }
+}
+
+/// ダッシュボード用の小さな本カバー.
+class _MiniBookCover extends StatelessWidget {
+  const _MiniBookCover({required this.book, required this.colors});
+
+  final Book book;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isCompleted = book.status == BookStatus.completed;
+    final spineColor = isCompleted
+        ? colors.success.withAlpha(120)
+        : colors.accent.withAlpha(120);
+
+    return SizedBox(
+      width: 70,
+      child: Column(
+        children: [
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                  stops: const [0.0, 0.1, 0.1, 1.0],
+                  colors: [
+                    spineColor,
+                    spineColor,
+                    theme.cardColor,
+                    theme.cardColor,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(color: colors.textMuted.withAlpha(40)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(30),
+                    offset: const Offset(1, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Text(
+                    book.title,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 9,
+                      height: 1.2,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          // ステータスアイコン
+          Icon(
+            isCompleted ? Icons.check_circle : Icons.auto_stories,
+            size: 12,
+            color: isCompleted ? colors.success : colors.accent,
+          ),
+        ],
+      ),
     );
   }
 }

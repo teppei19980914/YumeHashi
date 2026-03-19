@@ -22,6 +22,7 @@ import 'services/trial_limit_service.dart' show setInvitePremium;
 import 'theme/app_theme.dart';
 import 'widgets/navigation/app_drawer.dart';
 import 'widgets/milestone/milestone_button.dart';
+import 'widgets/contact/contact_button.dart';
 import 'widgets/notification/notification_button.dart';
 import 'services/tutorial_service.dart';
 import 'widgets/tutorial/tutorial_banner.dart';
@@ -211,6 +212,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
               ),
             ),
             actions: const [
+              ContactButton(),
               MilestoneButton(),
               NotificationButton(),
             ],
