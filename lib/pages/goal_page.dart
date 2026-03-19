@@ -79,8 +79,7 @@ class GoalPage extends ConsumerWidget {
                       return _GoalCard(
                         goal: goal,
                         dreamTitle: dreamTitle,
-                        onEdit: () => _editGoal(context, ref, goal),
-                        onDelete: () => _deleteGoal(context, ref, goal),
+                        onTap: () => _editGoal(context, ref, goal),
                       );
                     },
                   );
@@ -185,6 +184,11 @@ class GoalPage extends ConsumerWidget {
     final result = await showGoalDialog(context, goal: goal, dreams: dreams);
     if (result == null) return;
 
+    if (result.deleteRequested) {
+      await ref.read(goalListProvider.notifier).deleteGoal(goal.id);
+      return;
+    }
+
     await ref.read(goalListProvider.notifier).updateGoal(
           goalId: goal.id,
           dreamId: result.dreamId,
@@ -194,36 +198,6 @@ class GoalPage extends ConsumerWidget {
           how: result.how,
         );
   }
-
-  Future<void> _deleteGoal(
-    BuildContext context,
-    WidgetRef ref,
-    Goal goal,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('目標を削除'),
-        content: Text('「${goal.what}」を削除しますか？\n紐づくタスクもすべて削除されます。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('キャンセル'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('削除'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    await ref.read(goalListProvider.notifier).deleteGoal(goal.id);
-  }
 }
 
 /// 目標カードウィジェット.
@@ -231,14 +205,12 @@ class _GoalCard extends StatelessWidget {
   const _GoalCard({
     required this.goal,
     required this.dreamTitle,
-    required this.onEdit,
-    required this.onDelete,
+    required this.onTap,
   });
 
   final Goal goal;
   final String? dreamTitle;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback onTap;
 
   Color _parseColor(String hex) {
     final code = hex.replaceFirst('#', '');
@@ -251,7 +223,9 @@ class _GoalCard extends StatelessWidget {
     final colors = theme.appColors;
     final goalColor = _parseColor(goal.color);
 
-    return Card(
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
       clipBehavior: Clip.antiAlias,
       child: IntrinsicHeight(
         child: Row(
@@ -279,43 +253,8 @@ class _GoalCard extends StatelessWidget {
                           ),
                         ),
                         _WhenBadge(goal: goal),
-                        // ポップアップメニュー
-                        PopupMenuButton<String>(
-                          icon: Icon(
-                            Icons.more_vert,
-                            size: 18,
-                            color: colors.textMuted,
-                          ),
-                          padding: EdgeInsets.zero,
-                          itemBuilder: (_) => [
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.edit_outlined, size: 16),
-                                  SizedBox(width: 8),
-                                  Text('編集'),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete_outline,
-                                      size: 16, color: colors.error),
-                                  const SizedBox(width: 8),
-                                  Text('削除',
-                                      style: TextStyle(color: colors.error)),
-                                ],
-                              ),
-                            ),
-                          ],
-                          onSelected: (value) {
-                            if (value == 'edit') onEdit();
-                            if (value == 'delete') onDelete();
-                          },
-                        ),
+                        Icon(Icons.chevron_right,
+                            size: 18, color: colors.textMuted),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -355,6 +294,7 @@ class _GoalCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

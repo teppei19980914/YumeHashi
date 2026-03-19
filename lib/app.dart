@@ -15,6 +15,10 @@ import 'pages/gantt_page.dart';
 import 'pages/goal_page.dart';
 import 'pages/settings_page.dart';
 import 'pages/stats_page.dart';
+import 'providers/book_providers.dart';
+import 'providers/dashboard_providers.dart';
+import 'providers/dream_providers.dart';
+import 'providers/goal_providers.dart';
 import 'providers/service_providers.dart';
 import 'providers/theme_provider.dart';
 import 'services/remote_config_service.dart';
@@ -177,6 +181,11 @@ class _AppShellState extends ConsumerState<_AppShell> {
           final service = ref.read(dataExportServiceProvider);
           await service.clearAllData();
           await prefs.remove(resetPendingKey);
+          // リセット後、全Providerのキャッシュを更新してUIに反映
+          ref.invalidate(dreamListProvider);
+          ref.invalidate(goalListProvider);
+          ref.invalidate(bookListProvider);
+          ref.invalidate(allLogsProvider);
         });
       }
     }

@@ -85,10 +85,8 @@ class DreamPage extends ConsumerWidget {
                             dream: dreams[index],
                             goalCount:
                                 goalCountByDream[dreams[index].id] ?? 0,
-                            onEdit: () =>
+                            onTap: () =>
                                 _editDream(context, ref, dreams[index]),
-                            onDelete: () =>
-                                _deleteDream(context, ref, dreams[index]),
                           ),
                         );
                       },
@@ -261,44 +259,17 @@ class DreamPage extends ConsumerWidget {
     final result = await showDreamDialog(context, dream: dream);
     if (result == null) return;
 
+    if (result.deleteRequested) {
+      await ref.read(dreamListProvider.notifier).deleteDream(dream.id);
+      return;
+    }
+
     await ref.read(dreamListProvider.notifier).updateDream(
           dreamId: dream.id,
           title: result.title,
           description: result.description,
           why: result.why,
         );
-  }
-
-  Future<void> _deleteDream(
-    BuildContext context,
-    WidgetRef ref,
-    Dream dream,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('夢を削除'),
-        content: Text(
-          '「${dream.title}」を削除しますか？\n紐づく目標とタスクもすべて削除されます。',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('キャンセル'),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('削除'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true) return;
-
-    await ref.read(dreamListProvider.notifier).deleteDream(dream.id);
   }
 }
 
@@ -307,14 +278,12 @@ class _DreamCard extends StatelessWidget {
   const _DreamCard({
     required this.dream,
     required this.goalCount,
-    required this.onEdit,
-    required this.onDelete,
+    required this.onTap,
   });
 
   final Dream dream;
   final int goalCount;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -322,7 +291,9 @@ class _DreamCard extends StatelessWidget {
     final colors = theme.appColors;
     final primary = theme.colorScheme.primary;
 
-    return Card(
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
       clipBehavior: Clip.antiAlias,
       child: IntrinsicHeight(
         child: Row(
@@ -370,43 +341,8 @@ class _DreamCard extends StatelessWidget {
                               ),
                             ),
                           ),
-                        // ポップアップメニュー
-                        PopupMenuButton<String>(
-                          icon: Icon(
-                            Icons.more_vert,
-                            size: 18,
-                            color: colors.textMuted,
-                          ),
-                          padding: EdgeInsets.zero,
-                          itemBuilder: (_) => [
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.edit_outlined, size: 16),
-                                  SizedBox(width: 8),
-                                  Text('編集'),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete_outline,
-                                      size: 16, color: colors.error),
-                                  const SizedBox(width: 8),
-                                  Text('削除',
-                                      style: TextStyle(color: colors.error)),
-                                ],
-                              ),
-                            ),
-                          ],
-                          onSelected: (value) {
-                            if (value == 'edit') onEdit();
-                            if (value == 'delete') onDelete();
-                          },
-                        ),
+                        Icon(Icons.chevron_right,
+                            size: 18, color: colors.textMuted),
                       ],
                     ),
 
@@ -461,6 +397,7 @@ class _DreamCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

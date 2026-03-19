@@ -13,6 +13,7 @@ class DreamDialogResult {
     required this.title,
     required this.description,
     required this.why,
+    this.deleteRequested = false,
   });
 
   /// 夢のタイトル.
@@ -23,6 +24,9 @@ class DreamDialogResult {
 
   /// なぜこの夢を叶えたいか.
   final String why;
+
+  /// 削除リクエスト.
+  final bool deleteRequested;
 }
 
 /// 夢ダイアログを表示する.
@@ -164,6 +168,14 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
         ),
       ),
       actions: [
+        if (_isEdit)
+          TextButton(
+            onPressed: _requestDelete,
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('削除'),
+          ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('キャンセル'),
@@ -175,5 +187,42 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
         ),
       ],
     );
+  }
+
+  Future<void> _requestDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('夢を削除'),
+        content: Text(
+          '「${widget.dream!.title}」を削除しますか？\n'
+          '紐づく目標・タスクも削除されます。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      Navigator.pop(
+        context,
+        const DreamDialogResult(
+          title: '',
+          description: '',
+          why: '',
+          deleteRequested: true,
+        ),
+      );
+    }
   }
 }

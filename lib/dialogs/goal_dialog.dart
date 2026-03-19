@@ -20,6 +20,7 @@ class GoalDialogResult {
     required this.whenType,
     required this.whenTarget,
     required this.how,
+    this.deleteRequested = false,
   });
 
   /// 紐づく夢のID.
@@ -36,6 +37,9 @@ class GoalDialogResult {
 
   /// どうやって達成するか.
   final String how;
+
+  /// 削除リクエスト.
+  final bool deleteRequested;
 }
 
 /// 目標ダイアログを表示する.
@@ -292,6 +296,14 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
         ),
       ),
       actions: [
+        if (_isEdit)
+          TextButton(
+            onPressed: _requestDelete,
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('削除'),
+          ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('キャンセル'),
@@ -303,5 +315,44 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
         ),
       ],
     );
+  }
+
+  Future<void> _requestDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('目標を削除'),
+        content: Text(
+          '「${widget.goal!.what}」を削除しますか？\n'
+          '紐づくタスクも削除されます。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('削除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) {
+      Navigator.pop(
+        context,
+        GoalDialogResult(
+          dreamId: '',
+          what: '',
+          whenType: WhenType.date,
+          whenTarget: '',
+          how: '',
+          deleteRequested: true,
+        ),
+      );
+    }
   }
 }
