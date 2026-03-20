@@ -72,7 +72,7 @@ void main() {
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('使い方'));
+      await tester.tap(find.text('使い方').last);
       await tester.pumpAndSettle();
 
       expect(find.text('夢を登録する'), findsOneWidget);
@@ -84,7 +84,7 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('使い方'));
+      await tester.tap(find.text('使い方').last);
       await tester.pumpAndSettle();
 
       // kIsWebはテスト環境ではfalseなのでガントチャートは表示される
@@ -96,7 +96,7 @@ void main() {
       await tester.pumpWidget(wrap(isPremium: true));
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('使い方'));
+      await tester.tap(find.text('使い方').last);
       await tester.pumpAndSettle();
 
       expect(find.text('ガントチャートでタスク管理'), findsOneWidget);
@@ -106,7 +106,7 @@ void main() {
       await tester.pumpWidget(wrap());
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('使い方'));
+      await tester.tap(find.text('使い方').last);
       await tester.pumpAndSettle();
 
       await tester.scrollUntilVisible(

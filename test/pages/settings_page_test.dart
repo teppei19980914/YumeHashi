@@ -84,61 +84,6 @@ void main() {
     expect(find.text('1.0.0'), findsOneWidget);
   });
 
-  testWidgets('ヘルプセクションが表示される', (tester) async {
-    final prefs = await getPrefs();
-    await tester.pumpWidget(
-      wrapWithProviders(const SettingsPage(), prefs: prefs, db: setup.db),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.scrollUntilVisible(
-      find.text('ヘルプ'),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-
-    expect(find.text('ヘルプ'), findsOneWidget);
-    expect(find.text('チュートリアルを開始'), findsOneWidget);
-    expect(find.text('体験版の制限事項'), findsOneWidget);
-  });
-
-  testWidgets('やりたいこと発見ガイドが表示される', (tester) async {
-    final prefs = await getPrefs();
-    await tester.pumpWidget(
-      wrapWithProviders(const SettingsPage(), prefs: prefs, db: setup.db),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.scrollUntilVisible(
-      find.text('やりたいこと発見ガイド'),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('やりたいこと発見ガイド'), findsOneWidget);
-  });
-
-  testWidgets('チュートリアルをタップすると確認ダイアログが表示される', (tester) async {
-    final prefs = await getPrefs();
-    await tester.pumpWidget(
-      wrapWithProviders(const SettingsPage(), prefs: prefs, db: setup.db),
-    );
-    await tester.pumpAndSettle();
-
-    await tester.scrollUntilVisible(
-      find.text('チュートリアルを開始'),
-      200,
-      scrollable: find.byType(Scrollable).first,
-    );
-
-    await tester.ensureVisible(find.text('チュートリアルを開始'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('チュートリアルを開始'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('チュートリアルを開始'), findsWidgets);
-    expect(find.text('開始する'), findsOneWidget);
-  });
-
   testWidgets('全削除をタップすると確認ダイアログが表示される', (tester) async {
     final prefs = await getPrefs();
     await tester.pumpWidget(

@@ -49,7 +49,7 @@ void main() {
     expect(find.text('基本情報技術者'), findsOneWidget);
   });
 
-  testWidgets('目標カードのHowが表示される', (tester) async {
+  testWidgets('目標カードのWhatが表示される', (tester) async {
     final prefs = await getPrefs();
     await tester.pumpWidget(
       wrapWithProviders(
@@ -66,7 +66,11 @@ void main() {
 
     // WhyはDream側に移動したためGoalカードには表示されない
     expect(find.text('スキルアップ'), findsNothing);
-    expect(find.text('毎日1時間'), findsOneWidget);
+    // HowはカードUIから削除されたため表示されない
+    expect(find.text('毎日1時間'), findsNothing);
+    // Whatはカードのタイトルとして表示される
+    expect(find.text('Flutter活動'), findsOneWidget);
+    expect(find.text('基本情報技術者'), findsOneWidget);
   });
 
   testWidgets('夢がない状態でも追加ボタンでダイアログが開く',

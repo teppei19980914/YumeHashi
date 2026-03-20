@@ -101,6 +101,9 @@ List<Override> createTestOverrides({
       ),
     ),
     allLogsProvider.overrideWith((ref) async => []),
+    goalProgressProvider.overrideWith(
+      (ref) async => <String, ({int total, int completed})>{},
+    ),
     ganttTasksProvider.overrideWith((ref) async => <Task>[]),
     ganttGoalListProvider.overrideWith((ref) async => <Goal>[]),
     goalStatsProvider

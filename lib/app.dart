@@ -3,6 +3,7 @@
 /// MaterialApp + go_router + テーマ設定を統合する.
 library;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -178,6 +179,9 @@ class _AppShellState extends ConsumerState<_AppShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final prefs = ref.read(sharedPreferencesProvider);
+
+      // Web以外ではクラウド同期をスキップ
+      if (!kIsWeb) return;
 
       // クラウド認証保留フラグがなければスキップ
       if (!(prefs.getBool('cloud_auth_pending') ?? false)) {

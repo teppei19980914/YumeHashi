@@ -22,9 +22,11 @@ import 'services/trial_limit_service.dart';
 /// リモート設定は非同期で取得してアプリを即座に起動する.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
   final prefs = await SharedPreferences.getInstance();
 
   // URLキーの保存は同期的に実施（軽量なSharedPreferences操作のみ）

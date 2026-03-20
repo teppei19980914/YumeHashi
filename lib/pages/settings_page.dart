@@ -7,6 +7,7 @@ library;
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -187,8 +188,10 @@ class SettingsPage extends ConsumerWidget {
                 title: const Text('ご利用プラン'),
                 subtitle: Text(_getPlanName(ref)),
               ),
-              // プレミアム未認証: 認証の警告と認証ボタン
-              if (isPremium && !FirestoreSyncService().isSignedIn) ...[
+              // プレミアム未認証: 認証の警告と認証ボタン（Web限定）
+              if (kIsWeb &&
+                  isPremium &&
+                  !FirestoreSyncService().isSignedIn) ...[
                 Padding(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -221,8 +224,10 @@ class SettingsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 4),
               ],
-              // プレミアム認証済み: データ復元ボタン
-              if (isPremium && FirestoreSyncService().isSignedIn) ...[
+              // プレミアム認証済み: データ復元ボタン（Web限定）
+              if (kIsWeb &&
+                  isPremium &&
+                  FirestoreSyncService().isSignedIn) ...[
                 const Divider(height: 1),
                 ListTile(
                   leading: Icon(Icons.cloud_download, color: colors.success),
@@ -343,10 +348,13 @@ class SettingsPage extends ConsumerWidget {
 
     // プレミアムプラン
     if (isPremium) {
-      final syncService = FirestoreSyncService();
-      return syncService.isSignedIn
-          ? 'プレミアムプラン（認証）'
-          : 'プレミアムプラン（未認証）';
+      if (kIsWeb) {
+        final syncService = FirestoreSyncService();
+        return syncService.isSignedIn
+            ? 'プレミアムプラン（認証）'
+            : 'プレミアムプラン（未認証）';
+      }
+      return 'プレミアムプラン';
     }
 
     // スタータープラン

@@ -11,7 +11,6 @@ import '../services/dream_service.dart';
 import '../services/feedback_service.dart';
 import '../services/invite_service.dart';
 import '../services/gantt_excel_export_service.dart';
-import '../services/gantt_excel_import_service.dart';
 import '../services/goal_service.dart';
 import '../services/notification_service.dart';
 import '../services/remote_config_service.dart';
@@ -142,8 +141,3 @@ final ganttExcelExportServiceProvider =
 });
 
 /// GanttExcelImportServiceのProvider.
-final ganttExcelImportServiceProvider =
-    Provider<GanttExcelImportService>((ref) {
-  final taskService = ref.watch(taskServiceProvider);
-  return GanttExcelImportService(taskService: taskService);
-});
