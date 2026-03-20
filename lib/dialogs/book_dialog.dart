@@ -93,8 +93,12 @@ class _BookDialogContentState extends State<_BookDialogContent> {
           Text(_isEdit ? '書籍を編集' : '書籍を追加'),
         ],
       ),
-      content: SizedBox(
-        width: 400,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 400,
+          maxHeight: MediaQuery.of(context).size.height * 0.6,
+        ),
         child: Form(
           key: _formKey,
           child: SingleChildScrollView(
