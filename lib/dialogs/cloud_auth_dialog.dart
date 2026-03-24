@@ -1,6 +1,7 @@
-/// クラウド認証ダイアログ.
+/// アカウント連携ダイアログ.
 ///
-/// プレミアムプランユーザーがFirebaseアカウントを作成/ログインするためのダイアログ.
+/// 匿名ユーザーがメール/パスワードでアカウント昇格するか、
+/// 既存アカウントでログインしてデータを復元するためのダイアログ.
 library;
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,30 +10,28 @@ import 'package:flutter/material.dart';
 import '../services/firestore_sync_service.dart';
 import '../theme/app_theme.dart';
 
-/// クラウド認証ダイアログの結果.
+/// アカウント連携ダイアログの結果.
 enum CloudAuthResult {
-  /// サインイン/サインアップ成功.
-  success,
+  /// アカウント連携成功（匿名→メール昇格）.
+  linked,
+
+  /// 既存アカウントでログイン成功（データ復元が必要）.
+  loggedIn,
 
   /// スキップ（後で設定する）.
   skipped,
 }
 
-/// クラウド認証ダイアログを表示する.
-Future<CloudAuthResult?> showCloudAuthDialog(
-  BuildContext context, {
-  String? initialEmail,
-}) async {
+/// アカウント連携ダイアログを表示する.
+Future<CloudAuthResult?> showCloudAuthDialog(BuildContext context) async {
   return showDialog<CloudAuthResult>(
     context: context,
-    barrierDismissible: false,
-    builder: (context) => _CloudAuthDialog(initialEmail: initialEmail),
+    builder: (context) => const _CloudAuthDialog(),
   );
 }
 
 class _CloudAuthDialog extends StatefulWidget {
-  const _CloudAuthDialog({this.initialEmail});
-  final String? initialEmail;
+  const _CloudAuthDialog();
 
   @override
   State<_CloudAuthDialog> createState() => _CloudAuthDialogState();
@@ -40,20 +39,15 @@ class _CloudAuthDialog extends StatefulWidget {
 
 class _CloudAuthDialogState extends State<_CloudAuthDialog> {
   final _formKey = GlobalKey<FormState>();
-  late final TextEditingController _emailController;
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLogin = false; // false=新規作成, true=ログイン
+  // false=アカウント昇格（新規連携）, true=既存ログイン
+  bool _isLogin = false;
   bool _loading = false;
   String? _error;
   bool _obscurePassword = true;
 
   final _syncService = FirestoreSyncService();
-
-  @override
-  void initState() {
-    super.initState();
-    _emailController = TextEditingController(text: widget.initialEmail ?? '');
-  }
 
   @override
   void dispose() {
@@ -72,22 +66,34 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
 
     try {
       if (_isLogin) {
+        // 既存アカウントでログイン（別端末からの復元用）
         await _syncService.signIn(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
       } else {
-        await _syncService.signUp(
+        // 匿名アカウントをメール/パスワードに昇格
+        await _syncService.linkWithEmail(
           email: _emailController.text.trim(),
           password: _passwordController.text,
         );
       }
 
-      if (mounted) Navigator.pop(context, CloudAuthResult.success);
+      if (mounted) {
+        Navigator.pop(
+          context,
+          _isLogin ? CloudAuthResult.loggedIn : CloudAuthResult.linked,
+        );
+      }
     } on FirebaseAuthException catch (e) {
       setState(() {
         _loading = false;
         _error = _authErrorMessage(e.code);
+      });
+    } on StateError catch (e) {
+      setState(() {
+        _loading = false;
+        _error = e.message;
       });
     }
   }
@@ -95,13 +101,15 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
   String _authErrorMessage(String code) {
     switch (code) {
       case 'email-already-in-use':
-        return 'このメールアドレスは既に登録されています。ログインしてください。';
+      case 'credential-already-in-use':
+        return 'このメールアドレスは既に登録されています。'
+            '「既にアカウントをお持ちの方」からログインしてください。';
       case 'weak-password':
         return 'パスワードは6文字以上で設定してください。';
       case 'invalid-email':
         return 'メールアドレスの形式が正しくありません。';
       case 'user-not-found':
-        return 'アカウントが見つかりません。新規登録してください。';
+        return 'アカウントが見つかりません。新規連携してください。';
       case 'wrong-password':
       case 'invalid-credential':
         return 'メールアドレスまたはパスワードが正しくありません。';
@@ -116,11 +124,14 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
     final colors = theme.appColors;
 
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       title: Row(
         children: [
-          Icon(Icons.cloud_outlined, color: theme.colorScheme.primary),
+          Icon(Icons.link, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          Text(_isLogin ? 'クラウドにログイン' : 'クラウドアカウント作成'),
+          Expanded(
+            child: Text(_isLogin ? 'アカウントでログイン' : 'アカウント連携'),
+          ),
         ],
       ),
       content: ConstrainedBox(
@@ -133,13 +144,37 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  _isLogin
-                      ? '登録済みのアカウントでログインしてデータを復元します。'
-                      : 'データをクラウドに保存するためのアカウントを作成します。\n'
-                          'キャッシュクリアや端末変更時もデータを復元できます。',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colors.textSecondary,
+                // 説明
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withAlpha(40),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _isLogin ? Icons.cloud_download : Icons.shield_outlined,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _isLogin
+                              ? '登録済みのアカウントでログインしてデータを復元します。'
+                              : 'メールアドレスを連携すると、端末変更やキャッシュクリア時も'
+                                  'データを復元できます。',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -211,7 +246,7 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
                     }),
                     child: Text(
                       _isLogin
-                          ? '初めてご利用の方はこちら（新規登録）'
+                          ? '初めてご利用の方はこちら（アカウント連携）'
                           : '既にアカウントをお持ちの方はこちら（ログイン）',
                       style: const TextStyle(fontSize: 12),
                     ),
@@ -227,7 +262,7 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
           onPressed: _loading
               ? null
               : () => Navigator.pop(context, CloudAuthResult.skipped),
-          child: const Text('あとで設定する'),
+          child: const Text('あとで'),
         ),
         ElevatedButton(
           onPressed: _loading ? null : _submit,
@@ -237,7 +272,7 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(_isLogin ? 'ログイン' : 'アカウント作成'),
+              : Text(_isLogin ? 'ログイン' : '連携する'),
         ),
       ],
     );

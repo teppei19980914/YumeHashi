@@ -143,10 +143,8 @@ class SettingsPage extends ConsumerWidget {
                 subtitle: const Text('この操作は取り消せません'),
                 onTap: () => _clearAllData(context, ref),
               ),
-              // プレミアム認証済み: クラウドデータ復元（Web限定）
-              if (kIsWeb &&
-                  isPremium &&
-                  FirestoreSyncService().isSignedIn) ...[
+              // クラウドデータ復元（Web + サインイン済み）
+              if (kIsWeb && FirestoreSyncService().isSignedIn) ...[
                 const Divider(height: 1),
                 ListTile(
                   leading: Icon(Icons.cloud_download, color: colors.success),
@@ -159,6 +157,13 @@ class SettingsPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 24),
+
+        // アカウント（Web限定）
+        if (kIsWeb) ...[
+          _SectionHeader(title: 'アカウント', icon: Icons.person_outlined),
+          _AccountCard(ref: ref, colors: colors),
+          const SizedBox(height: 24),
+        ],
 
         // 招待プラン
         _InviteStatusCard(ref: ref, colors: colors),
@@ -200,42 +205,6 @@ class SettingsPage extends ConsumerWidget {
                 title: const Text('ご利用プラン'),
                 subtitle: Text(_getPlanName(ref)),
               ),
-              // プレミアム未認証: 認証の警告と認証ボタン（Web限定）
-              if (kIsWeb &&
-                  isPremium &&
-                  !FirestoreSyncService().isSignedIn) ...[
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: Text(
-                    'データ保護のためにクラウド認証を設定してください。\n'
-                    '未認証の場合、ブラウザのキャッシュクリアで'
-                    '全データが失われます。',
-                    style: TextStyle(
-                      color: colors.error,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: () => _setupCloudAuth(context, ref),
-                      icon: const Icon(Icons.cloud_outlined, size: 18),
-                      label: const Text('クラウド認証を設定する'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: colors.error,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
-              ],
               const Divider(height: 1),
               const ListTile(
                 leading: Icon(Icons.code),
@@ -261,24 +230,6 @@ class SettingsPage extends ConsumerWidget {
   }
 
 
-
-  Future<void> _setupCloudAuth(BuildContext context, WidgetRef ref) async {
-    final result = await showCloudAuthDialog(context);
-    if (result == CloudAuthResult.success && context.mounted) {
-      // 認証成功 → ローカルデータをアップロード
-      final syncService = FirestoreSyncService();
-      final exportService = ref.read(dataExportServiceProvider);
-      final json = await exportService.exportData();
-      await syncService.uploadData(json);
-
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('クラウド認証を設定し、データを保存しました')),
-      );
-      // UIを更新
-      (context as Element).markNeedsBuild();
-    }
-  }
 
   Future<void> _restoreFromCloud(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
@@ -544,6 +495,93 @@ class SettingsPage extends ConsumerWidget {
 /// 招待プラン状態カード.
 ///
 /// 招待コードが有効な場合のみ表示する.
+/// アカウントカード.
+class _AccountCard extends StatelessWidget {
+  const _AccountCard({required this.ref, required this.colors});
+
+  final WidgetRef ref;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final syncService = FirestoreSyncService();
+    final isLinked = syncService.isLinked;
+    final email = syncService.email;
+
+    return Card(
+      child: Column(
+        children: [
+          ListTile(
+            leading: Icon(
+              isLinked ? Icons.verified_user : Icons.person_outline,
+              color: isLinked ? colors.success : colors.warning,
+            ),
+            title: Text(isLinked ? 'アカウント連携済み' : '匿名ユーザー'),
+            subtitle: Text(
+              isLinked
+                  ? email ?? ''
+                  : 'メール連携するとデータを安全に保護できます',
+            ),
+          ),
+          if (!isLinked) ...[
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _linkAccount(context),
+                  icon: const Icon(Icons.link, size: 18),
+                  label: const Text('メールアドレスを連携する'),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Future<void> _linkAccount(BuildContext context) async {
+    final result = await showCloudAuthDialog(context);
+    if (result == null || result == CloudAuthResult.skipped) return;
+    if (!context.mounted) return;
+
+    final syncService = FirestoreSyncService();
+    final exportService = ref.read(dataExportServiceProvider);
+
+    if (result == CloudAuthResult.loggedIn) {
+      // ログイン成功 → クラウドからデータを自動復元
+      try {
+        final json = await syncService.downloadData();
+        if (json != null) {
+          await exportService.importData(json);
+          ref.invalidate(dreamListProvider);
+          ref.invalidate(goalListProvider);
+          ref.invalidate(bookListProvider);
+        }
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ログインしてデータを復元しました')),
+        );
+      } on Exception {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ログインしました（データ復元に失敗）')),
+        );
+      }
+    } else {
+      // アカウント連携成功 → ローカルデータをアップロード
+      final json = await exportService.exportData();
+      await syncService.uploadData(json);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('アカウントを連携しました')),
+      );
+    }
+    (context as Element).markNeedsBuild();
+  }
+}
+
 class _InviteStatusCard extends StatelessWidget {
   const _InviteStatusCard({required this.ref, required this.colors});
 

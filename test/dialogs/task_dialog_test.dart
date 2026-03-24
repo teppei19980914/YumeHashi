@@ -66,12 +66,23 @@ void main() {
     expect(find.text('新しいタスクを追加'), findsOneWidget);
   });
 
-  testWidgets('キャンセルでダイアログが閉じる', (tester) async {
+  testWidgets('戻るボタンでダイアログが閉じる', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('キャンセル'));
+    await tester.tap(find.text('戻る'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('新しいタスクを追加'), findsNothing);
+  });
+
+  testWidgets('閉じるボタンでダイアログが閉じる', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('閉じる'));
     await tester.pumpAndSettle();
 
     expect(find.text('新しいタスクを追加'), findsNothing);

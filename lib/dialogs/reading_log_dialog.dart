@@ -209,24 +209,13 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
               ),
               const SizedBox(height: 8),
 
-              // メモ + 記録ボタン
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _memoController,
-                      decoration: const InputDecoration(
-                        hintText: 'メモ（任意）',
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  FilledButton(
-                    onPressed: _addLog,
-                    child: const Text('記録'),
-                  ),
-                ],
+              // メモ
+              TextField(
+                controller: _memoController,
+                decoration: const InputDecoration(
+                  hintText: 'メモ（任意）',
+                  isDense: true,
+                ),
               ),
               const SizedBox(height: 16),
 
@@ -293,9 +282,19 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
           onPressed: () => Navigator.of(context).pop('back'),
           child: const Text('戻る'),
         ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('閉じる'),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('閉じる'),
+            ),
+            const SizedBox(width: 8),
+            ElevatedButton(
+              onPressed: _addLog,
+              child: const Text('記録'),
+            ),
+          ],
         ),
       ],
     );

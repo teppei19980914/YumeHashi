@@ -1,7 +1,7 @@
 /// Firestore データ同期サービス.
 ///
-/// プレミアムプランユーザーのローカルデータをFirestoreに同期する.
-/// ローカルSQLiteをマスターとし、Firestoreをバックアップとして使用する.
+/// Firebase匿名認証で自動ログインし、Firestoreにデータを同期する.
+/// ユーザーは任意のタイミングでメール/パスワードにアカウント昇格できる.
 library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -22,8 +22,17 @@ class FirestoreSyncService {
   /// 現在のFirebaseユーザー.
   User? get currentUser => _auth.currentUser;
 
-  /// ログイン済みかどうか.
+  /// ログイン済みかどうか（匿名含む）.
   bool get isSignedIn => _auth.currentUser != null;
+
+  /// 匿名ユーザーかどうか.
+  bool get isAnonymous => _auth.currentUser?.isAnonymous ?? true;
+
+  /// メール連携済みかどうか.
+  bool get isLinked => isSignedIn && !isAnonymous;
+
+  /// 連携済みメールアドレス.
+  String? get email => _auth.currentUser?.email;
 
   /// ユーザーのドキュメント参照.
   DocumentReference? get _userDoc {
@@ -32,18 +41,40 @@ class FirestoreSyncService {
     return _firestore.collection('users').doc(uid);
   }
 
-  /// メール+パスワードでサインアップ（新規ユーザー作成）.
-  Future<UserCredential> signUp({
+  // ── 認証 ──────────────────────────────────────────────────
+
+  /// 匿名認証でサインイン（初回アクセス時に自動実行）.
+  ///
+  /// 既にサインイン済みの場合は何もしない.
+  Future<User?> ensureSignedIn() async {
+    if (_auth.currentUser != null) return _auth.currentUser;
+    final credential = await _auth.signInAnonymously();
+    return credential.user;
+  }
+
+  /// 匿名アカウントをメール/パスワードに昇格する.
+  ///
+  /// 匿名ユーザーのUIDとデータはそのまま引き継がれる.
+  /// 既にメール連携済みの場合は例外を投げる.
+  Future<UserCredential> linkWithEmail({
     required String email,
     required String password,
   }) async {
-    return _auth.createUserWithEmailAndPassword(
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError('サインインされていません');
+    }
+    if (!user.isAnonymous) {
+      throw StateError('既にアカウント連携済みです');
+    }
+    final credential = EmailAuthProvider.credential(
       email: email,
       password: password,
     );
+    return user.linkWithCredential(credential);
   }
 
-  /// メール+パスワードでサインイン.
+  /// メール+パスワードでサインイン（別端末からのログイン用）.
   Future<UserCredential> signIn({
     required String email,
     required String password,
@@ -59,9 +90,9 @@ class FirestoreSyncService {
     await _auth.signOut();
   }
 
+  // ── データ同期 ────────────────────────────────────────────
+
   /// ローカルデータをFirestoreにアップロード（全データ同期）.
-  ///
-  /// [exportedJson] はDataExportService.exportData()の結果.
   Future<void> uploadData(String exportedJson) async {
     final doc = _userDoc;
     if (doc == null) return;
@@ -70,12 +101,11 @@ class FirestoreSyncService {
       'data': exportedJson,
       'updatedAt': FieldValue.serverTimestamp(),
       'email': _auth.currentUser?.email,
+      'isAnonymous': _auth.currentUser?.isAnonymous ?? true,
     }, SetOptions(merge: true));
   }
 
   /// Firestoreからデータをダウンロード.
-  ///
-  /// 保存済みデータのJSON文字列を返す. データがない場合はnull.
   Future<String?> downloadData() async {
     final doc = _userDoc;
     if (doc == null) return null;

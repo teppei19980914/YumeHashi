@@ -11,6 +11,7 @@ import 'app.dart';
 import 'firebase_options.dart';
 import 'providers/service_providers.dart';
 import 'providers/theme_provider.dart';
+import 'services/firestore_sync_service.dart';
 import 'services/invite_service.dart';
 import 'services/remote_config_service.dart';
 import 'services/stripe_service.dart';
@@ -49,10 +50,11 @@ Future<void> main() async {
     ),
   );
 
-  // リモート設定・招待コード・サブスク状態を非同期で処理
+  // リモート設定・招待コード・サブスク状態・匿名認証を非同期で処理
   _initRemoteConfigAsync(prefs, container);
   _initInviteCodeAsync(prefs);
   _initSubscriptionAsync(prefs);
+  _initAnonymousAuth();
 }
 
 /// URLキーをSharedPreferencesに保存する（同期的）.
@@ -147,6 +149,19 @@ Future<void> _initSubscriptionAsync(SharedPreferences prefs) async {
   // 新規サブスク成功時はクラウド認証フラグを立てる
   if (subscriptionParam == 'success') {
     await prefs.setBool('cloud_auth_pending', true);
+  }
+}
+
+/// Web起動時にFirebase匿名認証を自動実行する.
+///
+/// ユーザー操作なしでUIDが発行され、以降のデータ同期の基盤となる.
+/// 既にサインイン済み（匿名・メール問わず）の場合は何もしない.
+Future<void> _initAnonymousAuth() async {
+  if (!kIsWeb) return;
+  try {
+    await FirestoreSyncService().ensureSignedIn();
+  } on Exception {
+    // 認証失敗時はローカルのみで動作（次回起動時にリトライ）
   }
 }
 

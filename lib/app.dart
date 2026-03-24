@@ -9,8 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'dialogs/app_guide_dialog.dart';
-import 'dialogs/cloud_auth_dialog.dart';
-import 'services/firestore_sync_service.dart';
+import 'services/sync_manager.dart';
 import 'dialogs/help_dialog.dart';
 import 'dialogs/monitor_submission_dialog.dart';
 import 'dialogs/release_notes_dialog.dart';
@@ -171,58 +170,31 @@ class _AppShellState extends ConsumerState<_AppShell> {
   static const _seenVersionKey = 'release_notes_seen_version';
   static const _monitorSubmittedKey = 'monitor_data_submitted';
 
-  /// クラウド認証の確認（サブスク成功後に表示）.
+  /// クラウド同期の初期化（匿名認証ベース）.
+  ///
+  /// SyncManagerを初期化し、起動時の初回同期を実行する.
+  /// ライフサイクル監視で離脱時にも未同期データを保存する.
   void _checkCloudAuth() {
     if (_cloudAuthChecked) return;
     _cloudAuthChecked = true;
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-      final prefs = ref.read(sharedPreferencesProvider);
+      if (!mounted || !kIsWeb) return;
 
-      // Web以外ではクラウド同期をスキップ
-      if (!kIsWeb) return;
+      // SyncManager初期化
+      final syncManager = SyncManager();
+      syncManager.init(ref.read(dataExportServiceProvider));
 
-      // クラウド認証保留フラグがなければスキップ
-      if (!(prefs.getBool('cloud_auth_pending') ?? false)) {
-        // 既にサインイン済みなら自動同期
-        final syncService = FirestoreSyncService();
-        if (syncService.isSignedIn && isPremium) {
-          _autoSync(syncService);
-        }
-        return;
-      }
+      // ライフサイクル監視: アプリ離脱時に未同期データを保存
+      // AppLifecycleListenerは自動でBindingに登録される
+      AppLifecycleListener(
+        onHide: () => syncManager.syncOnExit(),
+        onPause: () => syncManager.syncOnExit(),
+      );
 
-      // フラグをクリア
-      await prefs.remove('cloud_auth_pending');
-
-      if (!mounted) return;
-      final result = await showCloudAuthDialog(context);
-
-      if (result == CloudAuthResult.success && mounted) {
-        // アカウント作成成功 → ローカルデータをアップロード
-        final syncService = FirestoreSyncService();
-        final exportService = ref.read(dataExportServiceProvider);
-        final json = await exportService.exportData();
-        await syncService.uploadData(json);
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('データをクラウドに保存しました')),
-        );
-      }
+      // 起動時の初回同期
+      await syncManager.syncNow();
     });
-  }
-
-  /// プレミアムユーザーのデータを自動同期.
-  Future<void> _autoSync(FirestoreSyncService syncService) async {
-    try {
-      final exportService = ref.read(dataExportServiceProvider);
-      final json = await exportService.exportData();
-      await syncService.uploadData(json);
-    } on Exception {
-      // 同期失敗は無視（次回起動時に再試行）
-    }
   }
 
   /// モニターデータ提出の確認.

@@ -360,10 +360,12 @@ class GanttPage extends ConsumerWidget {
         context,
         task: task,
         books: books,
-        studyLogService: ref.read(studyLogServiceProvider),
       );
       if (result == null) {
-        continue; // 選択肢画面に戻る
+        continue; // 戻る → 選択肢画面に戻る
+      }
+      if (result.closeRequested) {
+        return; // 閉じる → 完全に閉じる
       }
 
       if (result.deleteRequested) {
@@ -375,9 +377,6 @@ class GanttPage extends ConsumerWidget {
         return;
       }
 
-      if (result.studyLogsChanged) {
-        ref.invalidate(allLogsProvider);
-      }
       await ref.read(taskServiceProvider).updateTask(
             taskId: task.id,
             title: result.title,

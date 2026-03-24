@@ -2,7 +2,7 @@
 ///
 /// 左に固定の目標ラベル列、右にスクロール可能なタイムラインを表示する.
 /// タスクは目標ごとにグルーピングされ、グループ帯で視覚的に分類される.
-/// 目標列は横スクロールに関わらず常時表示され、縦スクロールは両列で同期される.
+/// 目標列・ヘッダー行は常時固定表示される.
 library;
 
 import 'dart:math' as math;
@@ -73,10 +73,9 @@ class _GanttChartState extends State<GanttChart> {
   late List<_GoalGroup> _groups;
   int? _hoveredRow;
 
-  // 縦スクロール同期用
-  final _labelVController = ScrollController();
-  final _timelineVController = ScrollController();
-  bool _syncingScroll = false;
+  // スクロール: ボディの縦・横を1つずつ管理し、他は Transform で追従
+  final _bodyVController = ScrollController();
+  final _bodyHController = ScrollController();
 
   static const double _labelColumnWidth = 140;
 
@@ -84,35 +83,13 @@ class _GanttChartState extends State<GanttChart> {
   void initState() {
     super.initState();
     _rebuild();
-    _labelVController.addListener(_onLabelVScroll);
-    _timelineVController.addListener(_onTimelineVScroll);
-    _timelineHController.addListener(_syncHScroll);
   }
 
   @override
   void dispose() {
-    _labelVController.removeListener(_onLabelVScroll);
-    _timelineVController.removeListener(_onTimelineVScroll);
-    _timelineHController.removeListener(_syncHScroll);
-    _labelVController.dispose();
-    _timelineVController.dispose();
-    _timelineHController.dispose();
-    _headerHController.dispose();
+    _bodyVController.dispose();
+    _bodyHController.dispose();
     super.dispose();
-  }
-
-  void _onLabelVScroll() {
-    if (_syncingScroll) return;
-    _syncingScroll = true;
-    _timelineVController.jumpTo(_labelVController.offset);
-    _syncingScroll = false;
-  }
-
-  void _onTimelineVScroll() {
-    if (_syncingScroll) return;
-    _syncingScroll = true;
-    _labelVController.jumpTo(_timelineVController.offset);
-    _syncingScroll = false;
   }
 
   @override
@@ -180,7 +157,6 @@ class _GanttChartState extends State<GanttChart> {
   }
 
   int? _hitTestRow(Offset localPosition) {
-    // ボディ内ではヘッダーオフセット不要（Y=0がボディの先頭）
     final y = localPosition.dy;
     if (y < 0) return null;
     final row = y ~/ _calculator.rowHeight;
@@ -193,48 +169,55 @@ class _GanttChartState extends State<GanttChart> {
     final theme = Theme.of(context);
     final colors = theme.appColors;
     final sceneWidth = _calculator.calculateSceneWidth(_timeline);
-    final bodyHeight = _calculator.calculateSceneHeight(widget.tasks.length) -
-        _calculator.headerHeight;
+    final bodyHeight =
+        widget.tasks.length * _calculator.rowHeight.toDouble();
+    final effectiveBodyHeight = math.max(bodyHeight, _calculator.rowHeight.toDouble());
     final headerH = _calculator.headerHeight.toDouble();
 
     return Column(
       children: [
-        // ── ヘッダー行（固定） ──
+        // ── ヘッダー行（縦方向に固定） ──
         SizedBox(
           height: headerH,
           child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // 左上: 「目標」ヘッダー
-              SizedBox(
+              // 左上: 目標ヘッダー（完全固定）
+              _FixedLabelHeader(
                 width: _labelColumnWidth,
-                child: CustomPaint(
-                  painter: _LabelHeaderPainter(
-                    bgColor: colors.bgPrimary,
-                    gridColor: colors.border,
-                    textColor: colors.textPrimary,
-                  ),
-                ),
+                bgColor: colors.bgPrimary,
+                gridColor: colors.border,
+                textColor: colors.textPrimary,
               ),
-              // 右上: タイムラインヘッダー（横スクロール連動）
+              // 右上: タイムラインヘッダー（横スクロール追従）
               Expanded(
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (_) => true, // ヘッダーの独自スクロール防止
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    controller: _headerHController,
-                    physics: const NeverScrollableScrollPhysics(),
-                    child: CustomPaint(
-                      size: Size(sceneWidth, headerH),
-                      painter: _TimelineHeaderPainter(
-                        calculator: _calculator,
-                        timeline: _timeline,
-                        milestones: widget.milestones,
-                        bgColor: colors.bgPrimary,
-                        gridColor: colors.border,
-                        textColor: colors.textPrimary,
-                        mutedColor: colors.textMuted,
-                        todayColor: colors.error,
+                child: ClipRect(
+                  child: ListenableBuilder(
+                    listenable: _bodyHController,
+                    builder: (context, child) {
+                      final offset = _bodyHController.hasClients
+                          ? _bodyHController.offset
+                          : 0.0;
+                      return Transform.translate(
+                        offset: Offset(-offset, 0),
+                        child: child,
+                      );
+                    },
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxWidth: sceneWidth,
+                      minWidth: sceneWidth,
+                      child: CustomPaint(
+                        size: Size(sceneWidth, headerH),
+                        painter: _TimelineHeaderPainter(
+                          calculator: _calculator,
+                          timeline: _timeline,
+                          milestones: widget.milestones,
+                          bgColor: colors.bgPrimary,
+                          gridColor: colors.border,
+                          textColor: colors.textPrimary,
+                          mutedColor: colors.textMuted,
+                          todayColor: colors.error,
+                        ),
                       ),
                     ),
                   ),
@@ -244,43 +227,55 @@ class _GanttChartState extends State<GanttChart> {
           ),
         ),
 
-        // ── ボディ行（縦スクロール同期、右は横スクロール可能） ──
+        // ── ボディ行 ──
         Expanded(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 左列: 目標ラベル（縦スクロール）
+              // 左列: 目標ラベル（縦スクロール追従、横は固定）
               SizedBox(
                 width: _labelColumnWidth,
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context)
-                      .copyWith(scrollbars: false),
-                  child: SingleChildScrollView(
-                    controller: _labelVController,
-                    child: CustomPaint(
-                      size: Size(_labelColumnWidth, bodyHeight),
-                      painter: _LabelBodyPainter(
-                        groups: _groups,
-                        calculator: _calculator,
-                        taskCount: widget.tasks.length,
-                        bgColor: colors.bgPrimary,
-                        gridColor: colors.border,
-                        textColor: colors.textPrimary,
-                        hoveredRow: _hoveredRow,
-                        hoverColor: colors.bgHover,
+                child: ClipRect(
+                  child: ListenableBuilder(
+                    listenable: _bodyVController,
+                    builder: (context, child) {
+                      final offset = _bodyVController.hasClients
+                          ? _bodyVController.offset
+                          : 0.0;
+                      return Transform.translate(
+                        offset: Offset(0, -offset),
+                        child: child,
+                      );
+                    },
+                    child: OverflowBox(
+                      alignment: Alignment.topLeft,
+                      maxHeight: effectiveBodyHeight,
+                      minHeight: effectiveBodyHeight,
+                      child: CustomPaint(
+                        size: Size(_labelColumnWidth, effectiveBodyHeight),
+                        painter: _LabelBodyPainter(
+                          groups: _groups,
+                          calculator: _calculator,
+                          taskCount: widget.tasks.length,
+                          bgColor: colors.bgPrimary,
+                          gridColor: colors.border,
+                          textColor: colors.textPrimary,
+                          hoveredRow: _hoveredRow,
+                          hoverColor: colors.bgHover,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
 
-              // 右列: タイムライン（縦+横スクロール）
+              // 右列: タイムラインボディ（縦+横スクロール可能、唯一のスクロール操作元）
               Expanded(
                 child: SingleChildScrollView(
-                  controller: _timelineVController,
+                  controller: _bodyVController,
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    controller: _timelineHController,
+                    controller: _bodyHController,
                     child: MouseRegion(
                       onHover: (event) {
                         final row = _hitTestRow(event.localPosition);
@@ -301,7 +296,7 @@ class _GanttChartState extends State<GanttChart> {
                           }
                         },
                         child: CustomPaint(
-                          size: Size(sceneWidth, bodyHeight),
+                          size: Size(sceneWidth, effectiveBodyHeight),
                           painter: _TimelineBodyPainter(
                             tasks: widget.tasks,
                             groups: _groups,
@@ -327,73 +322,46 @@ class _GanttChartState extends State<GanttChart> {
       ],
     );
   }
-
-  // 横スクロール同期: ヘッダーとボディ
-  final _timelineHController = ScrollController();
-  final _headerHController = ScrollController();
-
-  void _syncHScroll() {
-    if (_headerHController.hasClients) {
-      _headerHController.jumpTo(_timelineHController.offset);
-    }
-  }
 }
 
-// ── 左上: 「目標」ヘッダー ──────────────────────────────────────
+// ── 左上: 固定ヘッダーラベル ──────────────────────────────────
 
-class _LabelHeaderPainter extends CustomPainter {
-  _LabelHeaderPainter({
+class _FixedLabelHeader extends StatelessWidget {
+  const _FixedLabelHeader({
+    required this.width,
     required this.bgColor,
     required this.gridColor,
     required this.textColor,
   });
 
+  final double width;
   final Color bgColor;
   final Color gridColor;
   final Color textColor;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = bgColor,
-    );
-    _drawText(canvas, '目標', Offset(8, size.height / 2 - 7), textColor, 12,
-        fontWeight: FontWeight.w600);
-    // 下線
-    canvas.drawLine(
-      Offset(0, size.height),
-      Offset(size.width, size.height),
-      Paint()
-        ..color = gridColor
-        ..strokeWidth = 1,
-    );
-    // 右線
-    canvas.drawLine(
-      Offset(size.width - 1, 0),
-      Offset(size.width - 1, size.height),
-      Paint()
-        ..color = gridColor
-        ..strokeWidth = 1,
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      decoration: BoxDecoration(
+        color: bgColor,
+        border: Border(
+          bottom: BorderSide(color: gridColor),
+          right: BorderSide(color: gridColor),
+        ),
+      ),
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.only(left: 8),
+      child: Text(
+        '目標',
+        style: TextStyle(
+          color: textColor,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
-
-  void _drawText(Canvas canvas, String text, Offset offset, Color color,
-      double fontSize,
-      {FontWeight fontWeight = FontWeight.normal}) {
-    TextPainter(
-      text: TextSpan(
-          text: text,
-          style: TextStyle(
-              color: color, fontSize: fontSize, fontWeight: fontWeight)),
-      textDirection: TextDirection.ltr,
-    )
-      ..layout()
-      ..paint(canvas, offset);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ── 左列ボディ: 目標ラベル ────────────────────────────────────
@@ -432,42 +400,28 @@ class _LabelBodyPainter extends CustomPainter {
         Rect.fromLTWH(0, topY, size.width, groupHeight),
         Paint()..color = group.color.withAlpha(12),
       );
-
       // 左カラーバー
       canvas.drawRect(
         Rect.fromLTWH(0, topY, 4, groupHeight),
         Paint()..color = group.color,
       );
-
       // グループ上境界線
       canvas.drawLine(
-        Offset(0, topY),
-        Offset(size.width, topY),
-        Paint()
-          ..color = group.color.withAlpha(60)
-          ..strokeWidth = 1,
+        Offset(0, topY), Offset(size.width, topY),
+        Paint()..color = group.color.withAlpha(60)..strokeWidth = 1,
       );
-
       // 目標名
-      final labelY = topY + groupHeight / 2 -
-          (group.taskCount > 1 ? 7 : 7);
-      _drawText(
-        canvas,
-        group.name,
-        Offset(10, labelY),
-        group.color,
-        11,
-        fontWeight: FontWeight.w600,
-        maxWidth: size.width - 16,
-      );
+      _drawText(canvas, group.name,
+          Offset(10, topY + groupHeight / 2 - 7),
+          group.color, 11,
+          fontWeight: FontWeight.w600, maxWidth: size.width - 16);
 
       // ホバーハイライト
       if (hoveredRow != null &&
           hoveredRow! >= group.startRow &&
           hoveredRow! <= group.endRow) {
-        final hoverY = hoveredRow! * rowH;
         canvas.drawRect(
-          Rect.fromLTWH(0, hoverY, size.width, rowH),
+          Rect.fromLTWH(0, hoveredRow! * rowH, size.width, rowH),
           Paint()..color = hoverColor.withAlpha(60),
         );
       }
@@ -475,24 +429,16 @@ class _LabelBodyPainter extends CustomPainter {
 
     // 最終下線
     if (groups.isNotEmpty) {
-      final lastGroup = groups.last;
-      final bottomY = (lastGroup.endRow + 1) * rowH;
+      final bottomY = (groups.last.endRow + 1) * rowH;
       canvas.drawLine(
-        Offset(0, bottomY),
-        Offset(size.width, bottomY),
-        Paint()
-          ..color = gridColor.withAlpha(60)
-          ..strokeWidth = 1,
+        Offset(0, bottomY), Offset(size.width, bottomY),
+        Paint()..color = gridColor.withAlpha(60)..strokeWidth = 1,
       );
     }
-
     // 右区切り線
     canvas.drawLine(
-      Offset(size.width - 1, 0),
-      Offset(size.width - 1, size.height),
-      Paint()
-        ..color = gridColor
-        ..strokeWidth = 1,
+      Offset(size.width - 1, 0), Offset(size.width - 1, size.height),
+      Paint()..color = gridColor..strokeWidth = 1,
     );
   }
 
@@ -500,23 +446,15 @@ class _LabelBodyPainter extends CustomPainter {
       double fontSize,
       {FontWeight fontWeight = FontWeight.normal, double? maxWidth}) {
     TextPainter(
-      text: TextSpan(
-          text: text,
-          style: TextStyle(
-              color: color, fontSize: fontSize, fontWeight: fontWeight)),
-      textDirection: TextDirection.ltr,
-      maxLines: 2,
-      ellipsis: '...',
-    )
-      ..layout(maxWidth: maxWidth ?? double.infinity)
-      ..paint(canvas, offset);
+      text: TextSpan(text: text, style: TextStyle(
+          color: color, fontSize: fontSize, fontWeight: fontWeight)),
+      textDirection: TextDirection.ltr, maxLines: 2, ellipsis: '...',
+    )..layout(maxWidth: maxWidth ?? double.infinity)..paint(canvas, offset);
   }
 
   @override
-  bool shouldRepaint(_LabelBodyPainter oldDelegate) {
-    return oldDelegate.groups != groups ||
-        oldDelegate.hoveredRow != hoveredRow;
-  }
+  bool shouldRepaint(_LabelBodyPainter old) =>
+      old.groups != groups || old.hoveredRow != hoveredRow;
 }
 
 // ── 右上: タイムラインヘッダー ──────────────────────────────────
@@ -535,6 +473,7 @@ class _TimelineHeaderPainter extends CustomPainter {
 
   final GanttCalculator calculator;
   final TimelineRange timeline;
+  final List<GanttMilestone> milestones;
   final Color bgColor;
   final Color gridColor;
   final Color textColor;
@@ -544,110 +483,65 @@ class _TimelineHeaderPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     canvas.drawRect(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = bgColor,
-    );
+      Rect.fromLTWH(0, 0, size.width, size.height), Paint()..color = bgColor);
 
-    // 月ラベル
-    final monthBoundaries = calculator.getMonthBoundaries(timeline);
+    // 月ラベル + 区切り線
     final monthFormat = DateFormat('yyyy/MM');
-    for (final (date, x) in monthBoundaries) {
+    for (final (date, x) in calculator.getMonthBoundaries(timeline)) {
       _drawText(canvas, monthFormat.format(date), Offset(x + 4, 8),
-          textColor, 12,
-          fontWeight: FontWeight.w600);
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x, size.height),
-        Paint()
-          ..color = gridColor
-          ..strokeWidth = 1,
-      );
+          textColor, 12, fontWeight: FontWeight.w600);
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height),
+          Paint()..color = gridColor..strokeWidth = 1);
     }
 
-    // 日付・曜日
-    final dayPositions = calculator.getDayPositions(timeline);
-    for (final (date, x) in dayPositions) {
-      _drawText(
-        canvas,
-        '${date.day}',
-        Offset(x + calculator.pixelsPerDay / 2 - 6, 32),
-        mutedColor,
-        10,
-      );
-      const weekDays = ['月', '火', '水', '木', '金', '土', '日'];
-      final weekDay = weekDays[date.weekday - 1];
-      final isWeekend = date.weekday == DateTime.saturday ||
-          date.weekday == DateTime.sunday;
-      _drawText(
-        canvas,
-        weekDay,
-        Offset(x + calculator.pixelsPerDay / 2 - 5, 48),
-        isWeekend ? todayColor.withAlpha(150) : mutedColor,
-        9,
-      );
+    // 日付 + 曜日
+    const weekDays = ['月', '火', '水', '木', '金', '土', '日'];
+    for (final (date, x) in calculator.getDayPositions(timeline)) {
+      final cx = x + calculator.pixelsPerDay / 2;
+      _drawText(canvas, '${date.day}', Offset(cx - 6, 32), mutedColor, 10);
+      final isWeekend = date.weekday >= 6;
+      _drawText(canvas, weekDays[date.weekday - 1], Offset(cx - 5, 48),
+          isWeekend ? todayColor.withAlpha(150) : mutedColor, 9);
     }
 
     // 下線
-    canvas.drawLine(
-      Offset(0, size.height),
-      Offset(size.width, size.height),
-      Paint()
-        ..color = gridColor
-        ..strokeWidth = 1,
-    );
+    canvas.drawLine(Offset(0, size.height), Offset(size.width, size.height),
+        Paint()..color = gridColor..strokeWidth = 1);
 
-    // 今日線（ヘッダー部分）
+    // 今日線
     final todayX = calculator.calculateTodayX(timeline);
-    canvas.drawLine(
-      Offset(todayX, 0),
-      Offset(todayX, size.height),
-      Paint()
-        ..color = todayColor
-        ..strokeWidth = 2,
-    );
+    canvas.drawLine(Offset(todayX, 0), Offset(todayX, size.height),
+        Paint()..color = todayColor..strokeWidth = 2);
 
-    // マイルストーンマーカー
-    for (final milestone in milestones) {
-      final mx = calculator.dateToX(milestone.date, timeline) +
+    // マイルストーン
+    for (final ms in milestones) {
+      final mx = calculator.dateToX(ms.date, timeline) +
           calculator.pixelsPerDay / 2;
-      final colorHex = milestone.color.replaceFirst('#', '');
-      final color = Color(int.parse('FF$colorHex', radix: 16));
-      const diamondSize = 8.0;
-      final markerY = size.height - diamondSize - 4;
-      final path = Path()
-        ..moveTo(mx, markerY - diamondSize)
-        ..lineTo(mx + diamondSize, markerY)
-        ..lineTo(mx, markerY + diamondSize)
-        ..lineTo(mx - diamondSize, markerY)
-        ..close();
-      canvas.drawPath(path, Paint()..color = color);
-      _drawText(canvas, milestone.label,
-          Offset(mx + diamondSize + 2, markerY - 6), color, 9,
+      final hex = ms.color.replaceFirst('#', '');
+      final c = Color(int.parse('FF$hex', radix: 16));
+      const ds = 8.0;
+      final my = size.height - ds - 4;
+      canvas.drawPath(
+        Path()..moveTo(mx, my - ds)..lineTo(mx + ds, my)
+            ..lineTo(mx, my + ds)..lineTo(mx - ds, my)..close(),
+        Paint()..color = c);
+      _drawText(canvas, ms.label, Offset(mx + ds + 2, my - 6), c, 9,
           fontWeight: FontWeight.w600);
     }
   }
 
-  final List<GanttMilestone> milestones;
-
   void _drawText(Canvas canvas, String text, Offset offset, Color color,
-      double fontSize,
-      {FontWeight fontWeight = FontWeight.normal}) {
+      double fontSize, {FontWeight fontWeight = FontWeight.normal}) {
     TextPainter(
-      text: TextSpan(
-          text: text,
-          style: TextStyle(
-              color: color, fontSize: fontSize, fontWeight: fontWeight)),
+      text: TextSpan(text: text, style: TextStyle(
+          color: color, fontSize: fontSize, fontWeight: fontWeight)),
       textDirection: TextDirection.ltr,
-    )
-      ..layout()
-      ..paint(canvas, offset);
+    )..layout()..paint(canvas, offset);
   }
 
   @override
-  bool shouldRepaint(_TimelineHeaderPainter oldDelegate) {
-    return oldDelegate.timeline != timeline ||
-        oldDelegate.milestones != milestones;
-  }
+  bool shouldRepaint(_TimelineHeaderPainter old) =>
+      old.timeline != timeline || old.milestones != milestones;
 }
 
 // ── 右列ボディ: タイムライン ──────────────────────────────────
@@ -681,170 +575,101 @@ class _TimelineBodyPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    _drawGroupBackgrounds(canvas, size);
-    _drawGrid(canvas, size);
-    _drawMilestoneLines(canvas, size);
-    _drawTodayLine(canvas, size);
-    _drawBars(canvas);
-  }
-
-  void _drawGroupBackgrounds(Canvas canvas, Size size) {
     final rowH = calculator.rowHeight.toDouble();
-    for (final group in groups) {
-      final topY = group.startRow * rowH;
-      final groupHeight = group.taskCount * rowH;
 
-      canvas.drawRect(
-        Rect.fromLTWH(0, topY, size.width, groupHeight),
-        Paint()..color = group.color.withAlpha(8),
-      );
-      canvas.drawLine(
-        Offset(0, topY),
-        Offset(size.width, topY),
-        Paint()
-          ..color = group.color.withAlpha(40)
-          ..strokeWidth = 0.5,
-      );
-
-      if (hoveredRow != null &&
-          hoveredRow! >= group.startRow &&
-          hoveredRow! <= group.endRow) {
-        final hoverY = hoveredRow! * rowH;
+    // グループ背景 + 境界線
+    for (final g in groups) {
+      final topY = g.startRow * rowH;
+      final gh = g.taskCount * rowH;
+      canvas.drawRect(Rect.fromLTWH(0, topY, size.width, gh),
+          Paint()..color = g.color.withAlpha(8));
+      canvas.drawLine(Offset(0, topY), Offset(size.width, topY),
+          Paint()..color = g.color.withAlpha(40)..strokeWidth = 0.5);
+      if (hoveredRow != null && hoveredRow! >= g.startRow &&
+          hoveredRow! <= g.endRow) {
         canvas.drawRect(
-          Rect.fromLTWH(0, hoverY, size.width, rowH),
-          Paint()..color = hoverColor.withAlpha(60),
-        );
+            Rect.fromLTWH(0, hoveredRow! * rowH, size.width, rowH),
+            Paint()..color = hoverColor.withAlpha(60));
       }
     }
     if (groups.isNotEmpty) {
-      final lastGroup = groups.last;
-      final bottomY = (lastGroup.endRow + 1) * rowH;
-      canvas.drawLine(
-        Offset(0, bottomY),
-        Offset(size.width, bottomY),
-        Paint()
-          ..color = gridColor.withAlpha(60)
-          ..strokeWidth = 0.5,
-      );
+      final bottomY = (groups.last.endRow + 1) * rowH;
+      canvas.drawLine(Offset(0, bottomY), Offset(size.width, bottomY),
+          Paint()..color = gridColor.withAlpha(60)..strokeWidth = 0.5);
     }
-  }
 
-  void _drawGrid(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = gridColor.withAlpha(30)
-      ..strokeWidth = 0.5;
-    final rowH = calculator.rowHeight.toDouble();
-
+    // グリッド
+    final gridPaint = Paint()..color = gridColor.withAlpha(30)..strokeWidth = 0.5;
     for (var i = 0; i <= tasks.length; i++) {
       final y = i * rowH;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
     }
-
-    final dayPositions = calculator.getDayPositions(timeline);
-    for (final (date, x) in dayPositions) {
-      final isWeekend = date.weekday == DateTime.saturday ||
-          date.weekday == DateTime.sunday;
-      if (isWeekend) {
+    for (final (date, x) in calculator.getDayPositions(timeline)) {
+      if (date.weekday >= 6) {
         canvas.drawRect(
-          Rect.fromLTWH(x, 0, calculator.pixelsPerDay, size.height),
-          Paint()..color = gridColor.withAlpha(15),
-        );
+            Rect.fromLTWH(x, 0, calculator.pixelsPerDay, size.height),
+            Paint()..color = gridColor.withAlpha(15));
       }
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
     }
-  }
 
-  void _drawTodayLine(Canvas canvas, Size size) {
-    final todayX = calculator.calculateTodayX(timeline);
-    canvas.drawLine(
-      Offset(todayX, 0),
-      Offset(todayX, size.height),
-      Paint()
-        ..color = todayColor
-        ..strokeWidth = 2,
-    );
-  }
-
-  void _drawBars(Canvas canvas) {
-    for (var i = 0; i < tasks.length; i++) {
-      final task = tasks[i];
-      final geo = calculator.calculateBarGeometry(
-        task.startDate, task.endDate, task.progress, timeline);
-      // ボディ内ではヘッダー分のオフセット不要（Y=0がボディの先頭）
-      final y = i * calculator.rowHeight.toDouble() +
-          calculator.barMargin.toDouble();
-      final barColor =
-          goalColors[task.goalId] ?? const Color(0xFF89B4FA);
-
-      final bgRect = RRect.fromRectAndRadius(
-        Rect.fromLTWH(geo.x, y, geo.width, calculator.barHeight.toDouble()),
-        const Radius.circular(4),
-      );
-      canvas.drawRRect(bgRect, Paint()..color = barColor.withAlpha(60));
-
-      if (geo.progressWidth > 0) {
-        final progressRect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-              geo.x, y, geo.progressWidth, calculator.barHeight.toDouble()),
-          const Radius.circular(4),
-        );
-        canvas.drawRRect(progressRect, Paint()..color = barColor);
-      }
-
-      _drawText(
-        canvas,
-        '${task.title} (${task.progress}%)',
-        Offset(geo.x + 6, y + 5),
-        textColor,
-        11,
-      );
-    }
-  }
-
-  void _drawMilestoneLines(Canvas canvas, Size size) {
-    for (final milestone in milestones) {
-      final x = calculator.dateToX(milestone.date, timeline) +
+    // マイルストーン破線
+    for (final ms in milestones) {
+      final x = calculator.dateToX(ms.date, timeline) +
           calculator.pixelsPerDay / 2;
-      final colorHex = milestone.color.replaceFirst('#', '');
-      final color = Color(int.parse('FF$colorHex', radix: 16));
-
-      final linePaint = Paint()
-        ..color = color.withAlpha(100)
-        ..strokeWidth = 1.5;
-      const dashH = 6.0;
-      const gapH = 4.0;
+      final hex = ms.color.replaceFirst('#', '');
+      final c = Color(int.parse('FF$hex', radix: 16));
+      final lp = Paint()..color = c.withAlpha(100)..strokeWidth = 1.5;
       var y = 0.0;
       while (y < size.height) {
         canvas.drawLine(
-          Offset(x, y),
-          Offset(x, math.min(y + dashH, size.height)),
-          linePaint,
-        );
-        y += dashH + gapH;
+            Offset(x, y), Offset(x, math.min(y + 6, size.height)), lp);
+        y += 10;
       }
+    }
+
+    // 今日線
+    final todayX = calculator.calculateTodayX(timeline);
+    canvas.drawLine(Offset(todayX, 0), Offset(todayX, size.height),
+        Paint()..color = todayColor..strokeWidth = 2);
+
+    // タスクバー
+    for (var i = 0; i < tasks.length; i++) {
+      final task = tasks[i];
+      final geo = calculator.calculateBarGeometry(
+          task.startDate, task.endDate, task.progress, timeline);
+      final y = i * rowH + calculator.barMargin.toDouble();
+      final barColor = goalColors[task.goalId] ?? const Color(0xFF89B4FA);
+      final bh = calculator.barHeight.toDouble();
+
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(
+              Rect.fromLTWH(geo.x, y, geo.width, bh), const Radius.circular(4)),
+          Paint()..color = barColor.withAlpha(60));
+      if (geo.progressWidth > 0) {
+        canvas.drawRRect(
+            RRect.fromRectAndRadius(
+                Rect.fromLTWH(geo.x, y, geo.progressWidth, bh),
+                const Radius.circular(4)),
+            Paint()..color = barColor);
+      }
+      _drawText(canvas, '${task.title} (${task.progress}%)',
+          Offset(geo.x + 6, y + 5), textColor, 11);
     }
   }
 
   void _drawText(Canvas canvas, String text, Offset offset, Color color,
-      double fontSize,
-      {FontWeight fontWeight = FontWeight.normal}) {
+      double fontSize, {FontWeight fontWeight = FontWeight.normal}) {
     TextPainter(
-      text: TextSpan(
-          text: text,
-          style: TextStyle(
-              color: color, fontSize: fontSize, fontWeight: fontWeight)),
+      text: TextSpan(text: text, style: TextStyle(
+          color: color, fontSize: fontSize, fontWeight: fontWeight)),
       textDirection: TextDirection.ltr,
-    )
-      ..layout()
-      ..paint(canvas, offset);
+    )..layout()..paint(canvas, offset);
   }
 
   @override
-  bool shouldRepaint(_TimelineBodyPainter oldDelegate) {
-    return oldDelegate.tasks != tasks ||
-        oldDelegate.groups != groups ||
-        oldDelegate.milestones != milestones ||
-        oldDelegate.hoveredRow != hoveredRow ||
-        oldDelegate.timeline != timeline;
-  }
+  bool shouldRepaint(_TimelineBodyPainter old) =>
+      old.tasks != tasks || old.groups != groups ||
+      old.milestones != milestones || old.hoveredRow != hoveredRow ||
+      old.timeline != timeline;
 }
