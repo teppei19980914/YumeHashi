@@ -12,7 +12,7 @@ import '../dialogs/task_dialog.dart';
 import '../dialogs/task_discovery_dialog.dart';
 import '../dialogs/trial_limit_dialog.dart';
 import '../models/goal.dart';
-import '../models/task.dart';
+import '../models/task.dart' show Task, bookGanttGoalId;
 import '../services/book_gantt_service.dart' show bookGanttColor;
 import '../services/study_stats_types.dart' show GanttMilestone;
 import '../providers/dashboard_providers.dart';
@@ -61,7 +61,10 @@ class GanttPage extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // セレクタ行
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               // 表示モードセレクタ
               goalsAsync.when(
@@ -84,7 +87,6 @@ class GanttPage extends ConsumerWidget {
                 loading: () => const SizedBox.shrink(),
                 error: (_, _) => const SizedBox.shrink(),
               ),
-              const Spacer(),
               // タスク追加ボタン（目標別・全タスク表示時）
               if (viewState.mode == GanttViewMode.allTasks ||
                   (viewState.mode == GanttViewMode.byGoal &&
@@ -94,7 +96,6 @@ class GanttPage extends ConsumerWidget {
                   icon: const Icon(Icons.lightbulb_outline, size: 18),
                   label: const Text('発見ガイド'),
                 ),
-                const SizedBox(width: 8),
                 ElevatedButton.icon(
                   key: TutorialTargetKeys.addTaskButton,
                   onPressed: () => _addTask(
@@ -113,7 +114,6 @@ class GanttPage extends ConsumerWidget {
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('読書スケジュールを追加'),
                 ),
-              const SizedBox(width: 8),
               // エクスポート
               IconButton(
                 icon: const Icon(Icons.file_download_outlined),
@@ -155,16 +155,20 @@ class GanttPage extends ConsumerWidget {
                   );
                 }
 
-                // GoalID→カラーのマップを構築
+                // GoalID→カラー / GoalID→名前のマップを構築
                 final goalColors = <String, Color>{};
+                final goalNames = <String, String>{};
                 final goalsData = goalsAsync.valueOrNull ?? [];
                 for (final goal in goalsData) {
                   goalColors[goal.id] = _parseColor(goal.color);
+                  goalNames[goal.id] = goal.what;
                 }
-                // 書籍タスク用カラーを追加
+                // 書籍タスク用
                 goalColors[bookGanttGoalId] = _parseColor(bookGanttColor);
-                // 独立タスク用カラーを追加
+                goalNames[bookGanttGoalId] = '書籍';
+                // 独立タスク用
                 goalColors[''] = _parseColor('#94E2D5');
+                goalNames[''] = '独立タスク';
 
                 // マイルストーン構築（日付指定の目標）
                 final milestones = <GanttMilestone>[];
@@ -182,6 +186,7 @@ class GanttPage extends ConsumerWidget {
                 return GanttChart(
                   tasks: tasks,
                   goalColors: goalColors,
+                  goalNames: goalNames,
                   milestones: milestones,
                   onTaskTap: (task) {
                     if (task.goalId == bookGanttGoalId) {

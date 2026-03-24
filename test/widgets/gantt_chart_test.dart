@@ -8,6 +8,7 @@ void main() {
   Widget buildSubject({
     List<Task> tasks = const [],
     Map<String, Color> goalColors = const {},
+    Map<String, String> goalNames = const {},
     List<GanttMilestone> milestones = const [],
     OnTaskTap? onTaskTap,
   }) {
@@ -19,6 +20,7 @@ void main() {
           child: GanttChart(
             tasks: tasks,
             goalColors: goalColors,
+            goalNames: goalNames,
             milestones: milestones,
             onTaskTap: onTaskTap,
           ),
@@ -77,6 +79,10 @@ void main() {
           'goal-1': Colors.blue,
           'goal-2': Colors.green,
         },
+        goalNames: {
+          'goal-1': 'TOEIC',
+          'goal-2': 'AWS',
+        },
       ));
       await tester.pumpAndSettle();
 
@@ -110,10 +116,11 @@ void main() {
       );
       expect(gestureDetector, findsOneWidget);
 
-      // Tap at a position within the first task row.
-      // headerHeight=70, rowHeight=40 => first row y center = 70 + 20 = 90
+      // ボディ部分は headerHeight 以下から始まる.
+      // ヘッダー(70px)が上部に固定されるので、GestureDetector内のY=0がボディ先頭.
+      // rowHeight=40 => first row center = 20
       final topLeft = tester.getTopLeft(gestureDetector);
-      await tester.tapAt(topLeft + const Offset(100, 90));
+      await tester.tapAt(topLeft + const Offset(100, 20));
       await tester.pump();
 
       expect(tappedTask, isNotNull);
@@ -136,9 +143,9 @@ void main() {
         matching: find.byType(GestureDetector),
       );
 
-      // Second row y center = 70 + 40 + 20 = 130
+      // Second row y center = 40 + 20 = 60
       final topLeft = tester.getTopLeft(gestureDetector);
-      await tester.tapAt(topLeft + const Offset(100, 130));
+      await tester.tapAt(topLeft + const Offset(100, 60));
       await tester.pump();
 
       expect(tappedTask, isNotNull);
@@ -170,6 +177,7 @@ void main() {
       await tester.pumpWidget(buildSubject(
         tasks: tasks,
         goalColors: {'goal-1': Colors.blue},
+        goalNames: {'goal-1': 'TOEIC'},
         onTaskTap: (task) => tappedTask = task,
       ));
       await tester.pumpAndSettle();
@@ -179,9 +187,11 @@ void main() {
         matching: find.byType(GestureDetector),
       );
 
-      // Tap in the header area (y=30, which is < headerHeight of 70)
+      // GestureDetector はボディ部分のみなので、Y=-10（ボディ外）をタップ
+      // ボディ外のタップは hitTest で null を返すので callback は発火しない
       final topLeft = tester.getTopLeft(gestureDetector);
-      await tester.tapAt(topLeft + const Offset(100, 30));
+      // ボディの最後の行より下をタップ（タスク3つ * 40px = 120px以降）
+      await tester.tapAt(topLeft + const Offset(100, 200));
       await tester.pump();
 
       expect(tappedTask, isNull);
