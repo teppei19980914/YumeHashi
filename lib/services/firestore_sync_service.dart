@@ -7,8 +7,23 @@ library;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+/// SyncManagerが依存するクラウド同期操作のインターフェース.
+abstract class CloudSyncClient {
+  /// ログイン済みかどうか.
+  bool get isSignedIn;
+
+  /// クラウドの最終同期日時を取得する.
+  Future<DateTime?> getLastSyncTime();
+
+  /// ローカルデータをクラウドにアップロードする.
+  Future<void> uploadData(String exportedJson);
+
+  /// クラウドからデータをダウンロードする.
+  Future<String?> downloadData();
+}
+
 /// Firestoreデータ同期サービス.
-class FirestoreSyncService {
+class FirestoreSyncService implements CloudSyncClient {
   /// FirestoreSyncServiceを作成する.
   FirestoreSyncService({
     FirebaseFirestore? firestore,
@@ -23,6 +38,7 @@ class FirestoreSyncService {
   User? get currentUser => _auth.currentUser;
 
   /// ログイン済みかどうか（匿名含む）.
+  @override
   bool get isSignedIn => _auth.currentUser != null;
 
   /// 匿名ユーザーかどうか.
@@ -93,6 +109,7 @@ class FirestoreSyncService {
   // ── データ同期 ────────────────────────────────────────────
 
   /// ローカルデータをFirestoreにアップロード（全データ同期）.
+  @override
   Future<void> uploadData(String exportedJson) async {
     final doc = _userDoc;
     if (doc == null) return;
@@ -106,6 +123,7 @@ class FirestoreSyncService {
   }
 
   /// Firestoreからデータをダウンロード.
+  @override
   Future<String?> downloadData() async {
     final doc = _userDoc;
     if (doc == null) return null;
@@ -118,6 +136,7 @@ class FirestoreSyncService {
   }
 
   /// 最終同期日時を取得する.
+  @override
   Future<DateTime?> getLastSyncTime() async {
     final doc = _userDoc;
     if (doc == null) return null;

@@ -73,9 +73,8 @@ class _GanttChartState extends State<GanttChart> {
   late List<_GoalGroup> _groups;
   int? _hoveredRow;
 
-  // スクロール: ボディの縦・横を1つずつ管理し、他は Transform で追従
-  final _bodyVController = ScrollController();
-  final _bodyHController = ScrollController();
+  // InteractiveViewer による2軸同時スクロール
+  final _transformController = TransformationController();
 
   static const double _labelColumnWidth = 140;
 
@@ -87,8 +86,7 @@ class _GanttChartState extends State<GanttChart> {
 
   @override
   void dispose() {
-    _bodyVController.dispose();
-    _bodyHController.dispose();
+    _transformController.dispose();
     super.dispose();
   }
 
@@ -192,13 +190,11 @@ class _GanttChartState extends State<GanttChart> {
               Expanded(
                 child: ClipRect(
                   child: ListenableBuilder(
-                    listenable: _bodyHController,
+                    listenable: _transformController,
                     builder: (context, child) {
-                      final offset = _bodyHController.hasClients
-                          ? _bodyHController.offset
-                          : 0.0;
+                      final dx = _transformController.value.storage[12];
                       return Transform.translate(
-                        offset: Offset(-offset, 0),
+                        offset: Offset(dx, 0),
                         child: child,
                       );
                     },
@@ -237,13 +233,11 @@ class _GanttChartState extends State<GanttChart> {
                 width: _labelColumnWidth,
                 child: ClipRect(
                   child: ListenableBuilder(
-                    listenable: _bodyVController,
+                    listenable: _transformController,
                     builder: (context, child) {
-                      final offset = _bodyVController.hasClients
-                          ? _bodyVController.offset
-                          : 0.0;
+                      final dy = _transformController.value.storage[13];
                       return Transform.translate(
-                        offset: Offset(0, -offset),
+                        offset: Offset(0, dy),
                         child: child,
                       );
                     },
@@ -269,47 +263,46 @@ class _GanttChartState extends State<GanttChart> {
                 ),
               ),
 
-              // 右列: タイムラインボディ（縦+横スクロール可能、唯一のスクロール操作元）
+              // 右列: タイムラインボディ（InteractiveViewerで2軸同時スクロール）
               Expanded(
-                child: SingleChildScrollView(
-                  controller: _bodyVController,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    controller: _bodyHController,
-                    child: MouseRegion(
-                      onHover: (event) {
-                        final row = _hitTestRow(event.localPosition);
-                        if (row != _hoveredRow) {
-                          setState(() => _hoveredRow = row);
+                child: InteractiveViewer(
+                  transformationController: _transformController,
+                  constrained: false,
+                  scaleEnabled: false,
+                  child: MouseRegion(
+                    onHover: (event) {
+                      final row = _hitTestRow(event.localPosition);
+                      if (row != _hoveredRow) {
+                        setState(() => _hoveredRow = row);
+                      }
+                    },
+                    onExit: (_) {
+                      if (_hoveredRow != null) {
+                        setState(() => _hoveredRow = null);
+                      }
+                    },
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTapUp: (details) {
+                        final row = _hitTestRow(details.localPosition);
+                        if (row != null && widget.onTaskTap != null) {
+                          widget.onTaskTap!(widget.tasks[row]);
                         }
                       },
-                      onExit: (_) {
-                        if (_hoveredRow != null) {
-                          setState(() => _hoveredRow = null);
-                        }
-                      },
-                      child: GestureDetector(
-                        onTapUp: (details) {
-                          final row = _hitTestRow(details.localPosition);
-                          if (row != null && widget.onTaskTap != null) {
-                            widget.onTaskTap!(widget.tasks[row]);
-                          }
-                        },
-                        child: CustomPaint(
-                          size: Size(sceneWidth, effectiveBodyHeight),
-                          painter: _TimelineBodyPainter(
-                            tasks: widget.tasks,
-                            groups: _groups,
-                            goalColors: widget.goalColors,
-                            milestones: widget.milestones,
-                            calculator: _calculator,
-                            timeline: _timeline,
-                            hoveredRow: _hoveredRow,
-                            gridColor: colors.border,
-                            textColor: colors.textPrimary,
-                            todayColor: colors.error,
-                            hoverColor: colors.bgHover,
-                          ),
+                      child: CustomPaint(
+                        size: Size(sceneWidth, effectiveBodyHeight),
+                        painter: _TimelineBodyPainter(
+                          tasks: widget.tasks,
+                          groups: _groups,
+                          goalColors: widget.goalColors,
+                          milestones: widget.milestones,
+                          calculator: _calculator,
+                          timeline: _timeline,
+                          hoveredRow: _hoveredRow,
+                          gridColor: colors.border,
+                          textColor: colors.textPrimary,
+                          todayColor: colors.error,
+                          hoverColor: colors.bgHover,
                         ),
                       ),
                     ),

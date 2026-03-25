@@ -183,7 +183,10 @@ class _AppShellState extends ConsumerState<_AppShell> {
 
       // SyncManager初期化
       final syncManager = SyncManager();
-      syncManager.init(ref.read(dataExportServiceProvider));
+      syncManager.init(
+        ref.read(dataExportServiceProvider),
+        prefs: ref.read(sharedPreferencesProvider),
+      );
 
       // ライフサイクル監視: アプリ離脱時に未同期データを保存
       // AppLifecycleListenerは自動でBindingに登録される

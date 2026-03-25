@@ -59,6 +59,16 @@ void main() {
     ];
   }
 
+  /// InteractiveViewer内のタップ可能なボディ領域を見つけるヘルパー.
+  /// InteractiveViewer自体もGestureDetectorを持つため、
+  /// CustomPaintの直接の祖先であるGestureDetectorを特定する.
+  Finder findBodyGestureDetector() {
+    return find.ancestor(
+      of: find.byType(CustomPaint).last,
+      matching: find.byType(GestureDetector),
+    ).first;
+  }
+
   group('GanttChart', () {
     testWidgets('renders empty chart when no tasks are provided',
         (tester) async {
@@ -109,11 +119,8 @@ void main() {
       final chartFinder = find.byType(GanttChart);
       expect(chartFinder, findsOneWidget);
 
-      // Find the GestureDetector inside the chart to tap on it.
-      final gestureDetector = find.descendant(
-        of: chartFinder,
-        matching: find.byType(GestureDetector),
-      );
+      // Find the GestureDetector inside the chart (body area).
+      final gestureDetector = findBodyGestureDetector();
       expect(gestureDetector, findsOneWidget);
 
       // ボディ部分は headerHeight 以下から始まる.
@@ -138,10 +145,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      final gestureDetector = find.descendant(
-        of: find.byType(GanttChart),
-        matching: find.byType(GestureDetector),
-      );
+      final gestureDetector = findBodyGestureDetector();
 
       // Second row y center = 40 + 20 = 60
       final topLeft = tester.getTopLeft(gestureDetector);
@@ -182,10 +186,7 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      final gestureDetector = find.descendant(
-        of: find.byType(GanttChart),
-        matching: find.byType(GestureDetector),
-      );
+      final gestureDetector = findBodyGestureDetector();
 
       // GestureDetector はボディ部分のみなので、Y=-10（ボディ外）をタップ
       // ボディ外のタップは hitTest で null を返すので callback は発火しない
@@ -234,6 +235,26 @@ void main() {
 
       expect(find.byType(GanttChart), findsOneWidget);
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('uses InteractiveViewer for seamless two-axis scrolling',
+        (tester) async {
+      final tasks = createSampleTasks();
+
+      await tester.pumpWidget(buildSubject(
+        tasks: tasks,
+        goalColors: {'goal-1': Colors.blue, 'goal-2': Colors.green},
+      ));
+      await tester.pumpAndSettle();
+
+      // InteractiveViewer がウィジェットツリーに存在することを確認
+      expect(
+        find.descendant(
+          of: find.byType(GanttChart),
+          matching: find.byType(InteractiveViewer),
+        ),
+        findsOneWidget,
+      );
     });
   });
 }
