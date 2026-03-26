@@ -90,14 +90,20 @@ class _BookPageState extends ConsumerState<BookPage> {
                   ? _buildEmptyState(theme, colors)
                   : LayoutBuilder(
                       builder: (context, constraints) {
-                        // 本の幅50 + 左右padding2 = 52px per book
+                        final availableWidth = constraints.maxWidth - 8;
+                        // 最小幅42px、最大幅60pxで収まる冊数を算出
                         final booksPerShelf =
-                            ((constraints.maxWidth - 8) / 52)
+                            (availableWidth / 44)
                                 .floor()
                                 .clamp(2, 20);
+                        // 棚幅を均等分配して動的に本の幅を決定
+                        final bookWidth =
+                            (availableWidth / booksPerShelf - 2)
+                                .clamp(40.0, 60.0);
                         return _Bookshelf(
                           books: books,
                           booksPerShelf: booksPerShelf,
+                          bookWidth: bookWidth,
                         );
                       },
                     ),
@@ -141,10 +147,15 @@ class _BookPageState extends ConsumerState<BookPage> {
 /// 本棚風の書籍カバーウィジェット.
 /// 本棚全体（棚段ごとに本を配置）.
 class _Bookshelf extends StatelessWidget {
-  const _Bookshelf({required this.books, required this.booksPerShelf});
+  const _Bookshelf({
+    required this.books,
+    required this.booksPerShelf,
+    required this.bookWidth,
+  });
 
   final List<Book> books;
   final int booksPerShelf;
+  final double bookWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +171,7 @@ class _Bookshelf extends StatelessWidget {
       itemBuilder: (_, index) => _ShelfRow(
         books: shelves[index],
         booksPerShelf: booksPerShelf,
+        bookWidth: bookWidth,
       ),
     );
   }
@@ -167,10 +179,15 @@ class _Bookshelf extends StatelessWidget {
 
 /// 1段の棚（木目調の棚板 + 本）.
 class _ShelfRow extends StatelessWidget {
-  const _ShelfRow({required this.books, required this.booksPerShelf});
+  const _ShelfRow({
+    required this.books,
+    required this.booksPerShelf,
+    required this.bookWidth,
+  });
 
   final List<Book> books;
   final int booksPerShelf;
+  final double bookWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -190,14 +207,14 @@ class _ShelfRow extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 1),
                     child: SizedBox(
-                      width: 50, // 本の幅を固定
+                      width: bookWidth,
                       height: 120 +
                           (books[i].title.length % 4) * 8.0,
                       child: _BookCover(book: books[i]),
                     ),
                   ),
                 // 残りのスペースは背景色で埋める
-                const Spacer(),
+                if (books.length < booksPerShelf) const Spacer(),
               ],
             ),
           ),

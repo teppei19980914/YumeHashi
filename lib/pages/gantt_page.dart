@@ -354,12 +354,14 @@ class GanttPage extends ConsumerWidget {
 
       // タスク編集
       final books = await ref.read(bookServiceProvider).getAllBooks();
+      final goals = await ref.read(goalServiceProvider).getAllGoals();
       if (!context.mounted) return;
 
       final result = await showTaskDialog(
         context,
         task: task,
         books: books,
+        goals: goals,
       );
       if (result == null) {
         continue; // 戻る → 選択肢画面に戻る
@@ -385,6 +387,7 @@ class GanttPage extends ConsumerWidget {
             progress: result.progress,
             memo: result.memo,
             bookId: result.bookId,
+            goalId: result.goalId,
           );
       ref.invalidate(ganttTasksProvider);
       return;

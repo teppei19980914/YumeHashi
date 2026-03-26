@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../models/book.dart';
+import '../models/goal.dart';
 import '../models/task.dart';
 
 /// TaskDialog の入力結果.
@@ -18,6 +19,7 @@ class TaskDialogResult {
     required this.endDate,
     required this.progress,
     required this.memo,
+    this.goalId,
     this.bookId = '',
     this.deleteRequested = false,
     this.closeRequested = false,
@@ -38,6 +40,9 @@ class TaskDialogResult {
   /// メモ.
   final String memo;
 
+  /// 紐づける目標ID（nullの場合は変更なし）.
+  final String? goalId;
+
   /// 関連書籍ID.
   final String bookId;
 
@@ -56,12 +61,14 @@ Future<TaskDialogResult?> showTaskDialog(
   BuildContext context, {
   Task? task,
   List<Book>? books,
+  List<Goal>? goals,
 }) {
   return showDialog<TaskDialogResult>(
     context: context,
     builder: (_) => _TaskDialogContent(
       task: task,
       books: books ?? const [],
+      goals: goals ?? const [],
     ),
   );
 }
@@ -70,10 +77,12 @@ class _TaskDialogContent extends StatefulWidget {
   const _TaskDialogContent({
     this.task,
     this.books = const [],
+    this.goals = const [],
   });
 
   final Task? task;
   final List<Book> books;
+  final List<Goal> goals;
 
   @override
   State<_TaskDialogContent> createState() => _TaskDialogContentState();
@@ -89,6 +98,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
   late DateTime _endDate;
   late double _progress;
   String _selectedBookId = '';
+  String _selectedGoalId = '';
 
   bool get _isEdit => widget.task != null;
   final _dateFormat = DateFormat('yyyy-MM-dd');
@@ -106,6 +116,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
     _endDate = task?.endDate ?? today.add(const Duration(days: 14));
     _progress = (task?.progress ?? 0).toDouble();
     _selectedBookId = task?.bookId ?? '';
+    _selectedGoalId = task?.goalId ?? '';
     _startDateController = TextEditingController(
       text: _dateFormat.format(_startDate),
     );
@@ -173,6 +184,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
         endDate: _endDate,
         progress: _progress.round(),
         memo: _memoController.text.trim(),
+        goalId: _isEdit ? _selectedGoalId : null,
         bookId: _selectedBookId,
       ),
     );
@@ -191,6 +203,9 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
           key: _formKey,
           child: SingleChildScrollView(
             physics: const ClampingScrollPhysics(),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,6 +280,31 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                   ],
                 ),
                 const SizedBox(height: 16),
+
+                // 目標（編集時のみ表示、goals が渡された場合のみ）
+                if (_isEdit && widget.goals.isNotEmpty) ...[
+                  Text('目標', style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 4),
+                  DropdownButtonFormField<String>(
+                    initialValue: _selectedGoalId,
+                    isExpanded: true,
+                    items: [
+                      const DropdownMenuItem(
+                        value: '',
+                        child: Text('独立タスク'),
+                      ),
+                      ...widget.goals.map(
+                        (g) => DropdownMenuItem(
+                          value: g.id,
+                          child: Text(g.what),
+                        ),
+                      ),
+                    ],
+                    onChanged: (v) =>
+                        setState(() => _selectedGoalId = v ?? ''),
+                  ),
+                  const SizedBox(height: 16),
+                ],
 
                 // 進捗
                 if (_isEdit) ...[
@@ -352,6 +392,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                       endDate: _endDate,
                       progress: _progress.round(),
                       memo: _memoController.text.trim(),
+                      goalId: _isEdit ? _selectedGoalId : null,
                       bookId: _selectedBookId,
                       deleteRequested: true,
                     ),

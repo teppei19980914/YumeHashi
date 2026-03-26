@@ -71,14 +71,14 @@ void main() {
       expect(maxDreams(1), 2);
       expect(maxGoalsPerDream(1), 3);
       expect(maxTasksPerGoal(1), 5);
-      expect(maxBooks(1), 5);
+      expect(maxBooks(1), 4);
     });
 
     test('レベル2でさらに緩和される', () {
       expect(maxDreams(2), 3);
-      expect(maxGoalsPerDream(2), 5);
+      expect(maxGoalsPerDream(2), 4);
       expect(maxTasksPerGoal(2), 8);
-      expect(maxBooks(2), 8);
+      expect(maxBooks(2), 5);
     });
 
     test('レベル3で実質無制限（基本機能）', () {

@@ -72,6 +72,9 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
         constraints: const BoxConstraints(maxWidth: 480),
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,

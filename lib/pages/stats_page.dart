@@ -524,12 +524,20 @@ class _ActivityChartSection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Icon(Icons.show_chart, size: 20, color: colors.success),
-                const SizedBox(width: 8),
-                Text('アクティビティ', style: theme.textTheme.titleMedium),
-                const Spacer(),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.show_chart, size: 20, color: colors.success),
+                    const SizedBox(width: 8),
+                    Text('アクティビティ', style: theme.textTheme.titleMedium),
+                  ],
+                ),
                 // 期間セレクタ
                 SegmentedButton<ActivityPeriodType>(
                   segments: const [

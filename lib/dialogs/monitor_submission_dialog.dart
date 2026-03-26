@@ -132,6 +132,9 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         constraints: const BoxConstraints(maxWidth: 480),
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
           child: switch (_currentStep) {
             0 => _buildIntroPage(theme, colors),
             1 => _buildSurveyPage(theme, colors),

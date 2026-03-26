@@ -82,6 +82,25 @@ class _GanttChartState extends State<GanttChart> {
   void initState() {
     super.initState();
     _rebuild();
+    _scrollToToday();
+  }
+
+  void _scrollToToday() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final todayX = _calculator.calculateTodayX(_timeline);
+      // 画面幅の1/3の位置に今日を表示する
+      final viewWidth = (context.size?.width ?? 400) - _labelColumnWidth;
+      final offsetX = -(todayX - viewWidth / 3);
+      _transformController.value = Matrix4.identity()
+        ..setTranslationRaw(offsetX.clamp(-_maxScrollX(), 0.0), 0.0, 0.0);
+    });
+  }
+
+  double _maxScrollX() {
+    final sceneWidth = _calculator.calculateSceneWidth(_timeline);
+    final viewWidth = (context.size?.width ?? 400) - _labelColumnWidth;
+    return (sceneWidth - viewWidth).clamp(0.0, double.infinity);
   }
 
   @override
@@ -188,6 +207,7 @@ class _GanttChartState extends State<GanttChart> {
               ),
               // 右上: タイムラインヘッダー（横スクロール追従）
               Expanded(
+                child: RepaintBoundary(
                 child: ClipRect(
                   child: ListenableBuilder(
                     listenable: _transformController,
@@ -219,6 +239,7 @@ class _GanttChartState extends State<GanttChart> {
                   ),
                 ),
               ),
+              ),
             ],
           ),
         ),
@@ -231,6 +252,7 @@ class _GanttChartState extends State<GanttChart> {
               // 左列: 目標ラベル（縦スクロール追従、横は固定）
               SizedBox(
                 width: _labelColumnWidth,
+                child: RepaintBoundary(
                 child: ClipRect(
                   child: ListenableBuilder(
                     listenable: _transformController,
@@ -261,48 +283,51 @@ class _GanttChartState extends State<GanttChart> {
                     ),
                   ),
                 ),
+                ),
               ),
 
               // 右列: タイムラインボディ（InteractiveViewerで2軸同時スクロール）
               Expanded(
-                child: InteractiveViewer(
-                  transformationController: _transformController,
-                  constrained: false,
-                  scaleEnabled: false,
-                  child: MouseRegion(
-                    onHover: (event) {
-                      final row = _hitTestRow(event.localPosition);
-                      if (row != _hoveredRow) {
-                        setState(() => _hoveredRow = row);
-                      }
-                    },
-                    onExit: (_) {
-                      if (_hoveredRow != null) {
-                        setState(() => _hoveredRow = null);
-                      }
-                    },
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTapUp: (details) {
-                        final row = _hitTestRow(details.localPosition);
-                        if (row != null && widget.onTaskTap != null) {
-                          widget.onTaskTap!(widget.tasks[row]);
+                child: RepaintBoundary(
+                  child: InteractiveViewer(
+                    transformationController: _transformController,
+                    constrained: false,
+                    scaleEnabled: false,
+                    child: MouseRegion(
+                      onHover: (event) {
+                        final row = _hitTestRow(event.localPosition);
+                        if (row != _hoveredRow) {
+                          setState(() => _hoveredRow = row);
                         }
                       },
-                      child: CustomPaint(
-                        size: Size(sceneWidth, effectiveBodyHeight),
-                        painter: _TimelineBodyPainter(
-                          tasks: widget.tasks,
-                          groups: _groups,
-                          goalColors: widget.goalColors,
-                          milestones: widget.milestones,
-                          calculator: _calculator,
-                          timeline: _timeline,
-                          hoveredRow: _hoveredRow,
-                          gridColor: colors.border,
-                          textColor: colors.textPrimary,
-                          todayColor: colors.error,
-                          hoverColor: colors.bgHover,
+                      onExit: (_) {
+                        if (_hoveredRow != null) {
+                          setState(() => _hoveredRow = null);
+                        }
+                      },
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTapUp: (details) {
+                          final row = _hitTestRow(details.localPosition);
+                          if (row != null && widget.onTaskTap != null) {
+                            widget.onTaskTap!(widget.tasks[row]);
+                          }
+                        },
+                        child: CustomPaint(
+                          size: Size(sceneWidth, effectiveBodyHeight),
+                          painter: _TimelineBodyPainter(
+                            tasks: widget.tasks,
+                            groups: _groups,
+                            goalColors: widget.goalColors,
+                            milestones: widget.milestones,
+                            calculator: _calculator,
+                            timeline: _timeline,
+                            hoveredRow: _hoveredRow,
+                            gridColor: colors.border,
+                            textColor: colors.textPrimary,
+                            todayColor: colors.error,
+                            hoverColor: colors.bgHover,
+                          ),
                         ),
                       ),
                     ),

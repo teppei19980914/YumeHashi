@@ -197,6 +197,46 @@ void main() {
         );
       });
 
+      test('goalIdを変更できる', () async {
+        final created = await service.createTask(
+          goalId: goalId,
+          title: 'Task',
+          startDate: DateTime(2025, 3, 1),
+          endDate: DateTime(2025, 3, 31),
+        );
+        expect(created.goalId, goalId);
+
+        final updated = await service.updateTask(
+          taskId: created.id,
+          title: 'Task',
+          startDate: DateTime(2025, 3, 1),
+          endDate: DateTime(2025, 3, 31),
+          progress: 0,
+          goalId: 'new-goal-id',
+        );
+        expect(updated, isNotNull);
+        expect(updated!.goalId, 'new-goal-id');
+      });
+
+      test('goalId未指定で元のgoalIdが維持される', () async {
+        final created = await service.createTask(
+          goalId: goalId,
+          title: 'Task',
+          startDate: DateTime(2025, 3, 1),
+          endDate: DateTime(2025, 3, 31),
+        );
+
+        final updated = await service.updateTask(
+          taskId: created.id,
+          title: 'Updated',
+          startDate: DateTime(2025, 3, 1),
+          endDate: DateTime(2025, 3, 31),
+          progress: 0,
+        );
+        expect(updated, isNotNull);
+        expect(updated!.goalId, goalId);
+      });
+
       test('存在しないIDでnull', () async {
         final result = await service.updateTask(
           taskId: 'nonexistent',

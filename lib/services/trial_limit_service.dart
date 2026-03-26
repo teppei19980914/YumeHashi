@@ -27,8 +27,8 @@ void setTrialModeForTest({required bool enabled}) {
 /// プレミアム機能（ガントチャート等）はレベルに関わらず体験版では利用不可.
 const _levelLimits = <int, _LevelConfig>{
   0: _LevelConfig(dreams: 1, goalsPerDream: 2, tasksPerGoal: 3, books: 3),
-  1: _LevelConfig(dreams: 2, goalsPerDream: 3, tasksPerGoal: 5, books: 5),
-  2: _LevelConfig(dreams: 3, goalsPerDream: 5, tasksPerGoal: 8, books: 8),
+  1: _LevelConfig(dreams: 2, goalsPerDream: 3, tasksPerGoal: 5, books: 4),
+  2: _LevelConfig(dreams: 3, goalsPerDream: 4, tasksPerGoal: 8, books: 5),
 };
 
 class _LevelConfig {

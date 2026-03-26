@@ -67,6 +67,7 @@ class TaskService {
     required int progress,
     String memo = '',
     String bookId = '',
+    String? goalId,
   }) async {
     if (title.trim().isEmpty) throw ArgumentError('タイトルは必須です');
     if (progress < 0 || progress > 100) {
@@ -87,6 +88,7 @@ class TaskService {
       status: _statusFromProgress(progress),
       memo: memo,
       bookId: bookId,
+      goalId: goalId ?? existing.goalId,
       updatedAt: DateTime.now(),
     );
     await _taskDao.updateTask(_taskToCompanion(updated));
