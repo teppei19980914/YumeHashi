@@ -31,8 +31,7 @@ class ConstellationPage extends ConsumerWidget {
         children: [
           // ヘッダー
           Text(
-            '活動時間に応じて星が灯り、星座が完成します。'
-            '${minutesPerStar ~/ 60}時間ごとに1つの星が輝きます。',
+            AppLabels.constellationDesc(minutesPerStar ~/ 60),
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textSecondary,
             ),

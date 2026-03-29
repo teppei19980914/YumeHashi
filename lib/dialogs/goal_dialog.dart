@@ -329,8 +329,7 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
       builder: (context) => AlertDialog(
         title: const Text(AppLabels.goalDialogDelete),
         content: Text(
-          '「${widget.goal!.what}」を削除しますか？\n'
-          '紐づくタスクも削除されます。',
+          AppLabels.goalDeleteConfirm(widget.goal!.what),
         ),
         actions: [
           TextButton(

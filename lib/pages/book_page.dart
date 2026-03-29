@@ -33,7 +33,7 @@ class _BookPageState extends ConsumerState<BookPage> {
       if (!mounted) return;
       await showTrialLimitDialog(
         context,
-        itemName: '書籍',
+        itemName: AppLabels.pageBooks,
         currentCount: currentCount,
         maxCount: maxBooks(level),
         feedbackService: ref.read(feedbackServiceProvider),

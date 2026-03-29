@@ -311,7 +311,7 @@ class AppLabels {
   static const authLinked = 'アカウント連携済み';
   static String authLinkedEmail(String email) => email;
 
-  // ── フィードバック ──────────────────────────────────────────
+  // ── アプリの感想 ──────────────────────────────────────────
   static const feedbackTitle = 'アプリの感想を送信';
   static const feedbackCategory = 'カテゴリ *';
   static const feedbackSelectCategory = 'カテゴリを選択してください';
@@ -320,7 +320,7 @@ class AppLabels {
   static const feedbackGuide = 'アプリの改善点や使いにくい部分、改善要望などをお聞かせください。';
   static const feedbackSendAction = 'アプリの感想を送る';
   static const feedbackSendDesc = 'こんな機能が欲しいやこんな不具合があったなどをお知らせください。';
-  static const feedbackSendTitle = 'フィードバックを送る';
+  static const feedbackSendTitle = 'アプリの感想を送る';
   static const feedbackSendSubtitle = 'アプリへのご意見・改善要望';
   static const contactTitle = 'ご意見・お問い合わせ';
 
@@ -365,7 +365,7 @@ class AppLabels {
   static const tutorialAppBarInbox = '受信ボックス';
   static const tutorialAppBarInboxDesc =
       '期限のリマインドや開発者からのお知らせ、実績通知が届きます。未読件数がバッジで表示されます。';
-  static const tutorialAppBarContact = 'フィードバック・お問い合わせ';
+  static const tutorialAppBarContact = 'アプリの感想・お問い合わせ';
   static const tutorialAppBarContactDesc =
       'アプリへのご意見・改善要望の送信や、開発に関するお問い合わせができます。';
   static const tutorialAppBarAchievement = '実績';
@@ -547,7 +547,7 @@ class AppLabels {
   static const upgradeFeature3Desc = '活動統計で努力の積み重ねを実感できる';
   static const upgradeFeature4Title = 'あなたの声が、新機能になる';
   static const upgradeFeature4Desc =
-      'フィードバックで要望した機能を最優先で利用可能';
+      '要望した機能を最優先で利用可能';
   static const upgradePlanName = 'プレミアムプラン';
   static const upgradeTrialDesc = '初回7日間無料 ── まず試してみてください';
   static const upgradePaidDesc = '月額ワンコインで全機能を利用可能';
@@ -567,12 +567,12 @@ class AppLabels {
       '$itemNameの上限に達しました';
   static String limitReachedDesc(String itemName, int maxCount) =>
       'スタータープランでは$itemNameを$maxCount件まで登録できます。';
-  static const limitUnlockByFeedback = 'フィードバックで制限を解除';
+  static const limitUnlockByFeedback = 'アプリの感想を送って制限を解除';
   static const limitUnlockByFeedbackDesc =
       'アプリの改善にご協力いただくと、制限が段階的に解除されます。';
   static const limitNeedUpgrade = 'さらに制限を解除するには';
   static const limitNeedUpgradeDesc =
-      'フィードバックによる解除は上限に達しました。\n'
+      'アプリの感想を送ることによる制限解除は上限に達しました。\n'
       'すべての機能を無制限で使うには、\n'
       '有料プランをご検討ください。';
   static const limitSendFeedback = 'アプリの感想を送信';
@@ -769,7 +769,7 @@ class AppLabels {
       '初回7日間の無料トライアルもご用意しています。';
   static const helpFaqStarterLimitQ = 'スタータープランの制限を解除するには？';
   static const helpFaqStarterLimitA =
-      'フィードバックを送信すると段階的に制限が解除されます。\n\n'
+      'アプリの感想を送信すると段階的に制限が解除されます。\n\n'
       'すべての機能を制限なく使うには、プレミアムプランへの'
       'アップグレードをご検討ください。\n\n'
       '【アップグレード手順】\n'
@@ -788,19 +788,19 @@ class AppLabels {
       'スタータープランに移行します。\n'
       '登録済みのデータはそのまま残ります。';
 
-  // FAQ Q&A: 問い合わせ・フィードバック
+  // FAQ Q&A: 問い合わせ・アプリの感想
   static const helpFaqInquiryQ = '問い合わせをしたい場合はどうすればよいですか？';
   static const helpFaqInquiryA =
       '画面右上のメールアイコンをタップし、'
       '「お問い合わせ」を選択してください。\n'
       '追加開発のご相談や案件のご依頼などを受け付けています。';
   static const helpFaqFeedbackQ =
-      'フィードバックを送りたい場合はどうすればよいですか？';
+      'アプリの感想を送りたい場合はどうすればよいですか？';
   static const helpFaqFeedbackA =
       '画面右上のメールアイコンをタップし、'
-      '「フィードバック」を選択してください。\n'
+      '「アプリの感想」を選択してください。\n'
       '改善要望・不具合報告・その他のご意見を受け付けています。\n'
-      'いただいたフィードバックは新機能の開発や改善に活用させていただきます。';
+      'いただいたアプリの感想は新機能の開発や改善に活用させていただきます。';
 
   // FAQ Q&A: 端末・環境
   static const helpFaqSmartphoneQ = 'スマートフォンでも使えますか？';
@@ -875,7 +875,7 @@ class AppLabels {
   static const helpPlanBookLimit = '書籍: 3冊まで';
   static const helpPlanLockedFeatures = 'スケジュール・詳細統計: 利用不可';
   static const helpPlanFeedbackUnlock =
-      'フィードバック送信で段階的に登録上限が緩和されます';
+      'アプリの感想送信で段階的に登録上限が緩和されます';
   static const helpPlanPremiumName = 'プレミアムプラン';
   static const helpPlanPremiumDesc =
       '月額480円（税込）で全機能を制限なくご利用いただけます。\n'
@@ -1095,7 +1095,7 @@ class AppLabels {
       '高度な統計等のプレミアム機能も含め全機能を制限なくご利用いただけます。';
   static const webTrialSettingsNote = 'この情報は設定画面からいつでも確認できます。';
 
-  // ── フィードバック追加 ──────────────────────────────────────────
+  // ── アプリの感想追加 ──────────────────────────────────────────
   static const feedbackThanksMessage = 'いつもご利用ありがとうございます。引き続きご意見をお聞かせください';
   static String feedbackUnlockNext(int nextLevel, int currentLevel, int maxLevel) =>
       '送信すると制限がレベル$nextLevelに解除されます'
@@ -1103,10 +1103,10 @@ class AppLabels {
   static String feedbackRemainingChars(int remaining) => 'あと$remaining文字';
   static String feedbackCharCount(int count) => '$count文字';
   static const feedbackPrivacyNote =
-      'フィードバックは匿名で送信されます。'
+      'アプリの感想は匿名で送信されます。'
       '個人を特定する情報は含まれません。';
   static const feedbackCategoryRequired = 'カテゴリの選択は必須です';
-  static const feedbackSuccessMax = 'フィードバックを送信しました。ありがとうございます！';
+  static const feedbackSuccessMax = 'アプリの感想を送信しました。ありがとうございます！';
   static String feedbackSuccessUnlockMax(int _) => 'ありがとうございます！制限が完全に解除されました';
   static String feedbackSuccessUnlock(int newLevel) => 'ありがとうございます！制限がレベル$newLevelに解除されました';
 
@@ -1139,7 +1139,6 @@ class AppLabels {
   static String milestoneNextGoal(String label) => '次の目標: $label';
 
   // ── ガントチャート内部ラベル ──────────────────────────────────
-  static const ganttIndependentTask = '独立タスク';
   static const ganttHeaderGoal = '目標';
   static const weekDays = ['月', '火', '水', '木', '金', '土', '日'];
 
@@ -1152,7 +1151,8 @@ class AppLabels {
       '「$title」を削除しますか？\n紐づく目標・タスクも削除されます。';
 
   // ── 星座ページ ──────────────────────────────────────────
-  static const constellationDesc = '活動時間に応じて星が灯り、星座が完成します。';
+  static String constellationDesc(int hoursPerStar) =>
+      '活動時間に応じて星が灯り、星座が完成します。$hoursPerStar時間ごとに1つの星が輝きます。';
   static String constellationStarCount(int lit, int total) =>
       '　$lit/$total 星';
 }

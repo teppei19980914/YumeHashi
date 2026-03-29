@@ -251,8 +251,7 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
       builder: (context) => AlertDialog(
         title: const Text(AppLabels.dreamDialogDelete),
         content: Text(
-          '「${widget.dream!.title}」を削除しますか？\n'
-          '紐づく目標・タスクも削除されます。',
+          AppLabels.dreamDeleteConfirm(widget.dream!.title),
         ),
         actions: [
           TextButton(
