@@ -84,7 +84,7 @@ void main() {
       expect(result.fileName, matches(RegExp(r'gantt_\d{8}\.xlsx')));
     });
 
-    test('ガントチャートシートが作成される', () {
+    test('スケジュールシートが作成される', () {
       final tasks = createTestTasks();
       final goals = createTestGoals();
       final result = service.exportAs(
@@ -94,7 +94,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      expect(excel.tables.containsKey('ガントチャート'), isTrue);
+      expect(excel.tables.containsKey('スケジュール'), isTrue);
     });
 
     test('ヘッダー行に固定列と日付列が含まれる', () {
@@ -107,7 +107,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      final sheet = excel.tables['ガントチャート']!;
+      final sheet = excel.tables['スケジュール']!;
       final headerRow = sheet.row(0);
 
       expect(_cellText(headerRow[0]), '目標名');
@@ -130,7 +130,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      final sheet = excel.tables['ガントチャート']!;
+      final sheet = excel.tables['スケジュール']!;
 
       // ヘッダー(1) + タスク(3) + マイルストーン(2) = 6行
       expect(sheet.maxRows, 6);
@@ -153,7 +153,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      final sheet = excel.tables['ガントチャート']!;
+      final sheet = excel.tables['スケジュール']!;
       expect(_cellText(sheet.row(1)[0]), '不明');
     });
   });
@@ -170,7 +170,7 @@ void main() {
 
       final html = utf8.decode(result.bytes);
       expect(html, contains('<!DOCTYPE html>'));
-      expect(html, contains('ガントチャート'));
+      expect(html, contains('スケジュール'));
     });
 
     test('タスク名が含まれる', () {
@@ -209,7 +209,7 @@ void main() {
       );
       final html = utf8.decode(result.bytes);
       // goal-1 has whenType=date, whenTarget='2026-12-31' => milestone
-      expect(html, contains('マイルストーン'));
+      expect(html, contains('目標期限'));
       expect(html, contains('TOEIC 900点'));
     });
 
@@ -220,10 +220,10 @@ void main() {
         format: 'csv',
       );
       final csv = utf8.decode(result.bytes);
-      expect(csv, contains('マイルストーン'));
+      expect(csv, contains('目標期限'));
     });
 
-    test('Excelにマイルストーン行が含まれる', () {
+    test('Excelに目標期限行が含まれる', () {
       final tasks = createTestTasks();
       final goals = createTestGoals();
       final result = service.exportAs(
@@ -233,7 +233,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      final sheet = excel.tables['ガントチャート']!;
+      final sheet = excel.tables['スケジュール']!;
       // ヘッダー(1) + タスク(3) + マイルストーン(2) = 6行
       expect(sheet.maxRows, 6);
     });
@@ -265,7 +265,7 @@ void main() {
         format: 'csv',
       );
       final csv = utf8.decode(result.bytes);
-      expect(csv, isNot(contains('マイルストーン')));
+      expect(csv, isNot(contains('目標期限')));
     });
   });
 

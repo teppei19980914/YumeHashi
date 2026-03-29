@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_labels.dart';
 import '../models/book.dart';
 
 const _newBookKey = '__new__';
@@ -114,9 +115,9 @@ class _BookScheduleDialogContentState
   }
 
   String _statusLabel(int progress) {
-    if (progress == 0) return '未読';
-    if (progress >= 100) return '読了';
-    return '読書中';
+    if (progress == 0) return AppLabels.bookStatusUnread;
+    if (progress >= 100) return AppLabels.bookStatusCompleted;
+    return AppLabels.bookStatusReading;
   }
 
   Future<void> _pickStartDate() async {
@@ -199,7 +200,7 @@ class _BookScheduleDialogContentState
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: Text(_isEdit ? '読書スケジュールを編集' : '読書スケジュールを追加'),
+      title: Text(_isEdit ? AppLabels.scheduleDialogEdit : AppLabels.scheduleDialogAdd),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
@@ -216,14 +217,14 @@ class _BookScheduleDialogContentState
               children: [
                 // 書籍ソース選択（追加モードのみ）
                 if (!_isEdit && widget.unscheduledBooks.isNotEmpty) ...[
-                  Text('書籍', style: theme.textTheme.titleSmall),
+                  Text(AppLabels.pageBooks, style: theme.textTheme.titleSmall),
                   const SizedBox(height: 4),
                   DropdownButtonFormField<String>(
                     initialValue: _selectedBookSource,
                     items: [
-                      const DropdownMenuItem(
+                      DropdownMenuItem(
                         value: _newBookKey,
-                        child: Text('\u{1F4DD} 新しい書籍を作成'),
+                        child: Text('\u{1F4DD} ${AppLabels.scheduleNewBook}'),
                       ),
                       ...widget.unscheduledBooks.map(
                         (b) => DropdownMenuItem(
@@ -237,19 +238,20 @@ class _BookScheduleDialogContentState
                   const SizedBox(height: 16),
                 ],
 
-                // 書籍名
-                Text('書籍名', style: theme.textTheme.titleSmall),
-                const SizedBox(height: 4),
-                TextFormField(
-                  controller: _titleController,
-                  enabled: _titleEditable,
-                  decoration: const InputDecoration(
-                    hintText: '例: Python入門',
+                // 書籍名（新規作成時または編集モードのみ表示）
+                if (_titleEditable) ...[
+                  Text(AppLabels.bookTitle, style: theme.textTheme.titleSmall),
+                  const SizedBox(height: 4),
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(
+                      hintText: AppLabels.scheduleHintTitle,
+                    ),
+                    validator: (v) =>
+                        v == null || v.trim().isEmpty ? AppLabels.validBookTitle : null,
                   ),
-                  validator: (v) =>
-                      v == null || v.trim().isEmpty ? '書籍名は必須です' : null,
-                ),
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                ],
 
                 // 日付
                 Row(
@@ -258,7 +260,7 @@ class _BookScheduleDialogContentState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('開始日', style: theme.textTheme.titleSmall),
+                          Text(AppLabels.taskStartDate, style: theme.textTheme.titleSmall),
                           const SizedBox(height: 4),
                           TextFormField(
                             controller: _startDateController,
@@ -284,7 +286,7 @@ class _BookScheduleDialogContentState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('終了日', style: theme.textTheme.titleSmall),
+                          Text(AppLabels.taskEndDate, style: theme.textTheme.titleSmall),
                           const SizedBox(height: 4),
                           TextFormField(
                             controller: _endDateController,
@@ -312,7 +314,7 @@ class _BookScheduleDialogContentState
                 // ステータス表示（読み取り専用）
                 Row(
                   children: [
-                    Text('ステータス', style: theme.textTheme.titleSmall),
+                    Text(AppLabels.scheduleStatus, style: theme.textTheme.titleSmall),
                     const Spacer(),
                     Text(
                       _statusLabel(_progress.round()),
@@ -325,7 +327,7 @@ class _BookScheduleDialogContentState
                 // 進捗率
                 Row(
                   children: [
-                    Text('進捗率', style: theme.textTheme.titleSmall),
+                    Text(AppLabels.scheduleProgress, style: theme.textTheme.titleSmall),
                     const Spacer(),
                     Text(
                       '${_progress.round()}%',
@@ -356,14 +358,14 @@ class _BookScheduleDialogContentState
               final confirmed = await showDialog<bool>(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: const Text('確認'),
+                  title: const Text(AppLabels.scheduleDeleteConfirmTitle),
                   content: const Text(
-                    'この書籍のスケジュールを削除しますか？\n（書籍自体は削除されません）',
+                    AppLabels.scheduleDeleteConfirmMsg,
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
-                      child: const Text('キャンセル'),
+                      child: const Text(AppLabels.btnCancel),
                     ),
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -371,22 +373,22 @@ class _BookScheduleDialogContentState
                             Theme.of(context).colorScheme.error,
                       ),
                       onPressed: () => Navigator.of(context).pop(true),
-                      child: const Text('削除'),
+                      child: const Text(AppLabels.btnDelete),
                     ),
                   ],
                 ),
               );
               if (confirmed == true) _onDelete();
             },
-            child: const Text('スケジュール削除'),
+            child: const Text(AppLabels.scheduleDeleteConfirm),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('キャンセル'),
+          child: const Text(AppLabels.btnCancel),
         ),
         ElevatedButton(
           onPressed: _submit,
-          child: Text(_isEdit ? '保存' : '追加'),
+          child: Text(_isEdit ? AppLabels.btnSave : AppLabels.btnAdd),
         ),
       ],
     );

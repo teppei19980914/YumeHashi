@@ -17,7 +17,7 @@ void main() {
       await tester.pumpWidget(
         wrapWidget(
           const PremiumGate(
-            featureName: 'ガントチャート',
+            featureName: 'スケジュール',
             featureIcon: Icons.view_timeline_outlined,
             premiumPoints: ['機能A', '機能B'],
             previewChild: Text('コンテンツ'),

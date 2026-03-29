@@ -7,6 +7,7 @@ library;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../l10n/app_labels.dart';
 import '../services/firestore_sync_service.dart';
 import '../theme/app_theme.dart';
 
@@ -102,19 +103,18 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
     switch (code) {
       case 'email-already-in-use':
       case 'credential-already-in-use':
-        return 'このメールアドレスは既に登録されています。'
-            '「既にアカウントをお持ちの方」からログインしてください。';
+        return AppLabels.authErrorEmailInUse;
       case 'weak-password':
-        return 'パスワードは6文字以上で設定してください。';
+        return AppLabels.authErrorWeakPassword;
       case 'invalid-email':
-        return 'メールアドレスの形式が正しくありません。';
+        return AppLabels.authErrorInvalidEmail;
       case 'user-not-found':
-        return 'アカウントが見つかりません。新規連携してください。';
+        return AppLabels.authErrorUserNotFound;
       case 'wrong-password':
       case 'invalid-credential':
-        return 'メールアドレスまたはパスワードが正しくありません。';
+        return AppLabels.authErrorWrongPassword;
       default:
-        return '認証エラーが発生しました（$code）';
+        return AppLabels.authErrorGeneral(code);
     }
   }
 
@@ -130,7 +130,7 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
           Icon(Icons.link, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(_isLogin ? 'アカウントでログイン' : 'アカウント連携'),
+            child: Text(_isLogin ? AppLabels.authDialogLogin : AppLabels.authDialogLink),
           ),
         ],
       ),
@@ -168,9 +168,8 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
                       Expanded(
                         child: Text(
                           _isLogin
-                              ? '登録済みのアカウントでログインしてデータを復元します。'
-                              : 'メールアドレスを連携すると、端末変更やキャッシュクリア時も'
-                                  'データを復元できます。',
+                              ? AppLabels.authDescLogin
+                              : AppLabels.authDescLink,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: theme.colorScheme.primary,
                             fontWeight: FontWeight.w500,
@@ -197,17 +196,17 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
                   const SizedBox(height: 12),
                 ],
 
-                Text('メールアドレス', style: theme.textTheme.titleSmall),
+                Text(AppLabels.authEmail, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
-                    hintText: 'example@email.com',
+                    hintText: AppLabels.authEmailHint,
                     prefixIcon: Icon(Icons.email_outlined),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return '必須項目です';
+                    if (v == null || v.trim().isEmpty) return AppLabels.validRequired;
                     final emailRegex = RegExp(
                       r'^[a-zA-Z0-9.!#$%&*+/=?^_`{|}~-]+@'
                       r'[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}'
@@ -215,20 +214,20 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
                       r'(?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$',
                     );
                     if (!emailRegex.hasMatch(v.trim())) {
-                      return '有効なメールアドレスを入力してください';
+                      return AppLabels.validEmail;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
 
-                Text('パスワード', style: theme.textTheme.titleSmall),
+                Text(AppLabels.authPassword, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
-                    hintText: '6文字以上',
+                    hintText: AppLabels.authPasswordHint,
                     prefixIcon: const Icon(Icons.lock_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -241,8 +240,8 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return '必須項目です';
-                    if (v.length < 6) return '6文字以上で入力してください';
+                    if (v == null || v.isEmpty) return AppLabels.validRequired;
+                    if (v.length < 6) return AppLabels.authPasswordHint;
                     return null;
                   },
                 ),
@@ -257,8 +256,8 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
                     }),
                     child: Text(
                       _isLogin
-                          ? '初めてご利用の方はこちら（アカウント連携）'
-                          : '既にアカウントをお持ちの方はこちら（ログイン）',
+                          ? AppLabels.authSwitchToLink
+                          : AppLabels.authSwitchToLogin,
                       style: const TextStyle(fontSize: 12),
                     ),
                   ),
@@ -273,7 +272,7 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
           onPressed: _loading
               ? null
               : () => Navigator.pop(context, CloudAuthResult.skipped),
-          child: const Text('あとで'),
+          child: const Text(AppLabels.btnLater),
         ),
         ElevatedButton(
           onPressed: _loading ? null : _submit,
@@ -283,7 +282,7 @@ class _CloudAuthDialogState extends State<_CloudAuthDialog> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Text(_isLogin ? 'ログイン' : '連携する'),
+              : Text(_isLogin ? AppLabels.authLogin : AppLabels.authLink),
         ),
       ],
     );

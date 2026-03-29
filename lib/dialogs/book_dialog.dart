@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_labels.dart';
 import '../models/book.dart';
 
 /// BookDialog の入力結果.
@@ -90,7 +91,7 @@ class _BookDialogContentState extends State<_BookDialogContent> {
         children: [
           const Icon(Icons.menu_book_outlined, size: 24),
           const SizedBox(width: 8),
-          Text(_isEdit ? '書籍を編集' : '書籍を追加'),
+          Text(_isEdit ? AppLabels.bookDialogEdit : AppLabels.bookDialogAdd),
         ],
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -108,19 +109,19 @@ class _BookDialogContentState extends State<_BookDialogContent> {
               children: [
                 TextFormField(
                   controller: _titleController,
-                  decoration: const InputDecoration(
-                    labelText: '書籍名 *',
-                    hintText: '書籍のタイトルを入力',
+                  decoration: InputDecoration(
+                    labelText: '${AppLabels.bookTitle} *',
+                    hintText: AppLabels.bookHintTitle,
                   ),
                   validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? '書籍名は必須です' : null,
+                      (v == null || v.trim().isEmpty) ? AppLabels.validBookTitle : null,
                   autofocus: !_isEdit,
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<BookCategory>(
                   initialValue: _selectedCategory,
                   decoration: const InputDecoration(
-                    labelText: 'カテゴリ',
+                    labelText: AppLabels.bookCategory,
                   ),
                   items: BookCategory.values
                       .map((c) => DropdownMenuItem(
@@ -136,8 +137,8 @@ class _BookDialogContentState extends State<_BookDialogContent> {
                 TextFormField(
                   controller: _whyController,
                   decoration: const InputDecoration(
-                    labelText: 'なぜ読むのか',
-                    hintText: 'この本を読む理由や目的',
+                    labelText: AppLabels.bookWhy,
+                    hintText: AppLabels.bookHintWhy,
                   ),
                   maxLines: 2,
                 ),
@@ -145,8 +146,8 @@ class _BookDialogContentState extends State<_BookDialogContent> {
                 TextFormField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(
-                    labelText: '内容メモ',
-                    hintText: '気になるポイントや期待する学びなど',
+                    labelText: AppLabels.bookMemo,
+                    hintText: AppLabels.bookHintMemo,
                   ),
                   maxLines: 3,
                 ),
@@ -162,15 +163,15 @@ class _BookDialogContentState extends State<_BookDialogContent> {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('削除'),
+            child: const Text(AppLabels.btnDelete),
           ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('キャンセル'),
+          child: const Text(AppLabels.btnCancel),
         ),
         FilledButton(
           onPressed: _submit,
-          child: Text(_isEdit ? '保存' : '追加'),
+          child: Text(_isEdit ? AppLabels.btnSave : AppLabels.btnAdd),
         ),
       ],
     );
@@ -180,19 +181,19 @@ class _BookDialogContentState extends State<_BookDialogContent> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('書籍を削除'),
-        content: Text('「${widget.book!.title}」を削除しますか？'),
+        title: const Text(AppLabels.bookDialogDelete),
+        content: Text(AppLabels.deleteConfirm(widget.book!.title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('削除'),
+            child: const Text(AppLabels.btnDelete),
           ),
         ],
       ),

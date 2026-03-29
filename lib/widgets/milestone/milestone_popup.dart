@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_labels.dart';
 import '../../services/study_stats_types.dart';
 import '../../theme/app_theme.dart';
 
@@ -24,7 +25,7 @@ class MilestonePopup extends StatelessWidget {
         children: [
           const Text('\u{1F3C6}', style: TextStyle(fontSize: 20)),
           const SizedBox(width: 8),
-          Text('実績', style: theme.textTheme.titleLarge),
+          Text(AppLabels.milestoneTitle, style: theme.textTheme.titleLarge),
         ],
       ),
       content: SizedBox(
@@ -35,21 +36,21 @@ class MilestonePopup extends StatelessWidget {
           children: [
             _StatRow(
               icon: '\u{23F0}',
-              label: '累計活動時間',
+              label: AppLabels.milestoneTotalHours,
               value: '${data.totalHours}時間',
               theme: theme,
             ),
             const SizedBox(height: 8),
             _StatRow(
               icon: '\u{1F4C5}',
-              label: '累計活動日数',
+              label: AppLabels.milestoneTotalDays,
               value: '${data.studyDays}日',
               theme: theme,
             ),
             const SizedBox(height: 8),
             _StatRow(
               icon: '\u{1F525}',
-              label: '連続活動日数',
+              label: AppLabels.milestoneStreakDays,
               value: '${data.currentStreak}日',
               theme: theme,
             ),
@@ -69,13 +70,13 @@ class MilestonePopup extends StatelessWidget {
               )
             else
               Text(
-                '最初の実績を目指そう',
+                AppLabels.milestoneFirstGoal,
                 style: TextStyle(color: colors.textMuted),
               ),
             if (data.nextMilestone != null) ...[
               const SizedBox(height: 12),
               Text(
-                '次の目標: ${data.nextMilestone!.label}',
+                AppLabels.milestoneNextGoal(data.nextMilestone!.label),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: colors.textSecondary,
                 ),
@@ -87,7 +88,7 @@ class MilestonePopup extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('閉じる'),
+          child: const Text(AppLabels.btnClose),
         ),
       ],
     );

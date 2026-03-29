@@ -80,18 +80,18 @@ void main() {
       expect(find.text('1. '), findsWidgets);
     });
 
-    testWidgets('体験版ではガントチャートガイドが非表示', (tester) async {
+    testWidgets('体験版ではスケジュールガイドが非表示', (tester) async {
       await tester.pumpWidget(wrap());
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('使い方').last);
       await tester.pumpAndSettle();
 
-      // kIsWebはテスト環境ではfalseなのでガントチャートは表示される
-      expect(find.text('ガントチャートでタスク管理'), findsOneWidget);
+      // kIsWebはテスト環境ではfalseなのでスケジュールは表示される
+      expect(find.text('スケジュールでタスク管理'), findsOneWidget);
     });
 
-    testWidgets('プレミアム版ではガントチャートガイドが表示される',
+    testWidgets('プレミアム版ではスケジュールガイドが表示される',
         (tester) async {
       await tester.pumpWidget(wrap(isPremium: true));
       await tester.tap(find.text('open'));
@@ -99,7 +99,7 @@ void main() {
       await tester.tap(find.text('使い方').last);
       await tester.pumpAndSettle();
 
-      expect(find.text('ガントチャートでタスク管理'), findsOneWidget);
+      expect(find.text('スケジュールでタスク管理'), findsOneWidget);
     });
 
     testWidgets('星座ステップまでスクロールできる', (tester) async {

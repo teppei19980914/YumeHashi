@@ -104,7 +104,7 @@ class GanttExcelExportService {
       ..writeln('<html lang="ja"><head>')
       ..writeln('<meta charset="UTF-8">')
       ..writeln('<meta name="viewport" content="width=device-width,initial-scale=1">')
-      ..writeln('<title>ガントチャート - ${df.format(DateTime.now())}</title>')
+      ..writeln('<title>スケジュール - ${df.format(DateTime.now())}</title>')
       ..writeln('<style>')
       ..writeln('* { margin: 0; padding: 0; box-sizing: border-box; }')
       ..writeln('body { font-family: -apple-system, "Segoe UI", sans-serif; background: #1e1e2e; color: #cdd6f4; padding: 20px; }')
@@ -127,7 +127,7 @@ class GanttExcelExportService {
       ..writeln('.weekend { background: #1e1e2e; }')
       ..writeln('.legend { margin-top: 16px; font-size: 11px; color: #6c7086; }')
       ..writeln('</style></head><body>')
-      ..writeln('<h1>ガントチャート</h1>')
+      ..writeln('<h1>スケジュール</h1>')
       ..writeln('<div class="subtitle">エクスポート日: ${df.format(DateTime.now())} | '
           'タスク数: ${tasks.length} | '
           '期間: ${df.format(earliest)} ～ ${df.format(latest)}</div>')
@@ -190,7 +190,7 @@ class GanttExcelExportService {
       buf.write('<tr>');
       buf.write('<td class="goal-name" style="color:#$msColor;">'
           '\u{25C6} ${_escapeHtml(ms.label)}</td>');
-      buf.write('<td>マイルストーン</td>');
+      buf.write('<td>目標期限</td>');
       buf.write('<td></td><td></td>');
       buf.write('<td>${df.format(ms.date)}</td>');
       buf.write('<td></td>');
@@ -209,7 +209,7 @@ class GanttExcelExportService {
 
     buf
       ..writeln('</table></div>')
-      ..writeln('<div class="legend">ユメログ - ガントチャートエクスポート</div>')
+      ..writeln('<div class="legend">ユメログ - スケジュールエクスポート</div>')
       ..writeln('</body></html>');
 
     return GanttExportResult(
@@ -283,11 +283,11 @@ class GanttExcelExportService {
     for (final ms in milestones) {
       buf.writeln(
         '${_csvEscape('\u{25C6} ${ms.label}')},'
-        'マイルストーン,'
+        '目標期限,'
         '${df.format(ms.date)},'
         ','
         ','
-        'マイルストーン,'
+        '目標期限,'
         '',
       );
     }
@@ -307,7 +307,7 @@ class GanttExcelExportService {
     Map<String, Goal> goalMap,
     List<GanttMilestone> milestones,
   ) {
-    final sheet = excel['ガントチャート'];
+    final sheet = excel['スケジュール'];
     if (tasks.isEmpty) return;
 
     final sortedTasks = _sortTasks(tasks, goalMap);
@@ -421,7 +421,7 @@ class GanttExcelExportService {
           .value = TextCellValue('\u{25C6} ${ms.label}');
       sheet
           .cell(CellIndex.indexByColumnRow(columnIndex: 1, rowIndex: row))
-          .value = TextCellValue('マイルストーン');
+          .value = TextCellValue('目標期限');
       sheet
           .cell(CellIndex.indexByColumnRow(columnIndex: 4, rowIndex: row))
           .value = TextCellValue(dateFmtMs.format(ms.date));

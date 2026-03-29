@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart' hide TextDirection;
 
+import '../../l10n/app_labels.dart';
 import '../../models/task.dart';
 import '../../services/gantt_calculator.dart';
 import '../../services/study_stats_types.dart';
@@ -215,7 +216,7 @@ class GanttChartState extends State<GanttChart> {
     if (widget.goalNames.containsKey(goalId)) {
       return widget.goalNames[goalId]!;
     }
-    if (goalId.isEmpty) return '独立タスク';
+    if (goalId.isEmpty) return AppLabels.ganttIndependentTask;
     return goalId;
   }
 
@@ -298,6 +299,7 @@ class GanttChartState extends State<GanttChart> {
                         size: Size(_labelColumnWidth, effectiveBodyHeight),
                         painter: _LabelBodyPainter(
                           groups: _groups,
+                          tasks: widget.tasks,
                           calculator: _calculator,
                           taskCount: widget.tasks.length,
                           bgColor: colors.bgPrimary,
@@ -312,15 +314,22 @@ class GanttChartState extends State<GanttChart> {
                 ),
               ),
 
-              // 右列: タイムラインボディ（ネイティブスクロール）
+              // 右列: タイムラインボディ
+              // マウスホイールは _onPointerSignal で横/縦を制御する.
+              // タッチ操作はそれぞれの ScrollView が処理する.
               Expanded(
                 child: Listener(
                   onPointerSignal: _onPointerSignal,
-                  child: SingleChildScrollView(
-                    controller: _verticalController,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context)
+                        .copyWith(scrollbars: false),
                     child: SingleChildScrollView(
-                      controller: _horizontalController,
-                      scrollDirection: Axis.horizontal,
+                      controller: _verticalController,
+                      physics: const NeverScrollableScrollPhysics(),
+                      child: SingleChildScrollView(
+                        controller: _horizontalController,
+                        scrollDirection: Axis.horizontal,
+                        physics: const NeverScrollableScrollPhysics(),
                       child: MouseRegion(
                       onHover: (event) {
                         final row = _hitTestRow(event.localPosition);
@@ -340,6 +349,9 @@ class GanttChartState extends State<GanttChart> {
                           if (row != null && widget.onTaskTap != null) {
                             widget.onTaskTap!(widget.tasks[row]);
                           }
+                        },
+                        onPanUpdate: (details) {
+                          _applyPanDelta(-details.delta.dx, -details.delta.dy);
                         },
                         child: RepaintBoundary(
                           child: CustomPaint(
@@ -362,6 +374,7 @@ class GanttChartState extends State<GanttChart> {
                       ),
                     ),
                   ),
+                  ),
                 ),
                 ),
               ),
@@ -372,16 +385,47 @@ class GanttChartState extends State<GanttChart> {
     );
   }
 
-  /// Shift+マウスホイールで横スクロール（Excel同様の操作感）.
+  /// タッチ/ドラッグ操作によるスクロール.
+  void _applyPanDelta(double dx, double dy) {
+    if (_horizontalController.hasClients) {
+      final hMax = _horizontalController.position.maxScrollExtent;
+      _horizontalController.jumpTo(
+        (_horizontalController.offset + dx).clamp(0.0, hMax),
+      );
+    }
+    if (_verticalController.hasClients) {
+      final vMax = _verticalController.position.maxScrollExtent;
+      _verticalController.jumpTo(
+        (_verticalController.offset + dy).clamp(0.0, vMax),
+      );
+    }
+  }
+
+  /// マウスホイールでのスクロール制御.
+  ///
+  /// ガントチャートは横幅が常に広いため:
+  /// - 通常ホイール → 横スクロール
+  /// - Shift+ホイール → 縦スクロール
   void _onPointerSignal(PointerSignalEvent event) {
-    if (event is PointerScrollEvent &&
-        HardwareKeyboard.instance.logicalKeysPressed
-            .any((key) => key == LogicalKeyboardKey.shiftLeft ||
-                          key == LogicalKeyboardKey.shiftRight)) {
-      final dx = event.scrollDelta.dy;
+    if (event is! PointerScrollEvent) return;
+
+    final isShift = HardwareKeyboard.instance.logicalKeysPressed.any(
+      (key) =>
+          key == LogicalKeyboardKey.shiftLeft ||
+          key == LogicalKeyboardKey.shiftRight,
+    );
+    final delta = event.scrollDelta.dy;
+
+    if (isShift) {
+      // Shift+ホイール → 縦スクロール
+      final current = _verticalController.offset;
+      final max = _verticalController.position.maxScrollExtent;
+      _verticalController.jumpTo((current + delta).clamp(0.0, max));
+    } else {
+      // 通常ホイール → 横スクロール
       final current = _horizontalController.offset;
       final max = _horizontalController.position.maxScrollExtent;
-      _horizontalController.jumpTo((current + dx).clamp(0.0, max));
+      _horizontalController.jumpTo((current + delta).clamp(0.0, max));
     }
   }
 }
@@ -415,7 +459,7 @@ class _FixedLabelHeader extends StatelessWidget {
       alignment: Alignment.centerLeft,
       padding: const EdgeInsets.only(left: 8),
       child: Text(
-        '目標',
+        AppLabels.ganttHeaderGoal,
         style: TextStyle(
           color: textColor,
           fontSize: 12,
@@ -431,6 +475,7 @@ class _FixedLabelHeader extends StatelessWidget {
 class _LabelBodyPainter extends CustomPainter {
   _LabelBodyPainter({
     required this.groups,
+    required this.tasks,
     required this.calculator,
     required this.taskCount,
     required this.bgColor,
@@ -441,6 +486,7 @@ class _LabelBodyPainter extends CustomPainter {
   });
 
   final List<_GoalGroup> groups;
+  final List<Task> tasks;
   final GanttCalculator calculator;
   final int taskCount;
   final Color bgColor;
@@ -472,11 +518,21 @@ class _LabelBodyPainter extends CustomPainter {
         Offset(0, topY), Offset(size.width, topY),
         Paint()..color = group.color.withAlpha(60)..strokeWidth = 1,
       );
-      // 目標名
+      // 目標名（グループ先頭行）
       _drawText(canvas, group.name,
-          Offset(10, topY + groupHeight / 2 - 7),
-          group.color, 11,
+          Offset(10, topY + 3),
+          group.color, 10,
           fontWeight: FontWeight.w600, maxWidth: size.width - 16);
+
+      // 各行にタスク名を表示
+      for (var r = group.startRow; r <= group.endRow; r++) {
+        if (r < tasks.length) {
+          _drawText(canvas, tasks[r].title,
+              Offset(10, r * rowH + rowH / 2 - 5),
+              textColor, 10,
+              maxWidth: size.width - 16);
+        }
+      }
 
       // ホバーハイライト
       if (hoveredRow != null &&
@@ -516,7 +572,8 @@ class _LabelBodyPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_LabelBodyPainter old) =>
-      old.groups != groups || old.hoveredRow != hoveredRow;
+      old.groups != groups || old.tasks != tasks ||
+      old.hoveredRow != hoveredRow;
 }
 
 // ── 右上: タイムラインヘッダー ──────────────────────────────────
@@ -558,7 +615,7 @@ class _TimelineHeaderPainter extends CustomPainter {
     }
 
     // 日付 + 曜日
-    const weekDays = ['月', '火', '水', '木', '金', '土', '日'];
+    const weekDays = AppLabels.weekDays;
     for (final (date, x) in calculator.getDayPositions(timeline)) {
       final cx = x + calculator.pixelsPerDay / 2;
       _drawText(canvas, '${date.day}', Offset(cx - 6, 32), mutedColor, 10);

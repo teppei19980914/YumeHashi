@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import '../l10n/app_labels.dart';
 import '../services/trial_limit_service.dart';
 
 /// ヘルプダイアログを表示する.
@@ -48,7 +49,7 @@ class _HelpDialogState extends State<_HelpDialog>
         children: [
           Icon(Icons.help_outline, size: 24, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          const Expanded(child: Text('ヘルプ')),
+          const Expanded(child: Text(AppLabels.helpTitle)),
           IconButton(
             icon: const Icon(Icons.close, size: 20),
             onPressed: () => Navigator.of(context).pop(),
@@ -68,9 +69,9 @@ class _HelpDialogState extends State<_HelpDialog>
             TabBar(
               controller: _tabController,
               tabs: [
-                const Tab(text: 'アプリについて'),
-                const Tab(text: 'FAQ'),
-                if (_showTrialTab) const Tab(text: 'スタータープラン'),
+                const Tab(text: AppLabels.helpTabAbout),
+                const Tab(text: AppLabels.helpTabFaq),
+                if (_showTrialTab) const Tab(text: AppLabels.helpTabPlan),
               ],
             ),
             Expanded(
@@ -89,7 +90,7 @@ class _HelpDialogState extends State<_HelpDialog>
       actions: [
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('閉じる'),
+          child: const Text(AppLabels.btnClose),
         ),
       ],
     );
@@ -111,172 +112,112 @@ class _FaqTabState extends State<_FaqTab> {
   static const _faqs = <_FaqItem>[
     // ── 基本的な使い方 ──
     _FaqItem(
-      question: '夢・目標・タスクの違いは何ですか？',
-      answer: '「夢」は最終的に達成したい大きなビジョンです。\n'
-          '「目標」は夢を実現するための具体的なステップです。\n'
-          '「タスク」は目標を達成するための日々のアクションです。\n\n'
-          '例: 夢「ITエンジニアになる」→ 目標「基本情報技術者を取得する」'
-          '→ タスク「午前問題を毎日10問解く」',
+      question: AppLabels.helpFaqDreamGoalTaskQ,
+      answer: AppLabels.helpFaqDreamGoalTaskA,
       keywords: ['夢', '目標', 'タスク', '違い', '使い分け', '階層'],
     ),
     _FaqItem(
-      question: '夢がなくても使えますか？',
-      answer: '夢を登録せずに、目標やタスクだけで利用できます。\n'
-          'また、「やりたいこと発見ガイド」を使えば、'
-          '質問に答えるだけでやりたいことを見つける手助けができます。\n'
-          '夢ページの「発見ガイド」ボタンからお試しください。',
+      question: AppLabels.helpFaqNoDreamQ,
+      answer: AppLabels.helpFaqNoDreamA,
       keywords: ['夢がない', 'やりたいこと', '発見', 'ガイド', '目標だけ'],
     ),
     _FaqItem(
-      question: 'ガントチャートとは何ですか？',
-      answer: 'タスクのスケジュールを横棒グラフで表示する機能です。'
-          '各タスクの開始日・終了日・進捗を視覚的に確認でき、'
-          'プロジェクト全体のスケジュール管理に役立ちます。\n'
-          'プレミアムプランでご利用いただけます。',
+      question: AppLabels.helpFaqScheduleQ,
+      answer: AppLabels.helpFaqScheduleA,
       keywords: ['ガントチャート', 'ガント', 'スケジュール', 'チャート', 'タイムライン'],
     ),
     _FaqItem(
-      question: '活動ログはどうやって記録しますか？',
-      answer: 'ガントチャートのタスクをタップし、「活動時間を記録」を選択します。'
-          '手動で時間を入力するか、タイマー機能を使って記録できます。\n'
-          'ダッシュボードの「活動を記録」ボタンからも記録できます。',
+      question: AppLabels.helpFaqActivityLogQ,
+      answer: AppLabels.helpFaqActivityLogA,
       keywords: ['活動ログ', 'ログ', '記録', 'タイマー', '時間', '入力'],
     ),
     _FaqItem(
-      question: '星座はどうすれば完成しますか？',
-      answer: '活動ログを記録すると、活動時間に応じて星座の星が一つずつ輝きます。'
-          '5時間ごとに1つの星が灯り、必要な星を全て集めると星座が完成します。',
+      question: AppLabels.helpFaqConstellationQ,
+      answer: AppLabels.helpFaqConstellationA,
       keywords: ['星座', '完成', '星', '輝く', '活動ログ', '時間'],
     ),
 
     // ── データ管理 ──
     _FaqItem(
-      question: 'データはどこに保存されますか？',
-      answer: 'すべてのデータはお使いのブラウザ内（ローカルストレージ）に保存されます。'
-          'サーバーにデータが送信されることはありません。\n'
-          'ただし、ブラウザのデータを消去するとアプリのデータも削除されます。',
+      question: AppLabels.helpFaqDataStorageQ,
+      answer: AppLabels.helpFaqDataStorageA,
       keywords: ['データ', '保存', 'ローカル', 'ブラウザ', '消去', '削除', 'プライバシー'],
     ),
     _FaqItem(
-      question: 'データのバックアップはできますか？',
-      answer: '設定ページの「データ管理」→「データをエクスポート」から'
-          'JSON形式でバックアップできます。\n'
-          'プレミアムプランでは、エクスポートしたファイルを'
-          '「データをインポート」から復元できます。',
+      question: AppLabels.helpFaqBackupQ,
+      answer: AppLabels.helpFaqBackupA,
       keywords: ['バックアップ', 'エクスポート', 'インポート', '書き出し', '移行', 'データ管理'],
     ),
     _FaqItem(
-      question: '別のブラウザや端末でデータを使えますか？',
-      answer: 'データはブラウザごとに独立して保存されます。\n'
-          '別のブラウザで使う場合は、設定ページからデータをエクスポートし、'
-          '新しいブラウザでインポートしてください（プレミアムプラン）。',
+      question: AppLabels.helpFaqOtherBrowserQ,
+      answer: AppLabels.helpFaqOtherBrowserA,
       keywords: ['ブラウザ', '端末', '移行', 'エクスポート', 'インポート', '同期', '別'],
     ),
 
     // ── プラン・料金 ──
     _FaqItem(
-      question: 'プレミアムプランを契約したい場合はどうすればよいですか？',
-      answer: '画面右上のメールアイコン横の実績アイコンの隣にある'
-          '設定ページの「プランのアップグレード」から申し込めます。\n'
-          '月額480円（税込）で全機能をご利用いただけます。\n'
-          '初回7日間の無料トライアルもご用意しています。',
+      question: AppLabels.helpFaqPremiumSubscribeQ,
+      answer: AppLabels.helpFaqPremiumSubscribeA,
       keywords: ['プレミアム', '契約', '申し込み', '料金', '価格', '480', 'サブスク', 'アップグレード'],
     ),
     _FaqItem(
-      question: 'スタータープランの制限を解除するには？',
-      answer: 'フィードバックを送信すると段階的に制限が解除されます。\n\n'
-          'すべての機能を制限なく使うには、プレミアムプランへの'
-          'アップグレードをご検討ください。\n\n'
-          '【アップグレード手順】\n'
-          '1. 設定ページを開く\n'
-          '2.「プランのアップグレード」をタップ\n'
-          '3.「7日間無料で試してみる」または「今すぐ申し込む」を選択\n'
-          '4. Stripeの決済画面でカード情報を入力',
+      question: AppLabels.helpFaqStarterLimitQ,
+      answer: AppLabels.helpFaqStarterLimitA,
       keywords: ['制限', '解除', 'フィードバック', 'プレミアム', '無料', 'スターター', 'アップグレード'],
     ),
     _FaqItem(
-      question: 'プレミアムプランを解約したい場合はどうすればよいですか？',
-      answer: '画面右上のメールアイコンから「お問い合わせ」を選択し、'
-          '解約希望の旨をお伝えください。\n'
-          'その際、プレミアムプラン申込時に入力したメールアドレスを'
-          '必ずご記載ください（契約の特定に必要です）。\n\n'
-          '解約後は次回更新日以降に課金が停止され、'
-          'スタータープランに移行します。\n'
-          '登録済みのデータはそのまま残ります。',
+      question: AppLabels.helpFaqPremiumCancelQ,
+      answer: AppLabels.helpFaqPremiumCancelA,
       keywords: ['解約', 'キャンセル', '退会', '課金', '停止', 'やめる', '問い合わせ'],
     ),
 
     // ── 問い合わせ・フィードバック ──
     _FaqItem(
-      question: '問い合わせをしたい場合はどうすればよいですか？',
-      answer: '画面右上のメールアイコンをタップし、'
-          '「お問い合わせ」を選択してください。\n'
-          '追加開発のご相談や案件のご依頼などを受け付けています。',
+      question: AppLabels.helpFaqInquiryQ,
+      answer: AppLabels.helpFaqInquiryA,
       keywords: ['問い合わせ', 'お問い合わせ', '連絡', '相談', 'メール', 'アイコン'],
     ),
     _FaqItem(
-      question: 'フィードバックを送りたい場合はどうすればよいですか？',
-      answer: '画面右上のメールアイコンをタップし、'
-          '「フィードバック」を選択してください。\n'
-          '改善要望・不具合報告・その他のご意見を受け付けています。\n'
-          'いただいたフィードバックは新機能の開発や改善に活用させていただきます。',
+      question: AppLabels.helpFaqFeedbackQ,
+      answer: AppLabels.helpFaqFeedbackA,
       keywords: ['フィードバック', '意見', '要望', '不具合', '報告', 'メール'],
     ),
 
     // ── 端末・環境 ──
     _FaqItem(
-      question: 'スマートフォンでも使えますか？',
-      answer: 'はい、スマートフォンのブラウザからアクセスできます。\n'
-          'iOSの場合はSafariで開き、共有ボタン→「ホーム画面に追加」で'
-          'アプリのように使えます。\n'
-          'Androidの場合はChromeで開き、メニュー→「ホーム画面に追加」で同様です。',
+      question: AppLabels.helpFaqSmartphoneQ,
+      answer: AppLabels.helpFaqSmartphoneA,
       keywords: ['スマートフォン', 'スマホ', 'モバイル', '携帯', 'ホーム画面', 'iOS', 'Android'],
     ),
     _FaqItem(
-      question: '対応しているブラウザはどれですか？',
-      answer: 'Google Chrome / Microsoft Edge / Safari / Firefox の'
-          '最新版に対応しています。\n'
-          'PC・スマートフォンのどちらでもご利用いただけます。',
+      question: AppLabels.helpFaqBrowserQ,
+      answer: AppLabels.helpFaqBrowserA,
       keywords: ['ブラウザ', '対応', 'Chrome', 'Edge', 'Safari', 'Firefox', '推奨'],
     ),
 
     // ── アプリの利用終了 ──
     _FaqItem(
-      question: 'アプリの利用を終了（退会）したい場合はどうすればよいですか？',
-      answer: 'ユーザー登録がないため、退会手続きは不要です。\n'
-          '設定ページの「全データを削除」でアプリ内のデータを消去し、'
-          'ブラウザのブックマークを削除すれば完了です。\n\n'
-          '【重要】プレミアムプランをご契約中の場合は、'
-          '必ず事前にメールアイコンの「お問い合わせ」から'
-          '解約をご連絡ください。\n'
-          '解約手続きを行わない場合、毎月の請求が継続されます。',
+      question: AppLabels.helpFaqQuitQ,
+      answer: AppLabels.helpFaqQuitA,
       keywords: ['終了', '退会', 'やめる', '削除', 'アカウント', '解約', '利用停止'],
     ),
 
     // ── 書籍 ──
     _FaqItem(
-      question: '書籍はどこから登録できますか？',
-      answer: 'ハンバーガーメニュー（左上の三本線）から「書籍」を選択し、'
-          '上部の入力欄からタイトルを入力して追加できます。\n'
-          '登録した書籍をタップすると、カテゴリやメモの編集ができます。',
+      question: AppLabels.helpFaqBookQ,
+      answer: AppLabels.helpFaqBookA,
       keywords: ['書籍', '本', '登録', '追加', '読書'],
     ),
 
     // ── その他 ──
     _FaqItem(
-      question: 'チュートリアルをもう一度やりたい場合は？',
-      answer: '画面右上の初心者マーク（使い方）アイコンをタップし、'
-          '「チュートリアルを開始」ボタンから再度体験できます。\n'
-          'チュートリアル中に作成したデータは、'
-          '完了時に保持するか削除するかを選べます。',
+      question: AppLabels.helpFaqTutorialQ,
+      answer: AppLabels.helpFaqTutorialA,
       keywords: ['チュートリアル', 'やり直し', '再開', '使い方', '操作方法'],
     ),
     _FaqItem(
-      question: '実績（マイルストーン）はどこで確認できますか？',
-      answer: '画面右上のトロフィーアイコンをタップすると、'
-          '達成した実績の一覧が表示されます。\n'
-          '活動時間や連続日数に応じて新しい実績が解除されます。\n'
-          '新しい実績が達成されると、アイコンにバッジが表示されます。',
+      question: AppLabels.helpFaqAchievementQ,
+      answer: AppLabels.helpFaqAchievementA,
       keywords: ['実績', 'マイルストーン', 'トロフィー', '達成', 'バッジ'],
     ),
   ];
@@ -303,7 +244,7 @@ class _FaqTabState extends State<_FaqTab> {
           child: TextField(
             onChanged: (value) => setState(() => _searchQuery = value),
             decoration: InputDecoration(
-              hintText: 'キーワードで検索...',
+              hintText: AppLabels.helpSearchHint,
               prefixIcon: const Icon(Icons.search, size: 20),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
@@ -331,7 +272,7 @@ class _FaqTabState extends State<_FaqTab> {
                       Icon(Icons.search_off, size: 40, color: theme.hintColor),
                       const SizedBox(height: 8),
                       Text(
-                        '該当するFAQが見つかりません',
+                        AppLabels.helpFaqSearchNoResult,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.hintColor,
                         ),
@@ -407,26 +348,20 @@ class _AboutTab extends StatelessWidget {
           _InfoRow(
             icon: Icons.security,
             color: Colors.orange,
-            title: '完全匿名でご利用いただけます',
-            subtitle: 'ユーザー登録・ログインは不要です。\n'
-                '入力したデータは全てお使いのブラウザ内にのみ保存され、'
-                '開発者を含む第三者に送信・公開されることはありません。',
+            title: AppLabels.helpAboutAnonymousTitle,
+            subtitle: AppLabels.helpAboutAnonymousDesc,
           ),
           _InfoRow(
             icon: Icons.warning_amber,
             color: Colors.amber,
-            title: 'ブラウザのデータ削除で全データが消えます',
-            subtitle: 'ブラウザのキャッシュやデータを消去すると、'
-                'アプリで登録した夢・目標・タスク・書籍・活動ログ等'
-                '全てのデータが削除されます。',
+            title: AppLabels.helpAboutDataDeleteTitle,
+            subtitle: AppLabels.helpAboutDataDeleteDesc,
           ),
           _InfoRow(
             icon: Icons.devices,
             color: Colors.deepOrange,
-            title: '別の端末・ブラウザではデータを引き継げません',
-            subtitle: 'データはブラウザごとに独立して保存されます。\n'
-                'プレミアムプランでは設定画面のエクスポート/インポート機能で'
-                'データ移行が可能です。',
+            title: AppLabels.helpAboutDeviceTitle,
+            subtitle: AppLabels.helpAboutDeviceDesc,
           ),
           const SizedBox(height: 8),
           Container(
@@ -445,8 +380,7 @@ class _AboutTab extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '大切なデータは定期的にエクスポートして'
-                    'バックアップすることをおすすめします。',
+                    AppLabels.helpAboutBackupTip,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.primary,
                     ),
@@ -476,7 +410,7 @@ class _TrialInfoTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '登録上限',
+            AppLabels.helpPlanRegistrationLimit,
             style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -485,26 +419,26 @@ class _TrialInfoTab extends StatelessWidget {
           _InfoRow(
             icon: Icons.auto_awesome,
             color: Colors.blue,
-            title: '夢: 1個まで',
+            title: AppLabels.helpPlanDreamLimit,
             subtitle: null,
           ),
           _InfoRow(
             icon: Icons.flag,
             color: Colors.green,
-            title: '目標: 夢1つにつき2個まで',
+            title: AppLabels.helpPlanGoalLimit,
             subtitle: null,
           ),
           _InfoRow(
             icon: Icons.menu_book,
             color: Colors.purple,
-            title: '書籍: 3冊まで',
+            title: AppLabels.helpPlanBookLimit,
             subtitle: null,
           ),
           _InfoRow(
             icon: Icons.lock_outline,
             color: Colors.red,
-            title: 'ガントチャート・詳細統計: 利用不可',
-            subtitle: 'フィードバック送信で段階的に登録上限が緩和されます',
+            title: AppLabels.helpPlanLockedFeatures,
+            subtitle: AppLabels.helpPlanFeedbackUnlock,
           ),
           const SizedBox(height: 16),
           Container(
@@ -523,7 +457,7 @@ class _TrialInfoTab extends StatelessWidget {
                     size: 28, color: theme.colorScheme.primary),
                 const SizedBox(height: 8),
                 Text(
-                  'プレミアムプラン',
+                  AppLabels.helpPlanPremiumName,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.primary,
@@ -531,8 +465,7 @@ class _TrialInfoTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '月額480円（税込）で全機能を制限なくご利用いただけます。\n'
-                  '初回7日間の無料トライアルもご用意しています。',
+                  AppLabels.helpPlanPremiumDesc,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: theme.colorScheme.primary,
                   ),
@@ -540,7 +473,7 @@ class _TrialInfoTab extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '設定ページの「プランのアップグレード」からお申し込みください。',
+                  AppLabels.helpPlanPremiumUpgradeHint,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.hintColor,
                   ),

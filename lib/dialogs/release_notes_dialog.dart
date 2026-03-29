@@ -5,6 +5,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
 /// リリースノートダイアログを表示する.
@@ -39,7 +40,7 @@ class _ReleaseNotesDialog extends StatelessWidget {
           Icon(Icons.new_releases_outlined,
               color: theme.colorScheme.primary, size: 24),
           const SizedBox(width: 8),
-          Text('バージョン $version'),
+          Text(AppLabels.releaseVersion(version)),
         ],
       ),
       content: ConstrainedBox(
@@ -50,7 +51,7 @@ class _ReleaseNotesDialog extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '新機能・改善のお知らせ',
+                AppLabels.releaseNotesSubtitle,
                 style: theme.textTheme.titleSmall?.copyWith(
                   color: colors.textSecondary,
                 ),
@@ -80,7 +81,7 @@ class _ReleaseNotesDialog extends StatelessWidget {
       actions: [
         ElevatedButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('確認しました'),
+          child: const Text(AppLabels.releaseNotesConfirm),
         ),
       ],
     );

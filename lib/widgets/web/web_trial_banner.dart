@@ -8,6 +8,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../l10n/app_labels.dart';
 import '../../services/feedback_service.dart';
 import '../../services/invite_service.dart';
 import '../../services/trial_limit_service.dart';
@@ -78,8 +79,8 @@ class _WebTrialBannerState extends State<WebTrialBanner> {
               children: [
                 Text(
                   inviteStatus.isActive
-                      ? '招待プラン利用中です'
-                      : 'スタータープランをご利用中です',
+                      ? AppLabels.premiumInviteActive
+                      : AppLabels.premiumStarterActive,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -87,16 +88,17 @@ class _WebTrialBannerState extends State<WebTrialBanner> {
                 const SizedBox(height: 4),
                 Text(
                   inviteStatus.isActive
-                      ? '全機能をご利用いただけます。'
-                          '残り${inviteStatus.remainingDays}日'
+                      ? '${AppLabels.webTrialInviteDesc}'
+                          '${AppLabels.webTrialInviteDays(inviteStatus.remainingDays ?? 0)}'
                       : isUnlimited
-                          ? '基本機能の制限は完全に解除されています。'
-                              'ガントチャート等のプレミアム機能はプレミアムプランをご利用ください。'
-                          : '夢${maxDreams(level)}個・'
-                              '目標${maxGoalsPerDream(level)}個/夢・'
-                              '書籍${maxBooks(level)}冊まで'
-                              '（レベル$level / $feedbackMaxLevel）。'
-                              'ガントチャート等のプレミアム機能はプレミアムプランをご利用ください。',
+                          ? AppLabels.webTrialUnlimitedDesc
+                          : AppLabels.webTrialLimitDesc(
+                              level,
+                              feedbackMaxLevel,
+                              maxDreams(level),
+                              maxGoalsPerDream(level),
+                              maxBooks(level),
+                            ),
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -107,7 +109,7 @@ class _WebTrialBannerState extends State<WebTrialBanner> {
             onPressed: _dismiss,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
-            tooltip: '閉じる',
+            tooltip: AppLabels.btnClose,
           ),
         ],
       ),
@@ -174,7 +176,7 @@ Future<void> _showTrialDialog(
         children: [
           Icon(Icons.language, size: 24),
           SizedBox(width: 8),
-          Text('スタータープランについて'),
+          Text(AppLabels.premiumAboutStarter),
         ],
       ),
       content: SingleChildScrollView(
@@ -183,49 +185,44 @@ Future<void> _showTrialDialog(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'このアプリはスタータープランです。デスクトップ版のインストール前に'
-            '機能をお試しいただけます。',
+            AppLabels.webTrialDialogIntro,
           ),
           const SizedBox(height: 16),
           const _NoticeItem(
             icon: Icons.shield_outlined,
-            text: '完全匿名でご利用いただけます。\n'
-                'ユーザー登録・ログインは不要です。入力したデータは全て'
-                'お使いのブラウザ内にのみ保存され、開発者を含む第三者に'
-                '送信・公開されることはありません。',
+            text: AppLabels.webTrialPrivacy,
           ),
           const SizedBox(height: 8),
           const _NoticeItem(
             icon: Icons.warning_amber_outlined,
-            text: 'ブラウザのキャッシュ/データを削除すると、'
-                '全ての活動記録が消えます。',
+            text: AppLabels.webTrialCacheWarning,
           ),
           const SizedBox(height: 8),
           const _NoticeItem(
             icon: Icons.devices_outlined,
-            text: '別の端末や別のブラウザからアクセスすると、'
-                'データは引き継がれません。\n'
-                '(設定画面のエクスポート/インポート機能で移行可能)',
+            text: AppLabels.webTrialDeviceWarning,
           ),
           const SizedBox(height: 12),
           _NoticeItem(
             icon: Icons.lock_outline,
             text: isUnlimited
-                ? '制限は完全に解除されています。'
-                : 'スタータープランの登録上限（レベル$unlockLevel / $feedbackMaxLevel）: '
-                    '夢${maxDreams(unlockLevel)}個、'
-                    '目標${maxGoalsPerDream(unlockLevel)}個/夢、'
-                    '書籍${maxBooks(unlockLevel)}冊',
+                ? AppLabels.webTrialLimitUnlocked
+                : AppLabels.webTrialLimitDetail(
+                    unlockLevel,
+                    feedbackMaxLevel,
+                    maxDreams(unlockLevel),
+                    maxGoalsPerDream(unlockLevel),
+                    maxBooks(unlockLevel),
+                  ),
           ),
           const SizedBox(height: 16),
           const Text(
-            'プレミアムプランにアップグレードすると、ガントチャート・'
-            '高度な統計等のプレミアム機能も含め全機能を制限なくご利用いただけます。',
+            AppLabels.webTrialUpgradeNote,
             style: TextStyle(fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
           Text(
-            'この情報は設定画面からいつでも確認できます。',
+            AppLabels.webTrialSettingsNote,
             style: TextStyle(
               color: Theme.of(context).hintColor,
               fontSize: 12,
@@ -237,7 +234,7 @@ Future<void> _showTrialDialog(
       actions: [
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('理解しました'),
+          child: const Text(AppLabels.premiumUnderstood),
         ),
       ],
     ),

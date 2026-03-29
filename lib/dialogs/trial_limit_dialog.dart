@@ -5,6 +5,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_labels.dart';
 import '../services/feedback_service.dart';
 import '../services/trial_limit_service.dart';
 import 'feedback_dialog.dart';
@@ -63,7 +64,7 @@ class _TrialLimitDialog extends StatelessWidget {
             color: theme.colorScheme.primary,
           ),
           const SizedBox(width: 8),
-          Expanded(child: Text('$itemNameの上限に達しました')),
+          Expanded(child: Text(AppLabels.limitReachedTitle(itemName))),
         ],
       ),
       content: Column(
@@ -73,7 +74,7 @@ class _TrialLimitDialog extends StatelessWidget {
           _UsageBar(current: currentCount, max: maxCount, itemName: itemName),
           const SizedBox(height: 16),
           Text(
-            'スタータープランでは$itemNameを$maxCount件まで登録できます。',
+            AppLabels.limitReachedDesc(itemName, maxCount),
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: 12),
@@ -93,15 +94,14 @@ class _TrialLimitDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'フィードバックで制限を解除',
+                    AppLabels.limitUnlockByFeedback,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text('アプリの改善にご協力いただくと、'
-                      '制限が段階的に解除されます。'),
+                  const Text(AppLabels.limitUnlockByFeedbackDesc),
                 ],
               ),
             ),
@@ -122,16 +122,14 @@ class _TrialLimitDialog extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'さらに制限を解除するには',
+                    AppLabels.limitNeedUpgrade,
                     style: theme.textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.tertiary,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text('フィードバックによる解除は上限に達しました。\n'
-                      'すべての機能を無制限で使うには、\n'
-                      '有料プランをご検討ください。'),
+                  const Text(AppLabels.limitNeedUpgradeDesc),
                 ],
               ),
             ),
@@ -148,7 +146,7 @@ class _TrialLimitDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('閉じる'),
+          child: const Text(AppLabels.btnClose),
         ),
         if (!isMaxLevel && feedbackService != null)
           if (!isFeedbackMax)
@@ -159,7 +157,7 @@ class _TrialLimitDialog extends StatelessWidget {
                 await showFeedbackDialog(context, feedbackService!);
               },
               icon: const Icon(Icons.rate_review, size: 18),
-              label: const Text('フィードバックを送信'),
+              label: const Text(AppLabels.limitSendFeedback),
             )
           else
             FilledButton.icon(
@@ -169,7 +167,7 @@ class _TrialLimitDialog extends StatelessWidget {
                 await showUpgradeDialog(context);
               },
               icon: const Icon(Icons.star, size: 18),
-              label: const Text('無制限プランを見る'),
+              label: const Text(AppLabels.limitViewPlan),
             ),
       ],
     );

@@ -3,28 +3,30 @@ library;
 
 import 'package:uuid/uuid.dart';
 
+import '../l10n/app_labels.dart';
+
 /// 書籍カテゴリ.
 enum BookCategory {
   /// IT・技術.
-  it('IT・技術'),
+  it(AppLabels.bookCatIt),
 
   /// ビジネス.
-  business('ビジネス'),
+  business(AppLabels.bookCatBusiness),
 
   /// 小説・文学.
-  novel('小説・文学'),
+  novel(AppLabels.bookCatNovel),
 
   /// 自己啓発.
-  selfHelp('自己啓発'),
+  selfHelp(AppLabels.bookCatSelfHelp),
 
   /// 学術・教育.
-  academic('学術・教育'),
+  academic(AppLabels.bookCatAcademic),
 
   /// 趣味・実用.
-  hobby('趣味・実用'),
+  hobby(AppLabels.bookCatHobby),
 
   /// その他.
-  other('その他');
+  other(AppLabels.bookCatOther);
 
   const BookCategory(this.label);
 

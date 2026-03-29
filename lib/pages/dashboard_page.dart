@@ -22,6 +22,7 @@ import '../widgets/notification/notification_button.dart';
 import '../services/study_stats_types.dart';
 import '../theme/app_theme.dart';
 import '../dialogs/onboarding_dialog.dart';
+import '../l10n/app_labels.dart';
 
 
 /// ダッシュボードページ.
@@ -81,21 +82,20 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
               children: [
                 Icon(Icons.school, size: 24),
                 SizedBox(width: 8),
-                Text('アプリの使い方'),
+                Text(AppLabels.dashHowToUse),
               ],
             ),
             content: const Text(
-              'アプリの基本的な使い方を説明しますか？\n'
-              '実際の操作を通じて、夢・目標・タスクの登録方法を体験できます。',
+              AppLabels.dashTutorialMsg,
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text('いいえ'),
+                child: const Text(AppLabels.btnNo),
               ),
               FilledButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text('はい'),
+                child: const Text(AppLabels.btnYes),
               ),
             ],
           ),
@@ -126,7 +126,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         ],
       ),
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, _) => Center(child: Text('エラー: $error')),
+      error: (error, _) => Center(child: Text(AppLabels.errorWithDetail('$error'))),
     );
   }
 
@@ -205,13 +205,13 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                     IconButton(
                       icon: const Icon(Icons.aspect_ratio, size: 20),
                       onPressed: () => notifier.resizeWidget(index),
-                      tooltip: 'サイズ変更',
+                      tooltip: AppLabels.tooltipSizeChange,
                     ),
                     IconButton(
                       icon: Icon(Icons.delete_outline,
                           size: 20, color: colors.error),
                       onPressed: () => notifier.removeWidget(index),
-                      tooltip: '削除',
+                      tooltip: AppLabels.tooltipDelete,
                     ),
                   ],
                 ),
@@ -222,7 +222,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
           if (available.isNotEmpty) ...[
             const SizedBox(height: 16),
             Text(
-              '追加可能なウィジェット',
+              AppLabels.dashAddableParts,
               style: Theme.of(context).textTheme.titleSmall,
             ),
             const SizedBox(height: 8),
@@ -261,10 +261,10 @@ class _GreetingBar extends StatelessWidget {
 
   String _greeting() {
     final hour = DateTime.now().hour;
-    if (hour < 5) return 'お疲れさまです';
-    if (hour < 12) return 'おはようございます';
-    if (hour < 18) return 'こんにちは';
-    return 'こんばんは';
+    if (hour < 5) return AppLabels.dashGreetingLate;
+    if (hour < 12) return AppLabels.dashGreetingMorning;
+    if (hour < 18) return AppLabels.dashGreetingAfternoon;
+    return AppLabels.dashGreetingEvening;
   }
 
   @override
@@ -289,7 +289,7 @@ class _GreetingBar extends StatelessWidget {
               onPressed: onReset,
               icon: Icon(Icons.restore, size: 16, color: colors.warning),
               label: Text(
-                'リセット',
+                AppLabels.dashEditReset,
                 style: TextStyle(color: colors.warning, fontSize: 13),
               ),
             ),
@@ -300,7 +300,7 @@ class _GreetingBar extends StatelessWidget {
               color: editMode ? colors.success : colors.textMuted,
             ),
             onPressed: onToggle,
-            tooltip: editMode ? '完了' : 'ウィジェット編集',
+            tooltip: editMode ? AppLabels.dashEditDone : AppLabels.dashEditWidgets,
           ),
         ],
       ),
@@ -384,14 +384,14 @@ class _TodayBannerContent extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    data.studied ? '今日は活動済み!' : '今日の活動を始めよう',
+                    data.studied ? AppLabels.dashTodayStudied : AppLabels.dashTodayStart,
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   if (data.studied)
                     Text(
-                      '$hours時間$minutes分 / ${data.sessionCount}セッション',
+                      AppLabels.dashTodayDetail(hours, minutes, data.sessionCount),
                       style: theme.textTheme.bodySmall,
                     ),
                 ],
@@ -420,7 +420,7 @@ class _TotalTimeContent extends ConsumerWidget {
       data: (data) => _StatDisplay(
         icon: Icons.timer_outlined,
         iconColor: colors.accent,
-        label: '合計活動時間',
+        label: AppLabels.dashTotalTime,
         value: '${data.totalHours.toStringAsFixed(1)}h',
         theme: theme,
       ),
@@ -444,8 +444,8 @@ class _StudyDaysContent extends ConsumerWidget {
       data: (data) => _StatDisplay(
         icon: Icons.calendar_today_outlined,
         iconColor: colors.success,
-        label: '活動日数',
-        value: '${data.totalStudyDays}日',
+        label: AppLabels.dashStudyDays,
+        value: AppLabels.unitDays(data.totalStudyDays),
         theme: theme,
       ),
       loading: () => const _WidgetLoading(),
@@ -468,7 +468,7 @@ class _DreamCountContent extends ConsumerWidget {
       data: (count) => _StatDisplay(
         icon: Icons.auto_awesome_outlined,
         iconColor: colors.accent,
-        label: '夢の数',
+        label: AppLabels.dashDreamCount,
         value: '$count',
         theme: theme,
       ),
@@ -492,7 +492,7 @@ class _GoalCountContent extends ConsumerWidget {
       data: (count) => _StatDisplay(
         icon: Icons.flag_outlined,
         iconColor: colors.warning,
-        label: '目標数',
+        label: AppLabels.dashGoalCount,
         value: '$count',
         theme: theme,
       ),
@@ -516,9 +516,9 @@ class _StreakContent extends ConsumerWidget {
       data: (data) => _StatDisplay(
         icon: Icons.local_fire_department_outlined,
         iconColor: colors.error,
-        label: '連続活動',
-        value: '${data.currentStreak}日',
-        subtitle: '最長: ${data.longestStreak}日',
+        label: AppLabels.dashStreak,
+        value: AppLabels.unitDays(data.currentStreak),
+        subtitle: AppLabels.dashStreakSubtitle(data.longestStreak),
         theme: theme,
       ),
       loading: () => const _WidgetLoading(),
@@ -560,10 +560,10 @@ class _BookshelfContent extends ConsumerWidget {
               children: [
                 Icon(Icons.menu_book_outlined, size: 20, color: colors.accent),
                 const SizedBox(width: 8),
-                Text('本棚', style: theme.textTheme.titleSmall),
+                Text(AppLabels.dashBookshelfLabel, style: theme.textTheme.titleSmall),
                 const Spacer(),
                 Text(
-                  '$completedCount/${books.length}冊 読了',
+                  AppLabels.dashBookshelfCount(completedCount, books.length),
                   style: theme.textTheme.labelSmall,
                 ),
               ],
@@ -571,7 +571,7 @@ class _BookshelfContent extends ConsumerWidget {
             const SizedBox(height: 12),
             if (displayBooks.isEmpty)
               Text(
-                '読書を始めると本棚に並びます',
+                AppLabels.dashBookshelfEmpty,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.textMuted,
                 ),
@@ -762,23 +762,23 @@ class _PersonalRecordContent extends ConsumerWidget {
             children: [
               Icon(Icons.emoji_events_outlined, size: 20, color: colors.warning),
               const SizedBox(width: 8),
-              Text('自己ベスト', style: theme.textTheme.titleSmall),
+              Text(AppLabels.dashPersonalRecordLabel, style: theme.textTheme.titleSmall),
             ],
           ),
           const SizedBox(height: 8),
           _RecordRow(
-            label: '1日最高',
+            label: AppLabels.dashBestDay,
             value: _formatMinutes(data.bestDayMinutes),
             colors: colors,
           ),
           _RecordRow(
-            label: '1週間最高',
+            label: AppLabels.dashBestWeek,
             value: _formatMinutes(data.bestWeekMinutes),
             colors: colors,
           ),
           _RecordRow(
-            label: '最長連続',
-            value: '${data.longestStreak}日',
+            label: AppLabels.dashLongestStreak,
+            value: AppLabels.unitDays(data.longestStreak),
             colors: colors,
           ),
         ],
@@ -815,7 +815,7 @@ class _ConsistencyContent extends ConsumerWidget {
             children: [
               Icon(Icons.bar_chart_outlined, size: 20, color: colors.accent),
               const SizedBox(width: 8),
-              Text('活動の実施率', style: theme.textTheme.titleSmall),
+              Text(AppLabels.dashConsistencyLabel, style: theme.textTheme.titleSmall),
             ],
           ),
           const SizedBox(height: 8),
@@ -844,7 +844,7 @@ class _ConsistencyContent extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            '今週: ${data.thisWeekDays}日 / 今月: ${data.thisMonthDays}日',
+            AppLabels.dashConsistencyDetail(data.thisWeekDays, data.thisMonthDays),
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.textSecondary,
             ),
@@ -876,7 +876,7 @@ class _DailyChartContent extends ConsumerWidget {
             children: [
               Icon(Icons.show_chart, size: 20, color: colors.success),
               const SizedBox(width: 8),
-              Text('アクティビティ (30日)', style: theme.textTheme.titleSmall),
+              Text(AppLabels.dashActivityLabel, style: theme.textTheme.titleSmall),
             ],
           ),
           const SizedBox(height: 12),
@@ -904,7 +904,7 @@ class _MiniBarChart extends StatelessWidget {
     if (data.days.isEmpty || data.maxMinutes == 0) {
       return Center(
         child: Text(
-          'データなし',
+          AppLabels.dashNoData,
           style: TextStyle(color: colors.textMuted, fontSize: 12),
         ),
       );
@@ -1078,7 +1078,7 @@ class _ConstellationPreviewContent extends ConsumerWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    '${overall.completedCount}/${constellations.length} 星座完成',
+                    AppLabels.dashConstellationProgress(overall.completedCount, constellations.length),
                     style: theme.textTheme.labelMedium,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -1142,7 +1142,7 @@ class _InboxPreviewContent extends ConsumerWidget {
               children: [
                 Icon(Icons.inbox, size: 18, color: colors.accent),
                 const SizedBox(width: 6),
-                Text('受信ボックス', style: theme.textTheme.titleSmall),
+                Text(AppLabels.dashInbox, style: theme.textTheme.titleSmall),
                 const Spacer(),
                 if (unread > 0)
                   Container(
@@ -1153,7 +1153,7 @@ class _InboxPreviewContent extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      '$unread件の未読',
+                      AppLabels.dashUnreadCount(unread),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 10,
@@ -1168,7 +1168,7 @@ class _InboxPreviewContent extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Center(
-                  child: Text('新しい通知はありません',
+                  child: Text(AppLabels.inboxNoNotifications,
                       style: TextStyle(
                         color: colors.textMuted,
                         fontSize: 12,

@@ -10,6 +10,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../dialogs/upgrade_dialog.dart';
+import '../../l10n/app_labels.dart';
 import '../../services/trial_limit_service.dart';
 import '../../theme/app_theme.dart';
 
@@ -140,7 +141,7 @@ class PremiumSectionGate extends StatelessWidget {
                       Icon(Icons.star, size: 12, color: colors.accent),
                       const SizedBox(width: 4),
                       Text(
-                        'プレミアム',
+                        AppLabels.premiumLabel,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: colors.accent,
                           fontWeight: FontWeight.bold,
@@ -170,7 +171,7 @@ class PremiumSectionGate extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: () => showUpgradeDialog(context),
                 icon: const Icon(Icons.upgrade, size: 16),
-                label: const Text('プレミアムプランを見る'),
+                label: const Text(AppLabels.premiumViewPlan),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: colors.accent,
                   side: BorderSide(color: colors.accent),
@@ -224,7 +225,7 @@ class _UpgradeCard extends StatelessWidget {
                     Icon(Icons.star, size: 14, color: colors.accent),
                     const SizedBox(width: 4),
                     Text(
-                      'プレミアム機能',
+                      AppLabels.premiumFeature,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: colors.accent,
                         fontWeight: FontWeight.bold,
@@ -247,7 +248,7 @@ class _UpgradeCard extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'プレミアムプランで利用できます',
+                AppLabels.premiumAvailable,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.hintColor,
                 ),
@@ -282,7 +283,7 @@ class _UpgradeCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: () => showUpgradeDialog(context),
                   icon: const Icon(Icons.upgrade),
-                  label: const Text('プレミアムプランを見る'),
+                  label: const Text(AppLabels.premiumViewPlan),
                 ),
               ),
             ],

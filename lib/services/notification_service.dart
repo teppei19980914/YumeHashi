@@ -8,25 +8,37 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../database/app_database.dart' as db;
 import '../database/daos/notification_dao.dart';
+import '../l10n/app_labels.dart';
 import '../models/notification.dart';
 import 'study_stats_types.dart';
+
+/// announcements.json 同期の結果.
+class AnnouncementSyncResult {
+  /// AnnouncementSyncResultを作成する.
+  const AnnouncementSyncResult({required this.notifications});
+
+  /// 同期された通知一覧.
+  final List<Notification> notifications;
+}
 
 /// 実績達成時の閾値.
 const _totalHoursThresholds = [1, 5, 10, 25, 50, 100, 250, 500, 1000];
 const _studyDaysThresholds = [3, 7, 14, 30, 60, 100, 200, 365];
 const _streakThresholds = [3, 7, 14, 30, 60, 100];
 
-const _achievementTitles = {
-  MilestoneType.totalHours: '累計{value}時間達成！',
-  MilestoneType.studyDays: '活動{value}日目達成！',
-  MilestoneType.streak: '{value}日連続活動達成！',
-};
+/// 実績タイプに対応するタイトルを返す.
+String _achievementTitle(MilestoneType type, int value) => switch (type) {
+      MilestoneType.totalHours => AppLabels.achievementTotalHoursTitle(value),
+      MilestoneType.studyDays => AppLabels.achievementStudyDaysTitle(value),
+      MilestoneType.streak => AppLabels.achievementStreakTitle(value),
+    };
 
-const _achievementMessages = {
-  MilestoneType.totalHours: '累計活動時間が{value}時間に到達しました。素晴らしい継続力です！',
-  MilestoneType.studyDays: '活動日数が{value}日に到達しました。コツコツ積み重ねていますね！',
-  MilestoneType.streak: '{value}日間連続で活動を続けています。この調子で頑張りましょう！',
-};
+/// 実績タイプに対応するメッセージを返す.
+String _achievementMessage(MilestoneType type, int value) => switch (type) {
+      MilestoneType.totalHours => AppLabels.achievementTotalHoursMsg(value),
+      MilestoneType.studyDays => AppLabels.achievementStudyDaysMsg(value),
+      MilestoneType.streak => AppLabels.achievementStreakMsg(value),
+    };
 
 const _thresholdMap = {
   MilestoneType.totalHours: _totalHoursThresholds,
@@ -96,10 +108,8 @@ class NotificationService {
           final dedupKey = '${type.value}:$threshold';
           final exists = await _notificationDao.existsByDedupKey(dedupKey);
           if (!exists) {
-            final title =
-                _achievementTitles[type]!.replaceAll('{value}', '$threshold');
-            final message =
-                _achievementMessages[type]!.replaceAll('{value}', '$threshold');
+            final title = _achievementTitle(type, threshold);
+            final message = _achievementMessage(type, threshold);
             final notification = Notification(
               notificationType: NotificationType.achievement,
               title: title,
@@ -146,16 +156,16 @@ class NotificationService {
 
       if (daysLeft < 0) {
         dedupSuffix = 'overdue:${today.toIso8601String().substring(0, 10)}';
-        title = '${item.title}が期限を過ぎています';
-        message = '期限を${-daysLeft}日超過しています。確認してください。';
+        title = AppLabels.reminderOverdueTitle(item.title);
+        message = AppLabels.reminderOverdueMsg(-daysLeft);
       } else if (daysLeft == 0) {
         dedupSuffix = 'due_today';
-        title = '${item.title}の期限は今日です';
-        message = '今日が期限日です。最後の追い込みを！';
+        title = AppLabels.reminderTodayTitle(item.title);
+        message = AppLabels.reminderTodayMsg;
       } else if (daysLeft <= 7) {
         dedupSuffix = 'due_7days';
-        title = '${item.title}の期限まであと$daysLeft日';
-        message = '期限が近づいています。計画を確認しましょう。';
+        title = AppLabels.reminderSoonTitle(item.title, daysLeft);
+        message = AppLabels.reminderSoonMsg;
       }
 
       if (title == null || dedupSuffix == null) continue;
@@ -179,33 +189,44 @@ class NotificationService {
     return created;
   }
 
-  /// システム通知をJSON文字列から読み込む.
-  Future<List<Notification>> loadSystemNotificationsFromJson(
+  /// システム通知をJSON文字列と同期する.
+  ///
+  /// DBの既存システム通知を全削除し、JSONの内容で再作成する.
+  /// これにより announcements.json の編集がそのままユーザーに反映される.
+  /// リマインダーや実績通知には影響しない.
+  Future<AnnouncementSyncResult> syncSystemNotificationsFromJson(
     String jsonStr,
   ) async {
     try {
       final items =
           (json.decode(jsonStr) as List).cast<Map<String, dynamic>>();
+
+      // 既存のシステム通知を全削除
+      await _notificationDao.deleteByType(NotificationType.system.value);
+
+      // JSONの内容で再作成
       final created = <Notification>[];
       for (final item in items) {
         final dedupKey = item['dedup_key']?.toString() ?? '';
         if (dedupKey.isEmpty) continue;
-        final exists = await _notificationDao.existsByDedupKey(dedupKey);
-        if (exists) continue;
+        final dateStr = item['date']?.toString() ?? '';
+        final createdAt =
+            dateStr.isNotEmpty ? DateTime.tryParse(dateStr) : null;
         final notification = Notification(
           notificationType: NotificationType.system,
           title: item['title']?.toString() ?? '',
           message: item['message']?.toString() ?? '',
           dedupKey: dedupKey,
+          createdAt: createdAt,
         );
         await _notificationDao.insertNotification(
           _notificationToCompanion(notification),
         );
         created.add(notification);
       }
-      return created;
+      return AnnouncementSyncResult(notifications: created);
     } catch (_) {
-      return [];
+      return const AnnouncementSyncResult(notifications: []);
     }
   }
 

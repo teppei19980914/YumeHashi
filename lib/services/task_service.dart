@@ -14,6 +14,13 @@ class TaskService {
 
   final TaskDao _taskDao;
 
+  /// IDでタスクを1件取得する.
+  Future<Task?> getTask(String taskId) async {
+    final row = await _taskDao.getById(taskId);
+    if (row == null) return null;
+    return _rowToTask(row);
+  }
+
   /// Goal IDに紐づくTaskを取得する.
   Future<List<Task>> getTasksForGoal(String goalId) async {
     final rows = await _taskDao.getByGoalId(goalId);

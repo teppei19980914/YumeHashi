@@ -7,6 +7,8 @@ library;
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/app_labels.dart';
+
 const _tutorialActiveKey = 'tutorial_active';
 const _tutorialStepKey = 'tutorial_step';
 const _tutorialDreamIdKey = 'tutorial_dream_id';
@@ -16,48 +18,48 @@ const _tutorialGoalIdKey = 'tutorial_goal_id';
 enum TutorialStep {
   /// 夢ページへ移動.
   goToDreams(
-    '画面下の「夢」タブをタップしてください',
-    '下部ナビゲーションバーの ✨ アイコンが「夢」ページです',
+    AppLabels.tutorialGoToDreams,
+    AppLabels.tutorialGoToDreamsHint,
   ),
 
   /// 夢を追加.
   addDream(
-    '右上の「夢を追加」ボタンをタップしてください',
-    'タイトルを入力するだけでOK！説明や理由は後から編集できます',
+    AppLabels.tutorialAddDream,
+    AppLabels.tutorialAddDreamHint,
   ),
 
   /// 目標ページへ移動.
   goToGoals(
-    '画面下の「目標」タブをタップしてください',
-    '下部ナビゲーションバーの 🚩 アイコンが「目標」ページです',
+    AppLabels.tutorialGoToGoals,
+    AppLabels.tutorialGoToGoalsHint,
   ),
 
   /// 目標を追加.
   addGoal(
-    '右上の「目標を追加」ボタンをタップしてください',
-    '夢に紐づく具体的な目標を設定します。What・When・Howを入力してください',
+    AppLabels.tutorialAddGoal,
+    AppLabels.tutorialAddGoalHint,
   ),
 
   /// ガントチャートページへ移動.
   goToGantt(
-    '画面下の「ガントチャート」タブをタップしてください',
-    '下部ナビゲーションバーのタイムラインアイコンが「ガントチャート」ページです',
+    AppLabels.tutorialGoToSchedule,
+    AppLabels.tutorialGoToScheduleHint,
   ),
 
   /// タスクを追加.
   addTask(
-    'ドロップダウンから目標を選び「タスクを追加」をタップ',
-    '左上のプルダウンで先ほど作成した目標を選択すると、追加ボタンが表示されます',
+    AppLabels.tutorialAddTask,
+    AppLabels.tutorialAddTaskHint,
   ),
 
   /// 画面右上アイコンの説明.
   explainAppBar(
-    '画面右上のアイコンを確認しましょう',
-    '各アイコンの役割を紹介します。「次へ」で進めてください',
+    AppLabels.tutorialExplainAppBar,
+    AppLabels.tutorialExplainAppBarHint,
   ),
 
   /// 完了.
-  completed('チュートリアル完了！', 'アプリの基本的な使い方を体験しました');
+  completed(AppLabels.tutorialCompletedStep, AppLabels.tutorialCompletedStepHint);
 
   const TutorialStep(this.instruction, this.hint);
 

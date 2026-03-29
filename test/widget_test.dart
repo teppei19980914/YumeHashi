@@ -183,7 +183,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('ダッシュボード'), findsWidgets);
+    expect(find.text('ホーム'), findsWidgets);
   });
 
   testWidgets('ドロワーから夢ページに遷移', (WidgetTester tester) async {

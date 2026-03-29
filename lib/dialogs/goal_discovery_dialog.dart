@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../data/goal_templates.dart';
+import '../l10n/app_labels.dart';
 import '../models/dream.dart';
 import '../theme/app_theme.dart';
 
@@ -171,7 +172,7 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
                         color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
-                      '目標設定ガイド',
+                      AppLabels.goalDiscoveryTitle,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -230,7 +231,7 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
                     if (_currentPage > 0)
                       TextButton(
                         onPressed: () => _goToPage(_currentPage - 1),
-                        child: const Text('戻る'),
+                        child: const Text(AppLabels.btnBack),
                       )
                     else
                       const SizedBox.shrink(),
@@ -239,12 +240,12 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
                         onPressed: _canProceed
                             ? () => _goToPage(_currentPage + 1)
                             : null,
-                        child: const Text('次へ'),
+                        child: const Text(AppLabels.btnNext),
                       )
                     else
                       ElevatedButton(
                         onPressed: _submit,
-                        child: const Text('目標を作成'),
+                        child: const Text(AppLabels.goalDiscoveryCreate),
                       ),
                   ],
                 ),
@@ -265,7 +266,7 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'どの夢に向けた目標ですか？',
+            AppLabels.goalDiscoveryDreamQuestion,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -273,7 +274,7 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
           ),
           const SizedBox(height: 8),
           Text(
-            '夢と紐づけることで、目標の意味がより明確になります。',
+            AppLabels.goalDiscoveryDreamDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textSecondary,
             ),
@@ -366,7 +367,7 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '夢とは紐づけず、独立した目標を立てる',
+                      AppLabels.goalDiscoveryNoDream,
                       style: theme.textTheme.titleSmall?.copyWith(
                         color: colors.textSecondary,
                       ),
@@ -406,7 +407,7 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '「$dreamTitle」を実現するために考えてみましょう',
+                      AppLabels.goalDiscoveryThinkFor(dreamTitle),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w600,
@@ -495,14 +496,14 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'テンプレートから選ぶ',
+            AppLabels.goalDiscoveryTemplateTitle,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'そのまま使っても、自分なりにアレンジしてもOKです。\n「自分で考える」場合はそのまま「次へ」を押してください。',
+            AppLabels.goalDiscoveryTemplateDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textSecondary,
             ),
@@ -564,7 +565,8 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '推奨期間: ${t.suggestedPeriod}',
+                        AppLabels.goalDiscoverySuggestedPeriod(
+                            t.suggestedPeriod),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                         ),
@@ -591,45 +593,54 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '目標を具体化しよう',
+              AppLabels.goalDiscoveryFormTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
-            Text('What（何を達成する？）', style: theme.textTheme.titleSmall),
+            Text(AppLabels.goalDiscoveryFormWhat,
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             TextFormField(
               controller: _whatController,
               decoration: const InputDecoration(
-                hintText: '例: TOEIC 800点を取る',
+                hintText: AppLabels.goalDiscoveryFormWhatHint,
               ),
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? '必須項目です' : null,
+                  v == null || v.trim().isEmpty
+                      ? AppLabels.validRequired
+                      : null,
             ),
             const SizedBox(height: 16),
-            Text('When（いつまでに？）', style: theme.textTheme.titleSmall),
+            Text(AppLabels.goalDiscoveryFormWhen,
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             TextFormField(
               controller: _whenController,
               decoration: const InputDecoration(
-                hintText: '例: 2026年12月, 3ヶ月以内',
+                hintText: AppLabels.goalDiscoveryFormWhenHint,
               ),
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? '必須項目です' : null,
+                  v == null || v.trim().isEmpty
+                      ? AppLabels.validRequired
+                      : null,
             ),
             const SizedBox(height: 16),
-            Text('How（どうやって？）', style: theme.textTheme.titleSmall),
+            Text(AppLabels.goalDiscoveryFormHow,
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             TextFormField(
               controller: _howController,
               decoration: const InputDecoration(
-                hintText: '例: 毎日1時間の英語学習を継続する',
+                hintText: AppLabels.goalDiscoveryFormHowHint,
               ),
               maxLines: 3,
               minLines: 2,
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? '必須項目です' : null,
+                  v == null || v.trim().isEmpty
+                      ? AppLabels.validRequired
+                      : null,
             ),
 
             if (_selectedDream != null) ...[
@@ -647,7 +658,8 @@ class _GoalDiscoveryDialogState extends State<_GoalDiscoveryDialog> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        '紐づく夢: ${_selectedDream!.title}',
+                        AppLabels.goalDiscoveryLinkedDream(
+                            _selectedDream!.title),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                         ),

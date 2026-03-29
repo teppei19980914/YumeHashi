@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_labels.dart';
 import '../../providers/dashboard_providers.dart';
 import '../../services/study_stats_types.dart';
 import '../../theme/app_theme.dart';
@@ -65,17 +66,17 @@ class _GoalStatsSectionState extends ConsumerState<GoalStatsSection> {
               children: [
                 Icon(Icons.assessment_outlined, size: 20, color: colors.accent),
                 const SizedBox(width: 8),
-                Text('目標別統計', style: theme.textTheme.titleMedium),
+                Text(AppLabels.statsGoalStats, style: theme.textTheme.titleMedium),
                 const Spacer(),
                 SegmentedButton<_StatsMode>(
                   segments: const [
                     ButtonSegment(
                       value: _StatsMode.goals,
-                      label: Text('目標'),
+                      label: Text(AppLabels.pageGoals),
                     ),
                     ButtonSegment(
                       value: _StatsMode.books,
-                      label: Text('読書'),
+                      label: Text(AppLabels.statsReading),
                     ),
                   ],
                   selected: {_mode},
@@ -100,8 +101,8 @@ class _GoalStatsSectionState extends ConsumerState<GoalStatsSection> {
                     child: Center(
                       child: Text(
                         _mode == _StatsMode.goals
-                            ? '目標を追加すると統計が表示されます'
-                            : '読書を始めると統計が表示されます',
+                            ? AppLabels.statsGoalEmptyHint
+                            : AppLabels.statsBookEmptyHint,
                         style: TextStyle(color: colors.textMuted),
                       ),
                     ),
@@ -118,7 +119,7 @@ class _GoalStatsSectionState extends ConsumerState<GoalStatsSection> {
               },
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (_, _) => const Text('エラーが発生しました'),
+              error: (_, _) => const Text(AppLabels.errorGeneral),
             ),
           ],
         ),
@@ -181,7 +182,7 @@ class _GoalStatsCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    '合計',
+                    AppLabels.statsTotal,
                     style: theme.textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

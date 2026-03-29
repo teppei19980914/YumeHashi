@@ -4,6 +4,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_labels.dart';
 import '../../providers/dashboard_providers.dart';
 import '../../providers/theme_provider.dart';
 import 'milestone_popup.dart';
@@ -29,7 +30,7 @@ class MilestoneButton extends ConsumerWidget {
       children: [
         IconButton(
           icon: const Icon(Icons.emoji_events_outlined),
-          tooltip: '実績',
+          tooltip: AppLabels.milestoneTooltip,
           onPressed: () async {
             final data = milestoneAsync.valueOrNull;
             if (data == null) return;

@@ -4,31 +4,33 @@ library;
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 
+import '../l10n/app_labels.dart';
+
 /// 夢のカテゴリ.
 enum DreamCategory {
   /// キャリア・仕事.
-  career('career', 'キャリア', Icons.work_outline, Color(0xFF4FC3F7)),
+  career('career', AppLabels.catCareer, Icons.work_outline, Color(0xFF4FC3F7)),
 
   /// 学び・資格.
-  learning('learning', '学び', Icons.school_outlined, Color(0xFF81C784)),
+  learning('learning', AppLabels.catLearning, Icons.school_outlined, Color(0xFF81C784)),
 
   /// 健康・運動.
-  health('health', '健康', Icons.favorite_outline, Color(0xFFE57373)),
+  health('health', AppLabels.catHealth, Icons.favorite_outline, Color(0xFFE57373)),
 
   /// お金・資産.
-  finance('finance', 'お金', Icons.savings_outlined, Color(0xFFFFD54F)),
+  finance('finance', AppLabels.catFinance, Icons.savings_outlined, Color(0xFFFFD54F)),
 
   /// 趣味・創作.
-  hobby('hobby', '趣味', Icons.palette_outlined, Color(0xFFBA68C8)),
+  hobby('hobby', AppLabels.catHobby, Icons.palette_outlined, Color(0xFFBA68C8)),
 
   /// 人間関係.
-  relationship('relationship', '人間関係', Icons.people_outline, Color(0xFFFF8A65)),
+  relationship('relationship', AppLabels.catRelationship, Icons.people_outline, Color(0xFFFF8A65)),
 
   /// 旅行・体験.
-  travel('travel', '旅行', Icons.flight_outlined, Color(0xFF4DD0E1)),
+  travel('travel', AppLabels.catTravel, Icons.flight_outlined, Color(0xFF4DD0E1)),
 
   /// その他.
-  other('other', 'その他', Icons.auto_awesome, Color(0xFF90A4AE));
+  other('other', AppLabels.catOther, Icons.auto_awesome, Color(0xFF90A4AE));
 
   const DreamCategory(this.value, this.label, this.icon, this.color);
 

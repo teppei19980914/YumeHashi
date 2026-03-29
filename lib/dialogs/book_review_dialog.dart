@@ -6,6 +6,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_labels.dart';
+
 /// BookReviewDialog の入力結果.
 class BookReviewResult {
   /// BookReviewResultを作成する.
@@ -102,7 +104,7 @@ class _BookReviewDialogContentState extends State<_BookReviewDialogContent> {
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: Text('読了レビュー: ${widget.bookTitle}'),
+      title: Text(AppLabels.reviewTitle(widget.bookTitle)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
@@ -116,7 +118,7 @@ class _BookReviewDialogContentState extends State<_BookReviewDialogContent> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 読了日
-              Text('読了日', style: theme.textTheme.titleSmall),
+              Text(AppLabels.reviewDate, style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               TextFormField(
                 controller: _dateController,
@@ -132,12 +134,12 @@ class _BookReviewDialogContentState extends State<_BookReviewDialogContent> {
               const SizedBox(height: 16),
 
               // 要約
-              Text('要約', style: theme.textTheme.titleSmall),
+              Text(AppLabels.reviewSummary, style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               TextField(
                 controller: _summaryController,
                 decoration: const InputDecoration(
-                  hintText: '本の概要やポイント（任意）',
+                  hintText: AppLabels.reviewSummaryHint,
                 ),
                 maxLines: 4,
                 minLines: 3,
@@ -145,12 +147,12 @@ class _BookReviewDialogContentState extends State<_BookReviewDialogContent> {
               const SizedBox(height: 16),
 
               // 感想
-              Text('感想', style: theme.textTheme.titleSmall),
+              Text(AppLabels.reviewImpressions, style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               TextField(
                 controller: _impressionsController,
                 decoration: const InputDecoration(
-                  hintText: '感想や学んだこと（任意）',
+                  hintText: AppLabels.reviewImpressionsHint,
                 ),
                 maxLines: 4,
                 minLines: 3,
@@ -162,11 +164,11 @@ class _BookReviewDialogContentState extends State<_BookReviewDialogContent> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('キャンセル'),
+          child: const Text(AppLabels.btnCancel),
         ),
         ElevatedButton(
           onPressed: _submit,
-          child: const Text('読了'),
+          child: const Text(AppLabels.bookStatusCompleted),
         ),
       ],
     );

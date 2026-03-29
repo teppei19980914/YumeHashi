@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../data/dream_templates.dart';
+import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
 /// 夢発見ガイドの結果.
@@ -162,7 +163,7 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'やりたいこと発見ガイド',
+                      AppLabels.dreamDiscoveryTitle,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -226,7 +227,7 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
                         TextButton(
                           onPressed: _previousPage,
                           child: Text(
-                            '戻る',
+                            AppLabels.btnBack,
                             style: TextStyle(color: colors.textMuted),
                           ),
                         ),
@@ -234,12 +235,12 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
                       if (_currentPage < _totalPages - 1)
                         FilledButton(
                           onPressed: _canProceed ? _nextPage : null,
-                          child: const Text('次へ'),
+                          child: const Text(AppLabels.btnNext),
                         )
                       else
                         FilledButton(
                           onPressed: _submit,
-                          child: const Text('夢を作成'),
+                          child: const Text(AppLabels.dreamDiscoveryCreate),
                         ),
                     ],
                   ),
@@ -262,7 +263,7 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'いくつかの質問に答えてみましょう',
+            AppLabels.dreamDiscoveryQuestionsDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textSecondary,
             ),
@@ -319,8 +320,7 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'あなたの回答から、興味のある分野が見えてきました。\n'
-            '気になるカテゴリを選んでください。',
+            AppLabels.dreamDiscoveryCategoryDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textSecondary,
             ),
@@ -354,7 +354,7 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
     final category = _selectedCategory;
     if (category == null) {
       return Center(
-        child: Text('カテゴリを選択してください',
+        child: Text(AppLabels.dreamDiscoverySelectCategory,
             style: TextStyle(color: colors.textMuted)),
       );
     }
@@ -372,7 +372,7 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
               Icon(category.icon, color: category.color, size: 20),
               const SizedBox(width: 8),
               Text(
-                '${category.label}の夢テンプレート',
+                AppLabels.dreamDiscoveryTemplateTitle(category.label),
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w600,
                 ),
@@ -381,7 +381,7 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
           ),
           const SizedBox(height: 4),
           Text(
-            '気になるものを選ぶか、自分で入力もできます。',
+            AppLabels.dreamDiscoveryTemplateDesc,
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.textSecondary,
             ),
@@ -415,7 +415,7 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
               _nextPage();
             },
             icon: const Icon(Icons.edit, size: 16),
-            label: const Text('自分で入力する'),
+            label: const Text(AppLabels.dreamDiscoverySelfInput),
           ),
         ],
       ),
@@ -434,41 +434,45 @@ class _DreamDiscoveryDialogState extends State<_DreamDiscoveryDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'あなたの夢を言葉にしましょう',
+              AppLabels.dreamDiscoveryFormDesc,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colors.textSecondary,
               ),
             ),
             const SizedBox(height: 16),
-            Text('タイトル', style: theme.textTheme.titleSmall),
+            Text(AppLabels.dreamDiscoveryFormTitle,
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                hintText: '例: 英語を話せるようになる',
+                hintText: AppLabels.dreamDiscoveryFormTitleHint,
               ),
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? '必須項目です' : null,
+                  v == null || v.trim().isEmpty
+                      ? AppLabels.validRequired
+                      : null,
             ),
             const SizedBox(height: 16),
-            Text('説明（任意）', style: theme.textTheme.titleSmall),
+            Text(AppLabels.dreamDiscoveryFormDescription,
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(
-                hintText: '例: 日常会話レベルの英語力を身につける',
+                hintText: AppLabels.dreamDiscoveryFormDescriptionHint,
               ),
               maxLines: 3,
               minLines: 2,
             ),
             const SizedBox(height: 16),
-            Text('Why ── なぜ実現したいか（任意）',
+            Text(AppLabels.dreamDiscoveryFormWhy,
                 style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             TextFormField(
               controller: _whyController,
               decoration: const InputDecoration(
-                hintText: '例: 世界中の人と話せるようになりたいから',
+                hintText: AppLabels.dreamDiscoveryFormWhyHint,
               ),
               maxLines: 3,
               minLines: 2,
@@ -537,7 +541,7 @@ class _CategoryCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    'おすすめ',
+                    AppLabels.dreamDiscoveryRecommended,
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,

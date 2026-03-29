@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_labels.dart';
+
 /// StudyLogDialog の入力結果.
 class StudyLogDialogResult {
   /// StudyLogDialogResultを作成する.
@@ -101,7 +103,7 @@ class _StudyLogDialogContentState extends State<_StudyLogDialogContent> {
 
     if (totalMinutes <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('活動時間は1分以上で入力してください')),
+        const SnackBar(content: Text(AppLabels.logMinRequired)),
       );
       return;
     }
@@ -120,7 +122,7 @@ class _StudyLogDialogContentState extends State<_StudyLogDialogContent> {
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: Text('活動ログを記録: ${widget.taskName}'),
+      title: Text('${AppLabels.logDialogTitle}: ${widget.taskName}'),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 400),
@@ -136,7 +138,7 @@ class _StudyLogDialogContentState extends State<_StudyLogDialogContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // 活動日
-              Text('活動日', style: theme.textTheme.titleSmall),
+              Text(AppLabels.logDate, style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               TextFormField(
                 controller: _dateController,
@@ -153,7 +155,7 @@ class _StudyLogDialogContentState extends State<_StudyLogDialogContent> {
               const SizedBox(height: 16),
 
               // 活動時間
-              Text('活動時間', style: theme.textTheme.titleSmall),
+              Text(AppLabels.logDuration, style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -161,7 +163,7 @@ class _StudyLogDialogContentState extends State<_StudyLogDialogContent> {
                     child: TextFormField(
                       controller: _hoursController,
                       decoration: const InputDecoration(
-                        suffixText: '時間',
+                        suffixText: AppLabels.logHours,
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -172,7 +174,7 @@ class _StudyLogDialogContentState extends State<_StudyLogDialogContent> {
                     child: TextFormField(
                       controller: _minutesController,
                       decoration: const InputDecoration(
-                        suffixText: '分',
+                        suffixText: AppLabels.logMinutes,
                       ),
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -183,12 +185,12 @@ class _StudyLogDialogContentState extends State<_StudyLogDialogContent> {
               const SizedBox(height: 16),
 
               // メモ
-              Text('メモ', style: theme.textTheme.titleSmall),
+              Text(AppLabels.logMemo, style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               TextFormField(
                 controller: _memoController,
                 decoration: const InputDecoration(
-                  hintText: '活動内容のメモ（任意）',
+                  hintText: AppLabels.logMemoHint,
                 ),
                 maxLines: 2,
               ),
@@ -200,11 +202,11 @@ class _StudyLogDialogContentState extends State<_StudyLogDialogContent> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('キャンセル'),
+          child: const Text(AppLabels.btnCancel),
         ),
         ElevatedButton(
           onPressed: _submit,
-          child: const Text('記録'),
+          child: const Text(AppLabels.btnRecord),
         ),
       ],
     );

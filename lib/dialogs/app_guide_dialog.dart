@@ -7,6 +7,8 @@ library;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import '../l10n/app_labels.dart';
+
 /// アプリ使い方ガイドダイアログを表示する.
 /// アプリ使い方ガイドダイアログを表示する.
 ///
@@ -59,7 +61,7 @@ class _AppGuideDialogState extends State<_AppGuideDialog>
         children: [
           Icon(Icons.menu_book_outlined, size: 24, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          const Expanded(child: Text('使い方')),
+          const Expanded(child: Text(AppLabels.tooltipHowToUse)),
           IconButton(
             icon: const Icon(Icons.close, size: 20),
             onPressed: () => Navigator.of(context).pop(),
@@ -79,8 +81,8 @@ class _AppGuideDialogState extends State<_AppGuideDialog>
             TabBar(
               controller: _tabController,
               tabs: const [
-                Tab(text: '全体像'),
-                Tab(text: '使い方'),
+                Tab(text: AppLabels.guideTabOverview),
+                Tab(text: AppLabels.guideTabHowTo),
               ],
             ),
             Expanded(
@@ -103,11 +105,11 @@ class _AppGuideDialogState extends State<_AppGuideDialog>
               widget.onStartTutorial!();
             },
             icon: const Icon(Icons.school_outlined, size: 18),
-            label: const Text('チュートリアルを開始'),
+            label: const Text(AppLabels.tutorialStart),
           ),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('閉じる'),
+          child: const Text(AppLabels.btnClose),
         ),
       ],
     );
@@ -133,25 +135,25 @@ class _OverviewTab extends StatelessWidget {
           // ── メイン階層: 夢 → 目標 → タスク ──────────────────
           _DiagramNode(
             icon: Icons.auto_awesome,
-            label: '夢',
-            subtitle: '最終ゴール',
+            label: AppLabels.guideDream,
+            subtitle: AppLabels.guideDreamSub,
             color: primary,
             theme: theme,
           ),
-          _DiagramArrow(label: '分解', theme: theme),
+          _DiagramArrow(label: AppLabels.guideDecompose, theme: theme),
           _DiagramNode(
             icon: Icons.flag,
-            label: '目標',
-            subtitle: '具体的なステップ',
+            label: AppLabels.guideGoal,
+            subtitle: AppLabels.guideGoalSub,
             color: primary,
             theme: theme,
           ),
           if (!isTrialWeb) ...[
-            _DiagramArrow(label: '実行', theme: theme),
+            _DiagramArrow(label: AppLabels.guideExecute, theme: theme),
             _DiagramNode(
               icon: Icons.view_timeline,
-              label: 'ガントチャート',
-              subtitle: 'スケジュール管理・進捗記録',
+              label: AppLabels.pageSchedule,
+              subtitle: AppLabels.guideScheduleSub,
               color: primary,
               theme: theme,
             ),
@@ -171,7 +173,7 @@ class _OverviewTab extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  '連携する画面',
+                  AppLabels.guideRelatedScreens,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.hintColor,
                   ),
@@ -182,12 +184,12 @@ class _OverviewTab extends StatelessWidget {
                   _DiagramRelation(
                     theme: theme,
                     leftIcon: Icons.menu_book,
-                    leftLabel: '書籍',
-                    leftSub: '何を読むか\nどう読んだか',
+                    leftLabel: AppLabels.pageBooks,
+                    leftSub: AppLabels.guideBookSub,
                     rightIcon: Icons.view_timeline,
-                    rightLabel: 'ガントチャート',
-                    rightSub: 'いつ読むか\nスケジュール管理',
-                    linkLabel: '読書計画',
+                    rightLabel: AppLabels.pageSchedule,
+                    rightSub: AppLabels.guideScheduleBookSub,
+                    linkLabel: AppLabels.guideReadingPlan,
                   ),
                 if (!isTrialWeb) const SizedBox(height: 12),
                 // 目標 ↔ ガントチャート
@@ -195,23 +197,23 @@ class _OverviewTab extends StatelessWidget {
                   _DiagramRelation(
                     theme: theme,
                     leftIcon: Icons.flag,
-                    leftLabel: '目標',
-                    leftSub: '何を達成するか',
+                    leftLabel: AppLabels.guideGoal,
+                    leftSub: AppLabels.guideGoalWhatSub,
                     rightIcon: Icons.view_timeline,
-                    rightLabel: 'ガントチャート',
-                    rightSub: 'いつ・どのくらい\nやるか',
-                    linkLabel: 'タスク管理',
+                    rightLabel: AppLabels.pageSchedule,
+                    rightSub: AppLabels.guideScheduleTaskSub,
+                    linkLabel: AppLabels.guideTaskManagement,
                   ),
                 if (isTrialWeb)
                   _DiagramRelation(
                     theme: theme,
                     leftIcon: Icons.menu_book,
-                    leftLabel: '書籍',
-                    leftSub: '何を読むか\nどう読んだか',
+                    leftLabel: AppLabels.pageBooks,
+                    leftSub: AppLabels.guideBookSub,
                     rightIcon: Icons.flag,
-                    rightLabel: '目標',
-                    rightSub: '何を達成するか',
-                    linkLabel: '紐づけ',
+                    rightLabel: AppLabels.guideGoal,
+                    rightSub: AppLabels.guideGoalWhatSub,
+                    linkLabel: AppLabels.guideBookGoalLink,
                   ),
               ],
             ),
@@ -225,8 +227,8 @@ class _OverviewTab extends StatelessWidget {
               Expanded(
                 child: _DiagramMiniNode(
                   icon: Icons.dashboard,
-                  label: 'ダッシュ\nボード',
-                  subtitle: '今日の状況',
+                  label: AppLabels.guideDashboardLabel,
+                  subtitle: AppLabels.guideDashboardSub,
                   theme: theme,
                 ),
               ),
@@ -234,8 +236,8 @@ class _OverviewTab extends StatelessWidget {
               Expanded(
                 child: _DiagramMiniNode(
                   icon: Icons.bar_chart,
-                  label: '統計',
-                  subtitle: '振り返り',
+                  label: AppLabels.pageStats,
+                  subtitle: AppLabels.guideStatsSub,
                   theme: theme,
                 ),
               ),
@@ -243,8 +245,8 @@ class _OverviewTab extends StatelessWidget {
               Expanded(
                 child: _DiagramMiniNode(
                   icon: Icons.stars,
-                  label: '星座',
-                  subtitle: 'モチベーション',
+                  label: AppLabels.pageConstellations,
+                  subtitle: AppLabels.guideConstellationSub,
                   theme: theme,
                 ),
               ),
@@ -253,8 +255,8 @@ class _OverviewTab extends StatelessWidget {
                 Expanded(
                   child: _DiagramMiniNode(
                     icon: Icons.menu_book,
-                    label: '書籍',
-                    subtitle: '読書管理',
+                    label: AppLabels.pageBooks,
+                    subtitle: AppLabels.guideBookManagement,
                     theme: theme,
                   ),
                 ),
@@ -530,76 +532,76 @@ class _GuideTab extends StatelessWidget {
       const _GuideStep(
         stepNumber: 1,
         icon: Icons.auto_awesome,
-        title: '夢を登録する',
+        title: AppLabels.guideStepDream,
         procedures: [
-          '画面下部の「夢」タブをタップ',
-          '右上の「＋ 夢を追加」ボタンをタップ',
-          '夢のタイトルを入力して「追加」をタップ',
+          AppLabels.guideStepDreamP1,
+          AppLabels.guideStepDreamP2,
+          AppLabels.guideStepDreamP3,
         ],
-        example: '例: 「ITエンジニアになる」「英語を話せるようになる」',
+        example: AppLabels.guideStepDreamExample,
       ),
       const _GuideStep(
         stepNumber: 2,
         icon: Icons.flag,
-        title: '目標を設定する',
+        title: AppLabels.guideStepGoal,
         procedures: [
-          '画面下部の「目標」タブをタップ',
-          '「＋ 目標を追加」ボタンをタップ',
-          '紐づける夢を選択',
-          'What（何を）・When（いつまでに）・How（どうやって）を入力',
-          '「追加」をタップ',
+          AppLabels.guideStepGoalP1,
+          AppLabels.guideStepGoalP2,
+          AppLabels.guideStepGoalP3,
+          AppLabels.guideStepGoalP4,
+          AppLabels.guideStepGoalP5,
         ],
-        example: '夢を細分化し、具体的な行動目標に落とし込みましょう',
+        example: AppLabels.guideStepGoalExample,
       ),
       if (!isTrialWeb)
         const _GuideStep(
           stepNumber: 3,
           icon: Icons.view_timeline,
-          title: 'ガントチャートでタスク管理',
+          title: AppLabels.guideStepSchedule,
           procedures: [
-            '画面下部の「ガントチャート」タブをタップ',
-            '上部のドロップダウンで目標を選択',
-            '「＋ タスク追加」ボタンをタップ',
-            'タスク名・開始日・終了日を入力して追加',
-            'チャート上のタスクをタップして進捗を更新',
+            AppLabels.guideStepScheduleP1,
+            AppLabels.guideStepScheduleP2,
+            AppLabels.guideStepScheduleP3,
+            AppLabels.guideStepScheduleP4,
+            AppLabels.guideStepScheduleP5,
           ],
-          example: 'タスクをタップすると活動ログの記録やタイマーも使えます',
+          example: AppLabels.guideStepScheduleExample,
         ),
       _GuideStep(
         stepNumber: isTrialWeb ? 3 : 4,
         icon: Icons.menu_book,
-        title: '書籍を管理する',
+        title: AppLabels.guideStepBook,
         procedures: const [
-          'ハンバーガーメニューから「書籍」を選択',
-          '「＋ 書籍を追加」ボタンをタップ',
-          'タイトルを入力して追加',
-          'カレンダーアイコンで読書スケジュールを設定',
-          '読了時にチェックアイコンで要約・感想を記録',
+          AppLabels.guideStepBookP1,
+          AppLabels.guideStepBookP2,
+          AppLabels.guideStepBookP3,
+          AppLabels.guideStepBookP4,
+          AppLabels.guideStepBookP5,
         ],
-        example: '読書の進捗管理と振り返りに活用できます',
+        example: AppLabels.guideStepBookExample,
       ),
       _GuideStep(
         stepNumber: isTrialWeb ? 4 : 5,
         icon: Icons.bar_chart,
-        title: '統計で振り返る',
+        title: AppLabels.guideStepStats,
         procedures: const [
-          'ハンバーガーメニューから「統計」を選択',
-          '期間（週・月・全期間）を切り替えて推移を確認',
-          '活動時間・活動日数・連続記録を把握',
+          AppLabels.guideStepStatsP1,
+          AppLabels.guideStepStatsP2,
+          AppLabels.guideStepStatsP3,
         ],
-        example: '定期的に振り返ることで、学習習慣を定着させましょう',
+        example: AppLabels.guideStepStatsExample,
       ),
       _GuideStep(
         stepNumber: isTrialWeb ? 5 : 6,
         icon: Icons.stars,
-        title: '星座で成長を実感',
+        title: AppLabels.guideStepConstellation,
         procedures: const [
-          'ハンバーガーメニューから「星座」を選択',
-          '夢ごとに割り当てられた星座を確認',
-          '活動ログを記録して星を輝かせる',
-          '完成した星座をタップすると説明が表示されます',
+          AppLabels.guideStepConstellationP1,
+          AppLabels.guideStepConstellationP2,
+          AppLabels.guideStepConstellationP3,
+          AppLabels.guideStepConstellationP4,
         ],
-        example: '活動の積み重ねが星座として可視化されます',
+        example: AppLabels.guideStepConstellationExample,
       ),
     ];
 

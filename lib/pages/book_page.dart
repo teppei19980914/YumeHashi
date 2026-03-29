@@ -11,6 +11,7 @@ import '../models/book.dart';
 import '../providers/book_providers.dart';
 import '../providers/service_providers.dart';
 import '../services/trial_limit_service.dart';
+import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
 
@@ -68,7 +69,7 @@ class _BookPageState extends ConsumerState<BookPage> {
           Row(
             children: [
               Text(
-                '本棚に登録した書籍を管理できます。',
+                AppLabels.bookDescription,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.textSecondary,
                 ),
@@ -77,7 +78,7 @@ class _BookPageState extends ConsumerState<BookPage> {
               ElevatedButton.icon(
                 onPressed: _addBook,
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('書籍を追加'),
+                label: const Text(AppLabels.bookAddButton),
               ),
             ],
           ),
@@ -110,7 +111,7 @@ class _BookPageState extends ConsumerState<BookPage> {
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
-                child: Text('エラーが発生しました: $error'),
+                child: Text(AppLabels.errorWithDetail('$error')),
               ),
             ),
           ),
@@ -127,14 +128,14 @@ class _BookPageState extends ConsumerState<BookPage> {
           Icon(Icons.menu_book_outlined, size: 64, color: colors.textMuted),
           const SizedBox(height: 16),
           Text(
-            '最初の一冊を登録しよう',
+            AppLabels.bookEmptyTitle,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colors.textMuted,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '上のフォームから書籍を登録できます',
+            AppLabels.bookEmptySubtitle,
             style: theme.textTheme.bodySmall,
           ),
         ],

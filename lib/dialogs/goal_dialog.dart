@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_labels.dart';
 import '../models/dream.dart';
 import '../models/goal.dart';
 import '../widgets/tutorial/tutorial_target_keys.dart';
@@ -166,7 +167,7 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: Text(_isEdit ? '目標を編集' : '新しい目標を追加'),
+      title: Text(_isEdit ? AppLabels.goalDialogEdit : AppLabels.goalDialogAdd),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
@@ -183,19 +184,19 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
               children: [
                 // Dream — 紐づく夢（任意）
                 Text(
-                  '紐づく夢（任意）',
+                  AppLabels.goalLinkedDream,
                   style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 4),
                 DropdownButtonFormField<String>(
                   initialValue: _selectedDreamId,
                   decoration: const InputDecoration(
-                    hintText: '夢を選択してください',
+                    hintText: AppLabels.goalSelectDream,
                   ),
                   items: [
                     const DropdownMenuItem(
                       value: '',
-                      child: Text('なし（独立した目標）'),
+                      child: Text(AppLabels.goalIndependent),
                     ),
                     ...widget.dreams.map((d) => DropdownMenuItem(
                           value: d.id,
@@ -210,23 +211,23 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
 
                 // What — 何を目標とするか
                 Text(
-                  'What（何を目標とするか）',
+                  AppLabels.goalWhat,
                   style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _whatController,
                   decoration: const InputDecoration(
-                    hintText: '例: TOEIC 900点を取得する',
+                    hintText: AppLabels.goalHintWhat,
                   ),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? '必須項目です' : null,
+                      v == null || v.trim().isEmpty ? AppLabels.validRequired : null,
                 ),
                 const SizedBox(height: 16),
 
                 // When — いつまでに達成するか
                 Text(
-                  'When（いつまでに達成するか）',
+                  AppLabels.goalWhen,
                   style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 4),
@@ -234,12 +235,12 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
                   segments: const [
                     ButtonSegment(
                       value: WhenType.date,
-                      label: Text('日付指定'),
+                      label: Text(AppLabels.goalDateType),
                       icon: Icon(Icons.calendar_today, size: 16),
                     ),
                     ButtonSegment(
                       value: WhenType.period,
-                      label: Text('期間指定'),
+                      label: Text(AppLabels.goalPeriodType),
                       icon: Icon(Icons.schedule, size: 16),
                     ),
                   ],
@@ -266,34 +267,34 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
                     readOnly: true,
                     onTap: _pickDate,
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? '日付を選択してください' : null,
+                        v == null || v.trim().isEmpty ? AppLabels.validSelectDate : null,
                   )
                 else
                   TextFormField(
                     controller: _whenTargetController,
                     decoration: const InputDecoration(
-                      hintText: '例: 3ヶ月以内',
+                      hintText: AppLabels.goalHintWhen,
                     ),
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? '期間を入力してください' : null,
+                        v == null || v.trim().isEmpty ? AppLabels.validEnterPeriod : null,
                   ),
                 const SizedBox(height: 16),
 
                 // How — どうやって達成するか
                 Text(
-                  'How（どうやって達成するか）',
+                  AppLabels.goalHow,
                   style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _howController,
                   decoration: const InputDecoration(
-                    hintText: '例: 公式問題集を毎日1セット解く',
+                    hintText: AppLabels.goalHintHow,
                   ),
                   maxLines: 3,
                   minLines: 2,
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? '必須項目です' : null,
+                      v == null || v.trim().isEmpty ? AppLabels.validRequired : null,
                 ),
               ],
             ),
@@ -307,16 +308,16 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('削除'),
+            child: const Text(AppLabels.btnDelete),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('キャンセル'),
+          child: const Text(AppLabels.btnCancel),
         ),
         ElevatedButton(
           key: _isEdit ? null : TutorialTargetKeys.goalDialogSubmit,
           onPressed: _submit,
-          child: Text(_isEdit ? '更新' : '追加'),
+          child: Text(_isEdit ? AppLabels.btnUpdate : AppLabels.btnAdd),
         ),
       ],
     );
@@ -326,7 +327,7 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('目標を削除'),
+        title: const Text(AppLabels.goalDialogDelete),
         content: Text(
           '「${widget.goal!.what}」を削除しますか？\n'
           '紐づくタスクも削除されます。',
@@ -334,14 +335,14 @@ class _GoalDialogContentState extends State<_GoalDialogContent> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('削除'),
+            child: const Text(AppLabels.btnDelete),
           ),
         ],
       ),

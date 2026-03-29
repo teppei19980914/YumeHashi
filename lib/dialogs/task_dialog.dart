@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_labels.dart';
 import '../models/book.dart';
 import '../models/goal.dart';
 import '../models/task.dart';
@@ -169,9 +170,9 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
   }
 
   String _statusLabel(int progress) {
-    if (progress == 0) return '未着手';
-    if (progress >= 100) return '完了';
-    return '進行中';
+    if (progress == 0) return AppLabels.taskStatusNotStarted;
+    if (progress >= 100) return AppLabels.taskStatusCompleted;
+    return AppLabels.taskStatusInProgress;
   }
 
   void _submit() {
@@ -196,7 +197,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
 
     return AlertDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      title: Text(_isEdit ? 'タスクを編集' : '新しいタスクを追加'),
+      title: Text(_isEdit ? AppLabels.taskDialogEdit : AppLabels.taskDialogAdd),
       content: SizedBox(
         width: 520,
         child: Form(
@@ -211,15 +212,15 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // タスク名
-                Text('タスク名', style: theme.textTheme.titleSmall),
+                Text(AppLabels.taskName, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _titleController,
                   decoration: const InputDecoration(
-                    hintText: '例: 第1章を読む',
+                    hintText: AppLabels.taskHintName,
                   ),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? '必須項目です' : null,
+                      v == null || v.trim().isEmpty ? AppLabels.validRequired : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -230,7 +231,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('開始日', style: theme.textTheme.titleSmall),
+                          Text(AppLabels.taskStartDate, style: theme.textTheme.titleSmall),
                           const SizedBox(height: 4),
                           TextFormField(
                             controller: _startDateController,
@@ -256,7 +257,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('終了日', style: theme.textTheme.titleSmall),
+                          Text(AppLabels.taskEndDate, style: theme.textTheme.titleSmall),
                           const SizedBox(height: 4),
                           TextFormField(
                             controller: _endDateController,
@@ -283,7 +284,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
 
                 // 目標（編集時のみ表示、goals が渡された場合のみ）
                 if (_isEdit && widget.goals.isNotEmpty) ...[
-                  Text('目標', style: theme.textTheme.titleSmall),
+                  Text(AppLabels.taskGoal, style: theme.textTheme.titleSmall),
                   const SizedBox(height: 4),
                   DropdownButtonFormField<String>(
                     initialValue: _selectedGoalId,
@@ -291,7 +292,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                     items: [
                       const DropdownMenuItem(
                         value: '',
-                        child: Text('独立タスク'),
+                        child: Text(AppLabels.taskIndependent),
                       ),
                       ...widget.goals.map(
                         (g) => DropdownMenuItem(
@@ -310,7 +311,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                 if (_isEdit) ...[
                   Row(
                     children: [
-                      Text('進捗', style: theme.textTheme.titleSmall),
+                      Text(AppLabels.taskProgress, style: theme.textTheme.titleSmall),
                       const Spacer(),
                       Text(
                         '${_progress.round()}% (${_statusLabel(_progress.round())})',
@@ -330,12 +331,12 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                 ],
 
                 // メモ
-                Text('メモ', style: theme.textTheme.titleSmall),
+                Text(AppLabels.taskMemo, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _memoController,
                   decoration: const InputDecoration(
-                    hintText: 'メモ（任意）',
+                    hintText: AppLabels.taskMemoHint,
                   ),
                   maxLines: 3,
                   minLines: 2,
@@ -344,14 +345,14 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                 // 関連書籍
                 if (widget.books.isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  Text('関連書籍', style: theme.textTheme.titleSmall),
+                  Text(AppLabels.taskRelatedBook, style: theme.textTheme.titleSmall),
                   const SizedBox(height: 4),
                   DropdownButtonFormField<String>(
                     initialValue: _selectedBookId,
                     items: [
                       const DropdownMenuItem(
                         value: '',
-                        child: Text('なし'),
+                        child: Text(AppLabels.taskNone),
                       ),
                       ...widget.books.map(
                         (b) => DropdownMenuItem(
@@ -377,7 +378,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
           children: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('戻る'),
+              child: const Text(AppLabels.btnBack),
             ),
             if (_isEdit)
               TextButton(
@@ -398,7 +399,7 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                     ),
                   );
                 },
-                child: const Text('削除'),
+                child: const Text(AppLabels.btnDelete),
               ),
           ],
         ),
@@ -417,12 +418,12 @@ class _TaskDialogContentState extends State<_TaskDialogContent> {
                   closeRequested: true,
                 ),
               ),
-              child: const Text('閉じる'),
+              child: const Text(AppLabels.btnClose),
             ),
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: _submit,
-              child: Text(_isEdit ? '更新' : '追加'),
+              child: Text(_isEdit ? AppLabels.btnUpdate : AppLabels.btnAdd),
             ),
           ],
         ),

@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../l10n/app_labels.dart';
 import '../services/task_study_log_logic.dart';
 import '../theme/app_theme.dart';
 
@@ -32,7 +33,7 @@ Future<String?> showReadingLogDialog(
     context: context,
     builder: (_) => _ReadingLogDialog(
       logic: logic,
-      title: dialogTitle ?? '読書時間 - $bookTitle',
+      title: dialogTitle ?? AppLabels.readingLogDefaultTitle(bookTitle),
     ),
   );
 }
@@ -91,7 +92,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
     final total = hours * 60 + minutes;
     if (total <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('1分以上で入力してください')),
+        const SnackBar(content: Text(AppLabels.readingLogMinRequired)),
       );
       return;
     }
@@ -163,7 +164,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '合計: ${TaskStudyLogLogic.formatDuration(_totalMinutes)}',
+                  AppLabels.readingLogTotal(TaskStudyLogLogic.formatDuration(_totalMinutes)),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: colors.accent,
@@ -173,7 +174,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
               const SizedBox(height: 16),
 
               // 日付選択
-              Text('日付', style: theme.textTheme.titleSmall),
+              Text(AppLabels.readingLogDate, style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               InkWell(
                 onTap: _pickDate,
@@ -189,7 +190,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
               const SizedBox(height: 12),
 
               // 時間入力
-              Text('読書時間', style: theme.textTheme.titleSmall),
+              Text(AppLabels.readingLogDuration, style: theme.textTheme.titleSmall),
               const SizedBox(height: 4),
               Row(
                 children: [
@@ -197,7 +198,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
                     child: TextField(
                       controller: _hoursController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(suffixText: '時間'),
+                      decoration: const InputDecoration(suffixText: AppLabels.readingLogHours),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -205,7 +206,7 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
                     child: TextField(
                       controller: _minutesController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(suffixText: '分'),
+                      decoration: const InputDecoration(suffixText: AppLabels.readingLogMinutes),
                     ),
                   ),
                 ],
@@ -216,20 +217,20 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
               TextField(
                 controller: _memoController,
                 decoration: const InputDecoration(
-                  hintText: 'メモ（任意）',
+                  hintText: AppLabels.readingLogMemoHint,
                   isDense: true,
                 ),
               ),
               const SizedBox(height: 16),
 
               // ログ一覧
-              Text('記録一覧', style: theme.textTheme.titleSmall),
+              Text(AppLabels.readingLogListTitle, style: theme.textTheme.titleSmall),
               const SizedBox(height: 8),
               if (_loading)
                 const Center(child: CircularProgressIndicator())
               else if (_logs.isEmpty)
                 Text(
-                  '読書を始めると記録が表示されます',
+                  AppLabels.readingLogEmpty,
                   style: TextStyle(color: colors.textMuted, fontSize: 13),
                 )
               else
@@ -283,19 +284,19 @@ class _ReadingLogDialogState extends State<_ReadingLogDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop('back'),
-          child: const Text('戻る'),
+          child: const Text(AppLabels.btnBack),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('閉じる'),
+              child: const Text(AppLabels.btnClose),
             ),
             const SizedBox(width: 8),
             ElevatedButton(
               onPressed: _addLog,
-              child: const Text('記録'),
+              child: const Text(AppLabels.btnRecord),
             ),
           ],
         ),

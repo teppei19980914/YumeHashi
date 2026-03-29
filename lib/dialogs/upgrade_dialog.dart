@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../l10n/app_labels.dart';
 import '../services/remote_config_service.dart';
 import '../services/stripe_service.dart';
 import '../services/trial_limit_service.dart';
@@ -17,10 +18,10 @@ import '../theme/app_theme.dart';
 
 /// プレミアム機能の一覧（価値訴求）.
 const _premiumFeatures = [
-  (Icons.all_inclusive, 'やりたいことを、制限なく追いかけられる', '夢・目標・タスク・書籍を好きなだけ登録'),
-  (Icons.view_timeline_outlined, 'やるべきことが一目でわかる', 'ガントチャートで全体像を把握し、迷わず行動できる'),
-  (Icons.insights, '自分の成長が見える', '活動統計で努力の積み重ねを実感できる'),
-  (Icons.campaign_outlined, 'あなたの声が、新機能になる', 'フィードバックで要望した機能を最優先で利用可能'),
+  (Icons.all_inclusive, AppLabels.upgradeFeature1Title, AppLabels.upgradeFeature1Desc),
+  (Icons.view_timeline_outlined, AppLabels.upgradeFeature2Title, AppLabels.upgradeFeature2Desc),
+  (Icons.insights, AppLabels.upgradeFeature3Title, AppLabels.upgradeFeature3Desc),
+  (Icons.campaign_outlined, AppLabels.upgradeFeature4Title, AppLabels.upgradeFeature4Desc),
 ];
 
 /// 課金案内ダイアログを表示する.
@@ -68,7 +69,7 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            '無料トライアルを開始しました（残り$trialDurationDays日間）',
+            AppLabels.upgradeTrialStarted(trialDurationDays),
           ),
         ),
       );
@@ -99,14 +100,14 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('決済ページの取得に失敗しました。しばらく後にお試しください。')),
+            const SnackBar(content: Text(AppLabels.upgradeCheckoutFailed)),
           );
         }
       }
     } on Exception {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('エラーが発生しました。しばらく後にお試しください。')),
+          const SnackBar(content: Text(AppLabels.errorRetryLater)),
         );
       }
     } finally {
@@ -124,7 +125,7 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
         children: [
           Icon(Icons.star, size: 24, color: colors.accent),
           const SizedBox(width: 8),
-          const Expanded(child: Text('もっと自由に、もっと先へ')),
+          const Expanded(child: Text(AppLabels.upgradeTitle)),
         ],
       ),
       content: SizedBox(
@@ -135,7 +136,7 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'ワンコインで、あなたの「やりたい」を全力でサポートします。',
+                AppLabels.upgradeSubtitle,
                 style: theme.textTheme.bodyMedium,
               ),
               const SizedBox(height: 16),
@@ -197,15 +198,15 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'プレミアムプラン',
+                                AppLabels.upgradePlanName,
                                 style: theme.textTheme.titleSmall?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                               Text(
                                 _isTrialAvailable
-                                    ? '初回7日間無料 ── まず試してみてください'
-                                    : '月額ワンコインで全機能を利用可能',
+                                    ? AppLabels.upgradeTrialDesc
+                                    : AppLabels.upgradePaidDesc,
                                 style: theme.textTheme.bodySmall,
                               ),
                             ],
@@ -221,7 +222,7 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            '¥480/月',
+                            AppLabels.upgradePrice,
                             style: theme.textTheme.titleSmall?.copyWith(
                               color: colors.accent,
                               fontWeight: FontWeight.bold,
@@ -237,7 +238,7 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
                         child: FilledButton.icon(
                           onPressed: _isLoading ? null : _startTrial,
                           icon: const Icon(Icons.rocket_launch),
-                          label: const Text('7日間無料で試してみる'),
+                          label: const Text(AppLabels.upgradeTrialButton),
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -255,7 +256,10 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
                                 )
                               : const Icon(Icons.payment),
                           label: Text(
-                            _isLoading ? '処理中...' : 'すぐに申し込む（¥480/月）',
+                            _isLoading
+                                ? AppLabels.upgradeProcessing
+                                : AppLabels.upgradeSubscribeNow(
+                                    AppLabels.upgradePrice),
                           ),
                         ),
                       ),
@@ -276,8 +280,9 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
                               : const Icon(Icons.payment),
                           label: Text(
                             _isLoading
-                                ? '処理中...'
-                                : 'プレミアムプランに申し込む（¥480/月）',
+                                ? AppLabels.upgradeProcessing
+                                : AppLabels.upgradePlanSubscribe(
+                                    AppLabels.upgradePrice),
                           ),
                         ),
                       ),
@@ -291,7 +296,7 @@ class _UpgradeDialogState extends State<_UpgradeDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('閉じる'),
+          child: const Text(AppLabels.btnClose),
         ),
       ],
     );

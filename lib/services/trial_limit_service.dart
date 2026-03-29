@@ -8,6 +8,7 @@ library;
 
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 
+import '../l10n/app_labels.dart';
 import 'feedback_service.dart';
 
 /// テスト用トライアルモード上書きフラグ（本番では常にfalse）.
@@ -171,11 +172,14 @@ int maxBooks(int unlockLevel) => _currentConfig(unlockLevel).books;
 /// 制限の説明テキストを取得する.
 String trialLimitDescription({int unlockLevel = 0}) {
   if (unlockLevel >= feedbackMaxLevel) {
-    return '制限は完全に解除されています。';
+    return AppLabels.limitUnlocked;
   }
   final config = _currentConfig(unlockLevel);
-  return '現在の制限（レベル$unlockLevel / $feedbackMaxLevel）:\n'
-      '- 夢: ${config.dreams}個まで\n'
-      '- 目標: 各夢${config.goalsPerDream}個まで\n'
-      '- 書籍: ${config.books}冊まで';
+  return AppLabels.limitDescription(
+    unlockLevel,
+    feedbackMaxLevel,
+    config.dreams,
+    config.goalsPerDream,
+    config.books,
+  );
 }

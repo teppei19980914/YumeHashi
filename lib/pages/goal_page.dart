@@ -11,6 +11,7 @@ import 'package:intl/intl.dart' show DateFormat;
 import '../dialogs/goal_dialog.dart';
 import '../dialogs/goal_discovery_dialog.dart';
 import '../dialogs/trial_limit_dialog.dart';
+import '../l10n/app_labels.dart';
 import '../models/dream.dart';
 import '../models/goal.dart';
 import '../providers/dream_providers.dart';
@@ -44,7 +45,7 @@ class GoalPage extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  'やりたいことに向けた目標を管理します。',
+                  AppLabels.goalPageDesc,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colors.textSecondary,
                   ),
@@ -54,14 +55,14 @@ class GoalPage extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: () => _openGoalGuide(context, ref),
                 icon: const Icon(Icons.explore, size: 16),
-                label: const Text('発見ガイド'),
+                label: const Text(AppLabels.goalDiscoveryGuide),
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
                 key: TutorialTargetKeys.addGoalButton,
                 onPressed: () => _addGoal(context, ref),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('目標を追加'),
+                label: const Text(AppLabels.goalAddButton),
               ),
             ],
           ),
@@ -85,13 +86,13 @@ class GoalPage extends ConsumerWidget {
                 loading: () =>
                     const Center(child: CircularProgressIndicator()),
                 error: (error, _) => Center(
-                  child: Text('エラーが発生しました: $error'),
+                  child: Text(AppLabels.errorWithDetail(error.toString())),
                 ),
               ),
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
-                child: Text('エラーが発生しました: $error'),
+                child: Text(AppLabels.errorWithDetail(error.toString())),
               ),
             ),
           ),
@@ -108,14 +109,14 @@ class GoalPage extends ConsumerWidget {
           Icon(Icons.flag_outlined, size: 64, color: colors.textMuted),
           const SizedBox(height: 16),
           Text(
-            '最初の目標を設定しよう',
+            AppLabels.goalEmptyHeading,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colors.textMuted,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '「目標を追加」ボタンから始められます',
+            AppLabels.goalEmptyHint,
             style: theme.textTheme.bodySmall,
           ),
         ],
@@ -158,7 +159,7 @@ class GoalPage extends ConsumerWidget {
         if (!context.mounted) return;
         await showTrialLimitDialog(
           context,
-          itemName: '目標',
+          itemName: AppLabels.pageGoals,
           currentCount: goals.length,
           maxCount: totalMax,
           feedbackService: ref.read(feedbackServiceProvider),
@@ -225,26 +226,25 @@ class GoalPage extends ConsumerWidget {
           children: [
             Icon(Icons.lightbulb_outline, size: 24),
             SizedBox(width: 8),
-            Expanded(child: Text('どんな目標を立てますか？')),
+            Expanded(child: Text(AppLabels.goalEmptyTitle)),
           ],
         ),
         content: const Text(
-          '夢を実現するための具体的な目標を設定します。\n'
-          'まだ決まっていない方は、ガイドが一緒に考えるお手伝いをします。',
+          AppLabels.goalTutorialGuideChoice,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           OutlinedButton.icon(
             icon: const Icon(Icons.explore, size: 18),
-            label: const Text('ガイドで考える'),
+            label: const Text(AppLabels.goalEmptyAction),
             onPressed: () => Navigator.pop(context, true),
           ),
           FilledButton.icon(
             icon: const Icon(Icons.edit, size: 18),
-            label: const Text('自分で入力する'),
+            label: const Text(AppLabels.goalTutorialSelfInput),
             onPressed: () => Navigator.pop(context, false),
           ),
         ],
@@ -372,7 +372,7 @@ class _DreamSectionHeader extends StatelessWidget {
             Icon(Icons.flag_outlined, size: 18, color: colors.textMuted),
             const SizedBox(width: 8),
             Text(
-              '独立した目標',
+              AppLabels.goalIndependentSection,
               style: theme.textTheme.titleSmall?.copyWith(
                 color: colors.textMuted,
                 fontWeight: FontWeight.w600,
@@ -598,7 +598,7 @@ class _GoalCard extends StatelessWidget {
         totalTasks > 0 ? completedTasks / totalTasks : 0.0;
     final progressText = totalTasks > 0
         ? '$completedTasks / $totalTasks'
-        : 'タスク未設定';
+        : AppLabels.goalTaskNotSet;
 
     return GestureDetector(
       onTap: onTap,

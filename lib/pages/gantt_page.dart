@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dialogs/book_schedule_dialog.dart';
+import '../l10n/app_labels.dart';
 import '../dialogs/reading_log_dialog.dart';
 import '../dialogs/task_dialog.dart';
 import '../dialogs/task_discovery_dialog.dart';
@@ -45,13 +46,13 @@ class _GanttPageState extends ConsumerState<GanttPage> {
     // プレミアム機能: Web体験版ではゲートを表示
     if (!canUseGanttChart) {
       return const PremiumGate(
-        featureName: 'ガントチャート',
+        featureName: AppLabels.pageSchedule,
         featureIcon: Icons.view_timeline_outlined,
         premiumPoints: [
-          'タスクの日程をタイムラインでビジュアル管理',
-          'Excelエクスポートでさらに活用・共有',
-          '読書スケジュールをガントで一元管理',
-          '目標別・書籍別のフィルタリング表示',
+          AppLabels.ganttPremiumPoint1,
+          AppLabels.ganttPremiumPoint2,
+          AppLabels.ganttPremiumPoint3,
+          AppLabels.ganttPremiumPoint4,
         ],
       );
     }
@@ -101,7 +102,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
                 OutlinedButton.icon(
                   onPressed: () => _openTaskDiscovery(context, ref),
                   icon: const Icon(Icons.lightbulb_outline, size: 18),
-                  label: const Text('発見ガイド'),
+                  label: const Text(AppLabels.ganttDiscoveryGuide),
                 ),
                 ElevatedButton.icon(
                   key: TutorialTargetKeys.addTaskButton,
@@ -111,7 +112,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
                     viewState.selectedGoalId ?? '',
                   ),
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('タスクを追加'),
+                  label: const Text(AppLabels.taskAdd),
                 ),
               ],
               // 読書スケジュール追加ボタン
@@ -119,12 +120,12 @@ class _GanttPageState extends ConsumerState<GanttPage> {
                 ElevatedButton.icon(
                   onPressed: () => _addBookSchedule(context, ref),
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('読書スケジュールを追加'),
+                  label: const Text(AppLabels.scheduleAddButton),
                 ),
               // エクスポート
               IconButton(
                 icon: const Icon(Icons.file_download_outlined),
-                tooltip: 'エクスポート',
+                tooltip: AppLabels.tooltipExport,
                 onPressed: () => _showExportMenu(context, ref),
               ),
             ],
@@ -164,7 +165,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
                 onPressed: () =>
                     _chartKey.currentState?.scrollToDate(DateTime.now()),
                 icon: const Icon(Icons.today, size: 16),
-                label: const Text('今日'),
+                label: const Text(AppLabels.ganttToday),
                 style: OutlinedButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                 ),
@@ -173,7 +174,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
               OutlinedButton.icon(
                 onPressed: () => _pickJumpDate(context),
                 icon: const Icon(Icons.calendar_month, size: 16),
-                label: const Text('日付へ移動'),
+                label: const Text(AppLabels.ganttJumpToDate),
                 style: OutlinedButton.styleFrom(
                   visualDensity: VisualDensity.compact,
                 ),
@@ -198,14 +199,14 @@ class _GanttPageState extends ConsumerState<GanttPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          '最初のタスクを追加しよう',
+                          AppLabels.ganttEmptyTitle,
                           style: theme.textTheme.titleMedium?.copyWith(
                             color: colors.textMuted,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '目標を選択してタスクを追加しましょう',
+                          AppLabels.ganttEmptySubtitle,
                           style: theme.textTheme.bodySmall,
                         ),
                       ],
@@ -223,10 +224,10 @@ class _GanttPageState extends ConsumerState<GanttPage> {
                 }
                 // 書籍タスク用
                 goalColors[bookGanttGoalId] = _parseColor(bookGanttColor);
-                goalNames[bookGanttGoalId] = '書籍';
+                goalNames[bookGanttGoalId] = AppLabels.ganttBookLabel;
                 // 独立タスク用
                 goalColors[''] = _parseColor('#94E2D5');
-                goalNames[''] = '独立タスク';
+                goalNames[''] = AppLabels.ganttIndependentTask;
 
                 // マイルストーン構築（日付指定の目標）
                 final milestones = <GanttMilestone>[];
@@ -259,7 +260,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
-                child: Text('エラーが発生しました: $error'),
+                child: Text(AppLabels.errorWithDetail('$error')),
               ),
             ),
           ),
@@ -340,7 +341,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
         if (!context.mounted) return;
         await showTrialLimitDialog(
           context,
-          itemName: 'タスク（この目標）',
+          itemName: AppLabels.ganttTrialLimitTask(tasksForGoal),
           currentCount: tasksForGoal,
           maxCount: maxTasksPerGoal(level),
           feedbackService: ref.read(feedbackServiceProvider),
@@ -388,7 +389,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
               onPressed: () => Navigator.of(context).pop('edit'),
               child: const ListTile(
                 leading: Icon(Icons.edit_outlined),
-                title: Text('タスクを編集'),
+                title: Text(AppLabels.ganttEditTaskOption),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -396,7 +397,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
               onPressed: () => Navigator.of(context).pop('log'),
               child: const ListTile(
                 leading: Icon(Icons.timer_outlined),
-                title: Text('活動時間を記録'),
+                title: Text(AppLabels.ganttRecordActivity),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -416,7 +417,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
           context,
           logic: logic,
           bookTitle: task.title,
-          dialogTitle: '活動時間 - ${task.title}',
+          dialogTitle: AppLabels.ganttActivityTitle(task.title),
         );
         ref.invalidate(allLogsProvider);
         if (result != 'back') return;
@@ -516,7 +517,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
               onPressed: () => Navigator.of(context).pop('schedule'),
               child: const ListTile(
                 leading: Icon(Icons.calendar_month_outlined),
-                title: Text('スケジュールを編集'),
+                title: Text(AppLabels.ganttEditScheduleOption),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -524,7 +525,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
               onPressed: () => Navigator.of(context).pop('reading_log'),
               child: const ListTile(
                 leading: Icon(Icons.timer_outlined),
-                title: Text('読書時間を記録'),
+                title: Text(AppLabels.ganttRecordReading),
                 contentPadding: EdgeInsets.zero,
               ),
             ),
@@ -578,7 +579,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
     if (tasks.isEmpty) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('エクスポートするタスクがありません')),
+        const SnackBar(content: Text(AppLabels.exportNoTasks)),
       );
       return;
     }
@@ -586,14 +587,14 @@ class _GanttPageState extends ConsumerState<GanttPage> {
     final format = await showDialog<String>(
       context: context,
       builder: (context) => SimpleDialog(
-        title: const Text('エクスポート形式を選択'),
+        title: const Text(AppLabels.exportSelectFormat),
         children: [
           SimpleDialogOption(
             onPressed: () => Navigator.pop(context, 'html'),
             child: const ListTile(
               leading: Icon(Icons.language),
               title: Text('HTML'),
-              subtitle: Text('ブラウザで閲覧・共有に最適'),
+              subtitle: Text(AppLabels.exportHtmlDesc),
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -603,7 +604,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
             child: const ListTile(
               leading: Icon(Icons.table_chart),
               title: Text('Excel (.xlsx)'),
-              subtitle: Text('Excel / Google スプレッドシートで開けます'),
+              subtitle: Text(AppLabels.exportExcelDesc),
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -613,7 +614,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
             child: const ListTile(
               leading: Icon(Icons.grid_on),
               title: Text('CSV'),
-              subtitle: Text('Google スプレッドシート / 各種ツールで利用可能'),
+              subtitle: Text(AppLabels.exportCsvDesc),
               dense: true,
               contentPadding: EdgeInsets.zero,
             ),
@@ -643,13 +644,13 @@ class _GanttPageState extends ConsumerState<GanttPage> {
       if (!context.mounted) return;
       if (saved) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${result.fileName} をエクスポートしました')),
+          SnackBar(content: Text(AppLabels.exportSuccess(result.fileName))),
         );
       }
     } on Object catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('エクスポートに失敗しました: $e')),
+        SnackBar(content: Text(AppLabels.exportError('$e'))),
       );
     }
   }
@@ -659,19 +660,19 @@ class _GanttPageState extends ConsumerState<GanttPage> {
     return showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('タスクを削除'),
-        content: Text('「$title」を削除しますか？'),
+        title: const Text(AppLabels.taskDialogDelete),
+        content: Text(AppLabels.ganttDeleteConfirm(title)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('削除'),
+            child: const Text(AppLabels.btnDelete),
           ),
         ],
       ),
@@ -697,11 +698,11 @@ class _ViewSelector extends StatelessWidget {
     final items = <DropdownMenuItem<String>>[
       const DropdownMenuItem(
         value: 'all',
-        child: Text('全タスク'),
+        child: Text(AppLabels.ganttViewAllTasks),
       ),
       const DropdownMenuItem(
         value: 'books',
-        child: Text('書籍タスク'),
+        child: Text(AppLabels.ganttViewBooks),
       ),
       ...goals.map(
         (g) => DropdownMenuItem(

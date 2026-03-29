@@ -9,6 +9,7 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'app_version.dart';
 import 'dialogs/app_guide_dialog.dart';
 import 'services/firestore_sync_service.dart' show FirestoreSyncService;
 import 'services/sync_manager.dart';
@@ -30,10 +31,11 @@ import 'providers/dream_providers.dart';
 import 'providers/goal_providers.dart';
 import 'providers/service_providers.dart';
 import 'providers/theme_provider.dart';
-import 'services/remote_config_service.dart';
+import 'services/remote_config_service.dart' show resetPendingKey;
 import 'services/trial_limit_service.dart'
     show isPremium, setInvitePremium, setDeveloperMode;
 import 'theme/app_theme.dart';
+import 'l10n/app_labels.dart';
 import 'widgets/navigation/app_drawer.dart';
 import 'widgets/milestone/milestone_button.dart';
 import 'widgets/contact/contact_button.dart';
@@ -51,14 +53,14 @@ void disableInboxCheckForTest() => _disableInboxCheck = true;
 
 /// ページタイトルマップ.
 const _pageTitles = <String, String>{
-  '/': 'ダッシュボード',
-  '/dreams': '夢',
-  '/goals': '目標',
-  '/gantt': 'ガントチャート',
-  '/books': '書籍',
-  '/constellations': '星座',
-  '/stats': '統計',
-  '/settings': '設定',
+  '/': AppLabels.pageHome,
+  '/dreams': AppLabels.pageDreams,
+  '/goals': AppLabels.pageGoals,
+  '/gantt': AppLabels.pageSchedule,
+  '/books': AppLabels.pageBooks,
+  '/constellations': AppLabels.pageConstellations,
+  '/stats': AppLabels.pageStats,
+  '/settings': AppLabels.pageSettings,
 };
 
 /// フェード遷移のルートを生成するヘルパー.
@@ -114,7 +116,7 @@ class YumeLogApp extends ConsumerWidget {
     setInvitePremium(enabled: inviteStatus.isActive);
 
     return MaterialApp.router(
-      title: 'ユメログ - 夢実現支援',
+      title: AppLabels.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
@@ -134,24 +136,24 @@ class YumeLogApp extends ConsumerWidget {
 
 /// ボトムナビゲーションの定義.
 const _bottomNavItems = [
-  (path: '/', icon: Icons.home_outlined, activeIcon: Icons.home, label: 'ホーム'),
+  (path: '/', icon: Icons.home_outlined, activeIcon: Icons.home, label: AppLabels.pageHome),
   (
     path: '/dreams',
     icon: Icons.auto_awesome_outlined,
     activeIcon: Icons.auto_awesome,
-    label: '夢',
+    label: AppLabels.pageDreams,
   ),
   (
     path: '/goals',
     icon: Icons.flag_outlined,
     activeIcon: Icons.flag,
-    label: '目標',
+    label: AppLabels.pageGoals,
   ),
   (
     path: '/gantt',
     icon: Icons.view_timeline_outlined,
     activeIcon: Icons.view_timeline,
-    label: 'ガントチャート',
+    label: AppLabels.pageSchedule,
   ),
 ];
 
@@ -177,6 +179,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
   bool _monitorChecked = false;
   bool _cloudAuthChecked = false;
   bool _inboxChecked = false;
+
 
   static const _seenVersionKey = 'release_notes_seen_version';
   static const _monitorSubmittedKey = 'monitor_data_submitted';
@@ -231,7 +234,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
       // 2. 開発者通知の読み込み（assets/announcements.json）
       try {
         final jsonStr = await rootBundle.loadString('assets/announcements.json');
-        await notifService.loadSystemNotificationsFromJson(jsonStr);
+        await notifService.syncSystemNotificationsFromJson(jsonStr);
       } on Object {
         // アセット読み込み失敗（テスト環境等）は無視
       }
@@ -277,6 +280,8 @@ class _AppShellState extends ConsumerState<_AppShell> {
       setDeveloperMode(
         enabled: syncService.email == 'teppei09141998@gmail.com',
       );
+      // プレミアム状態が変わった場合、UIを再描画してバナーを更新
+      if (mounted && isPremium) setState(() {});
 
       // 起動時の初回同期
       await syncManager.syncNow();
@@ -404,36 +409,38 @@ class _AppShellState extends ConsumerState<_AppShell> {
   }
 
   /// リリースノートの確認と表示.
+  ///
+  /// app_version.dart の appVersion / releaseNotes を参照し、
+  /// 前回表示バージョンと異なればポップアップ表示する.
   void _checkReleaseNotes() {
     if (_releaseNotesChecked) return;
     _releaseNotesChecked = true;
 
+    if (_disableInboxCheck) return; // テスト環境ではスキップ
+
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      final prefs = ref.read(sharedPreferencesProvider);
-      final service = RemoteConfigService(prefs);
-      final release = await service.fetchReleaseNotes();
-      if (release == null || !mounted) return;
 
+      final prefs = ref.read(sharedPreferencesProvider);
       final seenVersion = prefs.getString(_seenVersionKey);
       // 初回アクセス（seenVersionが未保存）はスキップしてバージョンだけ保存
       if (seenVersion == null) {
-        await prefs.setString(_seenVersionKey, release.version);
+        await prefs.setString(_seenVersionKey, appVersion);
         return;
       }
-      if (seenVersion == release.version) return;
+      if (seenVersion == appVersion) return;
       // リリース通知がOFFの場合はバージョンだけ更新してスキップ
       if (!(prefs.getBool('release_notes_enabled') ?? true)) {
-        await prefs.setString(_seenVersionKey, release.version);
+        await prefs.setString(_seenVersionKey, appVersion);
         return;
       }
 
-      await prefs.setString(_seenVersionKey, release.version);
+      await prefs.setString(_seenVersionKey, appVersion);
       if (!mounted) return;
       await showReleaseNotesDialog(
         context,
-        version: release.version,
-        notes: release.notes,
+        version: appVersion,
+        notes: releaseNotes,
       );
     });
   }
@@ -518,7 +525,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
                 key: TutorialTargetKeys.menuButton,
                 icon: const Icon(Icons.menu),
                 onPressed: () => Scaffold.of(context).openDrawer(),
-                tooltip: 'メニュー',
+                tooltip: AppLabels.tooltipMenu,
               ),
             ),
             actions: [
@@ -529,7 +536,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
                     color: IconTheme.of(context).color ?? Colors.white,
                   ),
                 ),
-                tooltip: '使い方',
+                tooltip: AppLabels.tooltipHowToUse,
                 onPressed: () => showAppGuideDialog(
                   context,
                   isPremium: isPremium,
@@ -538,7 +545,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
               ),
               IconButton(
                 icon: const Icon(Icons.help_outline),
-                tooltip: 'ヘルプ',
+                tooltip: AppLabels.tooltipHelp,
                 onPressed: () => showHelpDialog(context),
               ),
               const NotificationButton(),

@@ -30,7 +30,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // ダッシュボード（初期ページ）
-    expect(find.text('ダッシュボード'), findsWidgets);
+    expect(find.text('ホーム'), findsWidgets);
 
     // 夢ページ
     await navigateViaDrawerInTest(tester, '夢');
@@ -40,9 +40,9 @@ void main() {
     await navigateViaDrawerInTest(tester, '目標');
     expect(find.text('目標'), findsWidgets);
 
-    // ガントチャートページ
-    await navigateViaDrawerInTest(tester, 'ガントチャート');
-    expect(find.text('ガントチャート'), findsWidgets);
+    // スケジュールページ
+    await navigateViaDrawerInTest(tester, 'スケジュール');
+    expect(find.text('スケジュール'), findsWidgets);
 
     // 書籍ページ
     await navigateViaDrawerInTest(tester, '書籍');

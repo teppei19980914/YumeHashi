@@ -70,6 +70,13 @@ class NotificationDao extends DatabaseAccessor<AppDatabase>
             ..where((t) => t.isRead.equals(false)))
           .write(const NotificationsCompanion(isRead: Value(true)));
 
+  /// 指定種別の通知を全削除する.
+  Future<int> deleteByType(String notificationType) async {
+    return (delete(notifications)
+          ..where((t) => t.notificationType.equals(notificationType)))
+        .go();
+  }
+
   /// Notificationを削除する.
   Future<bool> deleteById(String notificationId) async {
     final count = await (delete(notifications)

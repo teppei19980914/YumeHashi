@@ -14,6 +14,7 @@ import '../providers/book_providers.dart';
 import '../providers/dashboard_providers.dart';
 import '../services/study_stats_calculator.dart';
 import '../services/study_stats_types.dart';
+import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
 import '../services/trial_limit_service.dart' show isPremium, isTrialMode;
@@ -97,14 +98,14 @@ class _SummarySection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('サマリー', style: theme.textTheme.titleMedium),
+            Text(AppLabels.statsSummary, style: theme.textTheme.titleMedium),
             const SizedBox(height: 12),
             Wrap(
               spacing: 16,
               runSpacing: 12,
               children: [
                 _SummaryTile(
-                  label: '合計活動時間',
+                  label: AppLabels.statsTotalTime,
                   value: recordAsync.when(
                     data: (d) => '${d.totalHours.toStringAsFixed(1)}h',
                     loading: () => '...',
@@ -114,9 +115,9 @@ class _SummarySection extends ConsumerWidget {
                   iconColor: colors.accent,
                 ),
                 _SummaryTile(
-                  label: '活動日数',
+                  label: AppLabels.statsStudyDays,
                   value: recordAsync.when(
-                    data: (d) => '${d.totalStudyDays}日',
+                    data: (d) => AppLabels.unitDays(d.totalStudyDays),
                     loading: () => '...',
                     error: (_, _) => '-',
                   ),
@@ -124,9 +125,9 @@ class _SummarySection extends ConsumerWidget {
                   iconColor: colors.success,
                 ),
                 _SummaryTile(
-                  label: '連続活動',
+                  label: AppLabels.statsStreak,
                   value: streakAsync.when(
-                    data: (d) => '${d.currentStreak}日',
+                    data: (d) => AppLabels.unitDays(d.currentStreak),
                     loading: () => '...',
                     error: (_, _) => '-',
                   ),
@@ -134,7 +135,7 @@ class _SummarySection extends ConsumerWidget {
                   iconColor: colors.error,
                 ),
                 _SummaryTile(
-                  label: '今日',
+                  label: AppLabels.statsToday,
                   value: todayAsync.when(
                     data: (d) => _formatMinutes(d.totalMinutes),
                     loading: () => '...',
@@ -144,7 +145,7 @@ class _SummarySection extends ConsumerWidget {
                   iconColor: colors.warning,
                 ),
                 _SummaryTile(
-                  label: '目標数',
+                  label: AppLabels.statsGoalCount,
                   value: goalCountAsync.when(
                     data: (d) => '$d',
                     loading: () => '...',
@@ -232,7 +233,7 @@ class _PersonalRecordSection extends ConsumerWidget {
                 Icon(Icons.emoji_events_outlined,
                     size: 20, color: colors.warning),
                 const SizedBox(width: 8),
-                Text('自己ベスト', style: theme.textTheme.titleMedium),
+                Text(AppLabels.statsPersonalRecord, style: theme.textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 12),
@@ -240,7 +241,7 @@ class _PersonalRecordSection extends ConsumerWidget {
               data: (data) => Column(
                 children: [
                   _RecordItem(
-                    label: '1日の最高活動時間',
+                    label: AppLabels.statsBestDay,
                     value: _formatMinutes(data.bestDayMinutes),
                     detail: data.bestDayDate != null
                         ? DateFormat('yyyy/MM/dd').format(data.bestDayDate!)
@@ -248,21 +249,21 @@ class _PersonalRecordSection extends ConsumerWidget {
                   ),
                   const Divider(height: 16),
                   _RecordItem(
-                    label: '1週間の最高活動時間',
+                    label: AppLabels.statsBestWeek,
                     value: _formatMinutes(data.bestWeekMinutes),
                     detail: data.bestWeekStart != null
-                        ? '${DateFormat('MM/dd').format(data.bestWeekStart!)}〜'
+                        ? AppLabels.unitWeekStart(DateFormat('MM/dd').format(data.bestWeekStart!))
                         : null,
                   ),
                   const Divider(height: 16),
                   _RecordItem(
-                    label: '最長連続活動',
-                    value: '${data.longestStreak}日',
+                    label: AppLabels.statsLongestStreak,
+                    value: AppLabels.unitDays(data.longestStreak),
                   ),
                 ],
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => const Text('エラーが発生しました'),
+              error: (_, _) => const Text(AppLabels.errorGeneral),
             ),
           ],
         ),
@@ -273,9 +274,7 @@ class _PersonalRecordSection extends ConsumerWidget {
   String _formatMinutes(int minutes) {
     final h = minutes ~/ 60;
     final m = minutes % 60;
-    if (h > 0 && m > 0) return '$h時間$m分';
-    if (h > 0) return '$h時間';
-    return '$m分';
+    return AppLabels.unitHoursMinutes(h, m);
   }
 }
 
@@ -339,7 +338,7 @@ class _ConsistencySection extends ConsumerWidget {
               children: [
                 Icon(Icons.bar_chart_outlined, size: 20, color: colors.accent),
                 const SizedBox(width: 8),
-                Text('活動の実施率', style: theme.textTheme.titleMedium),
+                Text(AppLabels.statsConsistency, style: theme.textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 12),
@@ -349,7 +348,7 @@ class _ConsistencySection extends ConsumerWidget {
                   // 全体実施率
                   Row(
                     children: [
-                      Text('全体', style: theme.textTheme.bodyMedium),
+                      Text(AppLabels.statsOverall, style: theme.textTheme.bodyMedium),
                       const SizedBox(width: 12),
                       Expanded(
                         child: ClipRRect(
@@ -382,7 +381,7 @@ class _ConsistencySection extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: _PeriodCard(
-                          label: '今週',
+                          label: AppLabels.statsThisWeek,
                           days: data.thisWeekDays,
                           totalDays: data.thisWeekTotal,
                           minutes: data.thisWeekMinutes,
@@ -392,7 +391,7 @@ class _ConsistencySection extends ConsumerWidget {
                       const SizedBox(width: 12),
                       Expanded(
                         child: _PeriodCard(
-                          label: '今月',
+                          label: AppLabels.statsThisMonth,
                           days: data.thisMonthDays,
                           totalDays: data.thisMonthTotal,
                           minutes: data.thisMonthMinutes,
@@ -404,7 +403,7 @@ class _ConsistencySection extends ConsumerWidget {
                 ],
               ),
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => const Text('エラーが発生しました'),
+              error: (_, _) => const Text(AppLabels.errorGeneral),
             ),
           ],
         ),
@@ -447,7 +446,7 @@ class _PeriodCard extends StatelessWidget {
           Text(label, style: theme.textTheme.labelMedium),
           const SizedBox(height: 4),
           Text(
-            '$days / $totalDays 日',
+            AppLabels.unitDaysSlash(days, totalDays),
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.bold,
               color: color,
@@ -473,12 +472,12 @@ class _GoalStatsPremiumSection extends ConsumerWidget {
       return const GoalStatsSection();
     }
     return const PremiumSectionGate(
-      featureName: '目標別統計',
+      featureName: AppLabels.statsGoalStatsPremiumName,
       featureIcon: Icons.bar_chart,
       premiumPoints: [
-        '目標ごとの活動時間・日数を詳細分析',
-        'タスク単位の時間内訳を確認',
-        '読書ごとの進捗・時間を管理',
+        AppLabels.statsGoalStatsPremiumPoint1,
+        AppLabels.statsGoalStatsPremiumPoint2,
+        AppLabels.statsGoalStatsPremiumPoint3,
       ],
     );
   }
@@ -496,12 +495,12 @@ class _ActivityChartPremiumSection extends ConsumerWidget {
       return _ActivityChartSection(colors: colors);
     }
     return const PremiumSectionGate(
-      featureName: 'アクティビティチャート',
+      featureName: AppLabels.statsActivityPremiumName,
       featureIcon: Icons.show_chart,
       premiumPoints: [
-        '日・週・月・年単位の活動推移をグラフ表示',
-        '活動の継続パターンを可視化',
-        'モチベーション管理に最適',
+        AppLabels.statsActivityPremiumPoint1,
+        AppLabels.statsActivityPremiumPoint2,
+        AppLabels.statsActivityPremiumPoint3,
       ],
     );
   }
@@ -535,7 +534,7 @@ class _ActivityChartSection extends ConsumerWidget {
                   children: [
                     Icon(Icons.show_chart, size: 20, color: colors.success),
                     const SizedBox(width: 8),
-                    Text('アクティビティ', style: theme.textTheme.titleMedium),
+                    Text(AppLabels.statsActivity, style: theme.textTheme.titleMedium),
                   ],
                 ),
                 // 期間セレクタ
@@ -543,19 +542,19 @@ class _ActivityChartSection extends ConsumerWidget {
                   segments: const [
                     ButtonSegment(
                       value: ActivityPeriodType.daily,
-                      label: Text('日'),
+                      label: Text(AppLabels.statsPeriodDaily),
                     ),
                     ButtonSegment(
                       value: ActivityPeriodType.weekly,
-                      label: Text('週'),
+                      label: Text(AppLabels.statsPeriodWeekly),
                     ),
                     ButtonSegment(
                       value: ActivityPeriodType.monthly,
-                      label: Text('月'),
+                      label: Text(AppLabels.statsPeriodMonthly),
                     ),
                     ButtonSegment(
                       value: ActivityPeriodType.yearly,
-                      label: Text('年'),
+                      label: Text(AppLabels.statsPeriodYearly),
                     ),
                   ],
                   selected: {period},
@@ -584,7 +583,7 @@ class _ActivityChartSection extends ConsumerWidget {
                     child: Center(child: CircularProgressIndicator()),
                   ),
               error: (_, _) =>
-                  const SizedBox(height: 160, child: Center(child: Text('エラー'))),
+                  const SizedBox(height: 160, child: Center(child: Text(AppLabels.errorGeneral))),
             ),
           ],
         ),
@@ -605,7 +604,7 @@ class _BarChart extends StatelessWidget {
     if (data.buckets.isEmpty || data.maxMinutes == 0) {
       return Center(
         child: Text(
-          'データなし',
+          AppLabels.statsNoData,
           style: TextStyle(color: colors.textMuted),
         ),
       );
@@ -722,7 +721,7 @@ class _RecentLogsSection extends ConsumerWidget {
               children: [
                 Icon(Icons.history, size: 20, color: colors.textSecondary),
                 const SizedBox(width: 8),
-                Text('最近の活動ログ', style: theme.textTheme.titleMedium),
+                Text(AppLabels.statsRecentLogs, style: theme.textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 12),
@@ -733,7 +732,7 @@ class _RecentLogsSection extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     child: Center(
                       child: Text(
-                        '活動を始めるとログが表示されます',
+                        AppLabels.statsNoLogs,
                         style: TextStyle(color: colors.textMuted),
                       ),
                     ),
@@ -759,7 +758,7 @@ class _RecentLogsSection extends ConsumerWidget {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, _) => const Text('エラーが発生しました'),
+              error: (_, _) => const Text(AppLabels.errorGeneral),
             ),
           ],
         ),
@@ -867,30 +866,30 @@ class _BookStatsSection extends ConsumerWidget {
                   children: [
                     Icon(Icons.menu_book, size: 20, color: colors.accent),
                     const SizedBox(width: 8),
-                    Text('読書統計', style: theme.textTheme.titleSmall),
+                    Text(AppLabels.statsBookStats, style: theme.textTheme.titleSmall),
                   ],
                 ),
                 const Divider(),
                 Row(
                   children: [
                     _BookStatTile(
-                        label: '登録', value: '$total冊',
+                        label: AppLabels.statsRegistered, value: AppLabels.unitBooks(total),
                         color: colors.textPrimary),
                     _BookStatTile(
-                        label: '読了', value: '$completed冊',
+                        label: AppLabels.statsCompleted, value: AppLabels.unitBooks(completed),
                         color: colors.success),
                     _BookStatTile(
-                        label: '読書中', value: '$reading冊',
+                        label: AppLabels.statsReading, value: AppLabels.unitBooks(reading),
                         color: colors.accent),
                     _BookStatTile(
-                        label: '未読', value: '$unread冊',
+                        label: AppLabels.statsUnread, value: AppLabels.unitBooks(unread),
                         color: colors.textMuted),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Text('読了率', style: theme.textTheme.bodySmall),
+                    Text(AppLabels.statsCompletionRate, style: theme.textTheme.bodySmall),
                     const SizedBox(width: 8),
                     Expanded(
                       child: ClipRRect(
@@ -910,7 +909,7 @@ class _BookStatsSection extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text('カテゴリ別', style: theme.textTheme.labelLarge),
+                Text(AppLabels.statsCategory, style: theme.textTheme.labelLarge),
                 const SizedBox(height: 8),
                 ...sortedCategories.map((entry) {
                   final cat = entry.key;
@@ -940,7 +939,7 @@ class _BookStatsSection extends ConsumerWidget {
                         const SizedBox(width: 8),
                         SizedBox(
                           width: 70,
-                          child: Text('$completedInCat/$count冊',
+                          child: Text(AppLabels.unitBooksSlash(completedInCat, count),
                               style: theme.textTheme.labelSmall,
                               textAlign: TextAlign.end),
                         ),

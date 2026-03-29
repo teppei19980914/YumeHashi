@@ -31,7 +31,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('フィードバックを送信'), findsOneWidget);
+    expect(find.text('アプリの感想を送信'), findsOneWidget);
     expect(find.text('カテゴリ *'), findsOneWidget);
     expect(find.text('ご意見・ご感想 *'), findsOneWidget);
     expect(find.text('送信する'), findsOneWidget);
@@ -83,7 +83,7 @@ void main() {
     await tester.tap(find.text('キャンセル'));
     await tester.pumpAndSettle();
 
-    expect(find.text('フィードバックを送信'), findsNothing);
+    expect(find.text('アプリの感想を送信'), findsNothing);
   });
 
   testWidgets('文字数カウンターが表示される', (tester) async {
@@ -123,6 +123,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SingleChildScrollView), findsOneWidget);
-    expect(find.text('フィードバックを送信'), findsOneWidget);
+    expect(find.text('アプリの感想を送信'), findsOneWidget);
   });
 }

@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../dialogs/feedback_dialog.dart';
 import '../../dialogs/inquiry_dialog.dart';
+import '../../l10n/app_labels.dart';
 import '../../providers/service_providers.dart';
 import '../../services/inquiry_service.dart';
 
@@ -21,7 +22,7 @@ class ContactButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return IconButton(
       icon: const Icon(Icons.mail_outline),
-      tooltip: 'ご意見・お問い合わせ',
+      tooltip: AppLabels.contactTitle,
       onPressed: () => _showContactMenu(context, ref),
     );
   }
@@ -41,14 +42,14 @@ class ContactButton extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  'ご意見・お問い合わせ',
+                  AppLabels.contactTitle,
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
               ListTile(
                 leading: const Icon(Icons.rate_review_outlined),
-                title: const Text('フィードバックを送る'),
-                subtitle: const Text('アプリへのご意見・改善要望'),
+                title: const Text(AppLabels.feedbackSendTitle),
+                subtitle: const Text(AppLabels.feedbackSendSubtitle),
                 onTap: () {
                   Navigator.pop(context);
                   _openFeedback(context, ref);
@@ -56,8 +57,8 @@ class ContactButton extends ConsumerWidget {
               ),
               ListTile(
                 leading: const Icon(Icons.mail_outline),
-                title: const Text('お問い合わせ'),
-                subtitle: const Text('追加開発・案件のご相談など'),
+                title: const Text(AppLabels.inquiryTitle),
+                subtitle: const Text(AppLabels.inquirySubtitle),
                 onTap: () {
                   Navigator.pop(context);
                   _openInquiry(context, ref);

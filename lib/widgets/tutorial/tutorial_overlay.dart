@@ -10,6 +10,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../l10n/app_labels.dart';
 import '../../providers/dream_providers.dart';
 import '../../providers/service_providers.dart';
 import '../../services/tutorial_service.dart';
@@ -100,17 +101,17 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
 
   String _getDialogInstruction(TutorialStep step) {
     if (step == TutorialStep.addDream) {
-      return 'タイトルを入力して「追加」をタップしてください';
+      return AppLabels.tutorialInputTitle;
     }
     if (step == TutorialStep.addGoal) {
-      return '各項目を入力して「追加」をタップしてください';
+      return AppLabels.tutorialInputFields;
     }
     return step.instruction;
   }
 
   String _getDialogHint(TutorialStep step) {
     if (step == TutorialStep.addDream) {
-      return '説明やWhyは後から編集できます';
+      return AppLabels.tutorialEditLater;
     }
     if (step == TutorialStep.addGoal) {
       return 'What・When・Howを入力してください';
@@ -153,15 +154,14 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'チュートリアル完了！',
+                  AppLabels.tutorialCompleted,
                   style: theme.textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'アプリの基本操作を体験しました。\n'
-                  'チュートリアルで作成したデータをどうしますか？',
+                  AppLabels.tutorialCompletedMsg,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
@@ -173,7 +173,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
                     const SizedBox(width: 4),
                     Flexible(
                       child: Text(
-                        '設定画面からいつでもチュートリアルを再実行できます',
+                        AppLabels.tutorialRestart,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.hintColor,
                         ),
@@ -189,7 +189,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
                   children: [
                     OutlinedButton(
                       onPressed: () => _stopTutorial(ref),
-                      child: const Text('データを削除'),
+                      child: const Text(AppLabels.tutorialDeleteData),
                     ),
                     FilledButton(
                       onPressed: () async {
@@ -198,7 +198,7 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
                         await tutorialService.finish();
                         ref.read(tutorialStateProvider.notifier).reset();
                       },
-                      child: const Text('データを保持'),
+                      child: const Text(AppLabels.tutorialKeepData),
                     ),
                   ],
                 ),
@@ -444,7 +444,7 @@ class _TutorialSpotlightState extends ConsumerState<TutorialSpotlight>
     // ガントチャート画面でターゲットが見つからない（Web体験版等）
     if (step == TutorialStep.addTask &&
         _findTargetRectFromKey(targetKey) == null) {
-      return 'ガントチャートで目標達成までの道のりを可視化しよう！';
+      return AppLabels.tutorialGanttPremiumMsg;
     }
     return step.instruction;
   }
@@ -453,8 +453,7 @@ class _TutorialSpotlightState extends ConsumerState<TutorialSpotlight>
   String _getHint(TutorialStep step, GlobalKey? targetKey) {
     if (step == TutorialStep.addTask &&
         _findTargetRectFromKey(targetKey) == null) {
-      return 'プレミアムプランにアップグレードすると'
-          'タスク管理・進捗トラッキングなど全機能をご利用いただけます';
+      return AppLabels.tutorialGanttPremiumUpgrade;
     }
     return step.hint;
   }
@@ -620,7 +619,7 @@ class _TutorialBubble extends StatelessWidget {
                   size: 14, color: theme.colorScheme.onPrimary),
               const SizedBox(width: 4),
               Text(
-                'ステップ ${stepIndex + 1} / $totalSteps',
+                AppLabels.tutorialStep(stepIndex + 1, totalSteps),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onPrimary.withAlpha(200),
                 ),
@@ -703,7 +702,7 @@ class _FloatingBubble extends StatelessWidget {
                   size: 14, color: theme.colorScheme.onPrimary),
               const SizedBox(width: 4),
               Text(
-                'ステップ ${stepIndex + 1} / $totalSteps',
+                AppLabels.tutorialStep(stepIndex + 1, totalSteps),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onPrimary.withAlpha(200),
                 ),
@@ -814,7 +813,7 @@ class _DialogBubble extends StatelessWidget {
                   size: 14, color: theme.colorScheme.onPrimary),
               const SizedBox(width: 4),
               Text(
-                'ステップ ${stepIndex + 1} / $totalSteps',
+                AppLabels.tutorialStep(stepIndex + 1, totalSteps),
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: theme.colorScheme.onPrimary.withAlpha(200),
                 ),
@@ -990,7 +989,7 @@ class _AppBarExplainBubble extends StatelessWidget {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '画面右上のアイコンについて',
+                          AppLabels.tutorialAppBarTitle,
                           style: theme.textTheme.titleSmall?.copyWith(
                             color: theme.colorScheme.onPrimary,
                             fontWeight: FontWeight.bold,
@@ -1012,33 +1011,36 @@ class _AppBarExplainBubble extends StatelessWidget {
                   _iconRow(
                     context,
                     icon: Icons.eco,
-                    label: '使い方',
-                    description: 'アプリの全体像・操作手順を確認できます。'
-                        'チュートリアルもここから再開できます。',
+                    label: AppLabels.tutorialAppBarHowToUse,
+                    description: AppLabels.tutorialAppBarHowToUseDesc,
                   ),
                   const SizedBox(height: 8),
                   _iconRow(
                     context,
                     icon: Icons.help_outline,
-                    label: 'ヘルプ',
-                    description: 'よくある質問（FAQ）を検索できます。'
-                        '困った時はまずここを確認してください。',
+                    label: AppLabels.tutorialAppBarHelp,
+                    description: AppLabels.tutorialAppBarHelpDesc,
+                  ),
+                  const SizedBox(height: 8),
+                  _iconRow(
+                    context,
+                    icon: Icons.inbox_outlined,
+                    label: AppLabels.tutorialAppBarInbox,
+                    description: AppLabels.tutorialAppBarInboxDesc,
                   ),
                   const SizedBox(height: 8),
                   _iconRow(
                     context,
                     icon: Icons.mail_outline,
-                    label: '問い合わせ',
-                    description: 'フィードバックの送信や'
-                        '開発に関するお問い合わせができます。',
+                    label: AppLabels.tutorialAppBarContact,
+                    description: AppLabels.tutorialAppBarContactDesc,
                   ),
                   const SizedBox(height: 8),
                   _iconRow(
                     context,
                     icon: Icons.emoji_events_outlined,
-                    label: '実績',
-                    description: '活動の積み重ねで解除される実績を確認できます。'
-                        '新しい実績はバッジでお知らせします。',
+                    label: AppLabels.tutorialAppBarAchievement,
+                    description: AppLabels.tutorialAppBarAchievementDesc,
                   ),
 
                   const SizedBox(height: 14),
@@ -1054,7 +1056,7 @@ class _AppBarExplainBubble extends StatelessWidget {
                             horizontal: 20, vertical: 8),
                       ),
                       onPressed: onNext,
-                      child: const Text('次へ'),
+                      child: const Text(AppLabels.btnNext),
                     ),
                   ),
                 ],

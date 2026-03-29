@@ -22,7 +22,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('外観'), findsOneWidget);
-    expect(find.text('通知'), findsOneWidget);
+    expect(find.text('通知設定'), findsOneWidget);
     expect(find.text('データ管理'), findsOneWidget);
 
     // スクロールして下部のセクションを確認
@@ -62,8 +62,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('データをエクスポート'), findsOneWidget);
-    expect(find.text('データをインポート'), findsOneWidget);
+    expect(find.text('データを書き出す'), findsOneWidget);
+    expect(find.text('データを読み込む'), findsOneWidget);
     expect(find.text('全データを削除'), findsOneWidget);
   });
 
@@ -95,10 +95,10 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('すべてのデータを削除します'), findsOneWidget);
-    expect(find.text('削除する'), findsOneWidget);
+    expect(find.text('削除'), findsOneWidget);
   });
 
-  testWidgets('インポートメニューが表示される（非体験版）', (tester) async {
+  testWidgets('読み込みメニューが表示される（非体験版）', (tester) async {
     // テスト環境では kIsWeb=false のため isTrialMode=false
     // ファイルピッカーはプラットフォームAPIのためタップ動作はテストしない
     final prefs = await getPrefs();
@@ -107,7 +107,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('データをインポート'), findsOneWidget);
+    expect(find.text('データを読み込む'), findsOneWidget);
     expect(find.text('バックアップから復元'), findsOneWidget);
   });
 
@@ -119,6 +119,6 @@ void main() {
     await tester.pumpAndSettle();
 
     // 非体験版（テスト環境）ではフィードバックセクションは非表示
-    expect(find.text('フィードバックを送信'), findsNothing);
+    expect(find.text('アプリの感想を送信'), findsNothing);
   });
 }

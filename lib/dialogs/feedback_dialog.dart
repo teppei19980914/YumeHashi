@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_labels.dart';
 import '../services/feedback_service.dart';
 
 /// フィードバックダイアログを表示する.
@@ -64,7 +65,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
           Icon(Icons.rate_review_outlined,
               size: 24, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          const Expanded(child: Text('フィードバックを送信')),
+          const Expanded(child: Text(AppLabels.feedbackTitle)),
         ],
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -103,10 +104,8 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
                     Expanded(
                       child: Text(
                         currentLevel >= feedbackUnlockableLevel
-                            ? 'いつもご利用ありがとうございます。'
-                                '引き続きご意見をお聞かせください'
-                            : '送信すると制限がレベル$nextLevelに解除されます'
-                                '（現在: レベル$currentLevel / $feedbackMaxLevel）',
+                            ? AppLabels.feedbackThanksMessage
+                            : AppLabels.feedbackUnlockNext(nextLevel, currentLevel, feedbackMaxLevel),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w500,
@@ -119,13 +118,13 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
               const SizedBox(height: 16),
 
               // カテゴリ選択
-              Text('カテゴリ *', style: theme.textTheme.labelLarge),
+              Text(AppLabels.feedbackCategory, style: theme.textTheme.labelLarge),
               const SizedBox(height: 8),
               DropdownButtonFormField<FeedbackCategory>(
                 initialValue: _category,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'カテゴリを選択してください',
+                  hintText: AppLabels.feedbackSelectCategory,
                 ),
                 items: FeedbackCategory.values
                     .map((c) => DropdownMenuItem(
@@ -140,12 +139,12 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
               // テキスト入力
               Row(
                 children: [
-                  Text('ご意見・ご感想 *', style: theme.textTheme.labelLarge),
+                  Text(AppLabels.feedbackContent, style: theme.textTheme.labelLarge),
                   const Spacer(),
                   Text(
                     remaining > 0
-                        ? 'あと$remaining文字'
-                        : '$textLength文字',
+                        ? AppLabels.feedbackRemainingChars(remaining)
+                        : AppLabels.feedbackCharCount(textLength),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: remaining > 0
                           ? theme.colorScheme.error
@@ -162,9 +161,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
                 maxLines: 8,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'アプリの改善点や使いにくい部分、\n'
-                      '欲しい機能などをお聞かせください。\n\n'
-                      '具体的なご意見は開発の参考になります。',
+                  hintText: AppLabels.feedbackGuide,
                   alignLabelWithHint: true,
                 ),
                 onChanged: (_) => setState(() => _errorMessage = null),
@@ -179,8 +176,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      'フィードバックは匿名で送信されます。'
-                      '個人を特定する情報は含まれません。',
+                      AppLabels.feedbackPrivacyNote,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.hintColor,
                       ),
@@ -222,7 +218,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
       actions: [
         TextButton(
           onPressed: _submitting ? null : () => Navigator.of(context).pop(false),
-          child: const Text('キャンセル'),
+          child: const Text(AppLabels.btnCancel),
         ),
         FilledButton.icon(
           onPressed: _submitting ? null : _submit,
@@ -233,7 +229,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.send, size: 18),
-          label: Text(_submitting ? '送信中...' : '送信する'),
+          label: Text(_submitting ? AppLabels.btnSending : AppLabels.btnSend),
         ),
       ],
     );
@@ -241,7 +237,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
 
   Future<void> _submit() async {
     if (_category == null) {
-      setState(() => _errorMessage = 'カテゴリの選択は必須です');
+      setState(() => _errorMessage = AppLabels.feedbackCategoryRequired);
       return;
     }
 
@@ -268,10 +264,10 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
         SnackBar(
           content: Text(
             widget.feedbackService.isFeedbackMaxLevel
-                ? 'フィードバックを送信しました。ありがとうございます！'
+                ? AppLabels.feedbackSuccessMax
                 : result.newLevel >= feedbackMaxLevel
-                    ? 'ありがとうございます！制限が完全に解除されました'
-                    : 'ありがとうございます！制限がレベル${result.newLevel}に解除されました',
+                    ? AppLabels.feedbackSuccessUnlockMax(result.newLevel)
+                    : AppLabels.feedbackSuccessUnlock(result.newLevel),
           ),
         ),
       );

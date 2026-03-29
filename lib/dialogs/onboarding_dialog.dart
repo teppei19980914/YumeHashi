@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
 const _onboardingCompletedKey = 'onboarding_completed';
@@ -176,7 +177,7 @@ class _OnboardingDialogState extends State<_OnboardingDialog>
                         TextButton(
                           onPressed: _previousPage,
                           child: Text(
-                            '戻る',
+                            AppLabels.btnBack,
                             style: TextStyle(color: colors.textMuted),
                           ),
                         )
@@ -195,7 +196,7 @@ class _OnboardingDialogState extends State<_OnboardingDialog>
                           ),
                         ),
                         child: Text(
-                          _currentPage < _totalPages - 1 ? '次へ' : 'はじめる',
+                          _currentPage < _totalPages - 1 ? AppLabels.btnNext : AppLabels.btnBegin,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -221,11 +222,9 @@ class _OnboardingDialogState extends State<_OnboardingDialog>
         colors: colors,
         icon: Icons.auto_awesome,
         iconColor: colors.accent,
-        title: 'あなたには、\n「やりたいこと」がありますか？',
-        body: '小さなことでも、大きなことでも。\n'
-            '「こうなれたらいいな」と\n'
-            '心に浮かんだことがあるはずです。',
-        emphasis: 'その想いを、一歩ずつ形にしていこう。',
+        title: AppLabels.onboardingStep1,
+        body: AppLabels.onboardingStep1Body,
+        emphasis: AppLabels.onboardingStep1Emphasis,
       ),
     );
   }
@@ -238,11 +237,9 @@ class _OnboardingDialogState extends State<_OnboardingDialog>
         colors: colors,
         icon: Icons.edit_note,
         iconColor: colors.accent,
-        title: '書き出すことで、\n実現に向けて動き出します。',
-        body: '言葉にして書き出すことで、\n'
-            '脳はそれを「目標」として認識します。',
-        emphasis: '文字にすることで、\n'
-            '想いは「目標」へ変わる。',
+        title: AppLabels.onboardingStep2,
+        body: AppLabels.onboardingStep2Body,
+        emphasis: AppLabels.onboardingStep2Emphasis,
       ),
     );
   }
@@ -255,10 +252,8 @@ class _OnboardingDialogState extends State<_OnboardingDialog>
         colors: colors,
         icon: Icons.rocket_launch,
         iconColor: colors.accent,
-        title: '一歩踏み出せば、\n自然と前に進めます。',
-        body: '動き出した人は、動き続けられる。\n'
-            '最初の一歩さえ踏み出せば、\n'
-            'あとは自然と進んでいけます。',
+        title: AppLabels.onboardingStep3,
+        body: AppLabels.onboardingStep3Body,
         emphasis: null,
       ),
     );
@@ -272,11 +267,9 @@ class _OnboardingDialogState extends State<_OnboardingDialog>
         colors: colors,
         icon: Icons.favorite,
         iconColor: colors.accent,
-        title: 'ユメログは、あなたの\n「最初の一歩」を支えます。',
-        body: '夢を書き出し、目標に分解し、\n'
-            '日々の行動に落とし込む。\n'
-            '動き出したあなたと一緒に走り続けます。',
-        emphasis: '自分の力で未来を切り拓こう。',
+        title: AppLabels.onboardingStep4Title,
+        body: AppLabels.onboardingStep4Body,
+        emphasis: AppLabels.onboardingStep4Emphasis,
       ),
     );
   }

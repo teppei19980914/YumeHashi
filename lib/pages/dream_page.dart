@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../dialogs/dream_dialog.dart';
 import '../dialogs/dream_discovery_dialog.dart';
 import '../dialogs/trial_limit_dialog.dart';
+import '../l10n/app_labels.dart';
 import '../models/dream.dart';
 import '../providers/dream_providers.dart';
 import '../providers/goal_providers.dart';
@@ -42,7 +43,7 @@ class DreamPage extends ConsumerWidget {
             children: [
               Expanded(
                 child: Text(
-                  '将来の夢を設定し、夢の実現に向けた目標を管理します。',
+                  AppLabels.dreamPageDesc,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     color: colors.textSecondary,
                   ),
@@ -52,14 +53,14 @@ class DreamPage extends ConsumerWidget {
               OutlinedButton.icon(
                 onPressed: () => _openDiscoveryGuide(context, ref),
                 icon: const Icon(Icons.explore, size: 18),
-                label: const Text('発見ガイド'),
+                label: const Text(AppLabels.dreamDiscoveryGuide),
               ),
               const SizedBox(width: 8),
               ElevatedButton.icon(
                 key: TutorialTargetKeys.addDreamButton,
                 onPressed: () => _addDream(context, ref),
                 icon: const Icon(Icons.add, size: 18),
-                label: const Text('夢を追加'),
+                label: const Text(AppLabels.dreamAddButton),
               ),
             ],
           ),
@@ -93,13 +94,13 @@ class DreamPage extends ConsumerWidget {
                       loading: () =>
                           const Center(child: CircularProgressIndicator()),
                       error: (error, _) => Center(
-                        child: Text('エラーが発生しました: $error'),
+                        child: Text(AppLabels.errorWithDetail(error.toString())),
                       ),
                     ),
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
-                child: Text('エラーが発生しました: $error'),
+                child: Text(AppLabels.errorWithDetail(error.toString())),
               ),
             ),
           ),
@@ -116,15 +117,14 @@ class DreamPage extends ConsumerWidget {
           Icon(Icons.auto_awesome_outlined, size: 64, color: colors.textMuted),
           const SizedBox(height: 16),
           Text(
-            'やりたいことを見つけよう',
+            AppLabels.dreamEmptyHeading,
             style: theme.textTheme.titleMedium?.copyWith(
               color: colors.textMuted,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            '「夢を追加」ボタンから直接追加するか、\n'
-            '「発見ガイド」でやりたいことを見つけましょう',
+            AppLabels.dreamEmptyHint,
             style: theme.textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
@@ -163,7 +163,7 @@ class DreamPage extends ConsumerWidget {
         if (!context.mounted) return;
         await showTrialLimitDialog(
           context,
-          itemName: '夢',
+          itemName: AppLabels.pageDreams,
           currentCount: currentCount,
           maxCount: maxDreams(level),
           feedbackService: ref.read(feedbackServiceProvider),
@@ -246,26 +246,25 @@ class DreamPage extends ConsumerWidget {
           children: [
             Icon(Icons.lightbulb_outline, size: 24),
             SizedBox(width: 8),
-            Expanded(child: Text('やりたいことはありますか？')),
+            Expanded(child: Text(AppLabels.dreamEmptyTitle)),
           ],
         ),
         content: const Text(
-          'すでにやりたいことがある方はそのまま入力できます。\n'
-          'まだ決まっていない方は、ガイドが一緒に見つけるお手伝いをします。',
+          AppLabels.dreamTutorialGuideChoice,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           OutlinedButton.icon(
             icon: const Icon(Icons.explore, size: 18),
-            label: const Text('ガイドで見つける'),
+            label: const Text(AppLabels.dreamEmptyAction),
             onPressed: () => Navigator.pop(context, true),
           ),
           FilledButton.icon(
             icon: const Icon(Icons.edit, size: 18),
-            label: const Text('自分で入力する'),
+            label: const Text(AppLabels.dreamTutorialSelfInput),
             onPressed: () => Navigator.pop(context, false),
           ),
         ],

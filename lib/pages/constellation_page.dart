@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/constellations.dart';
+import '../l10n/app_labels.dart';
 import '../models/constellation.dart';
 import '../providers/constellation_providers.dart';
 import '../theme/app_theme.dart';
@@ -66,7 +67,7 @@ class ConstellationPage extends ConsumerWidget {
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
-                child: Text('エラーが発生しました: $error'),
+                child: Text(AppLabels.errorWithDetail(error.toString())),
               ),
             ),
           ),
@@ -181,7 +182,7 @@ class _ConstellationCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        '完成',
+                        AppLabels.constellationComplete,
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: const Color(0xFFFFD700),
                           fontWeight: FontWeight.bold,
@@ -287,7 +288,7 @@ class _ConstellationCard extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('閉じる'),
+            child: const Text(AppLabels.btnClose),
           ),
         ],
       ),

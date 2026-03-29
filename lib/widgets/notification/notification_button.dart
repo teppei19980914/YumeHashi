@@ -9,6 +9,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../dialogs/task_dialog.dart';
+import '../../l10n/app_labels.dart';
 import '../../models/notification.dart' as model;
 import '../../providers/service_providers.dart';
 import '../../theme/app_theme.dart';
@@ -41,7 +43,7 @@ class NotificationButton extends ConsumerWidget {
         IconButton(
           icon: const Icon(Icons.inbox_outlined),
           onPressed: () => _showInboxPopup(context, ref),
-          tooltip: '受信ボックス',
+          tooltip: AppLabels.tooltipInbox,
         ),
         if (count > 0)
           Positioned(
@@ -95,7 +97,7 @@ class _InboxPopup extends ConsumerWidget {
         children: [
           Icon(Icons.inbox, size: 22, color: colors.accent),
           const SizedBox(width: 8),
-          const Text('受信ボックス'),
+          const Text(AppLabels.inboxTitle),
           const Spacer(),
           TextButton.icon(
             onPressed: () async {
@@ -105,7 +107,7 @@ class _InboxPopup extends ConsumerWidget {
               ref.invalidate(allNotificationsProvider);
             },
             icon: const Icon(Icons.done_all, size: 16),
-            label: const Text('全て既読'),
+            label: const Text(AppLabels.inboxMarkAllRead),
             style: TextButton.styleFrom(
               visualDensity: VisualDensity.compact,
             ),
@@ -125,7 +127,7 @@ class _InboxPopup extends ConsumerWidget {
                     Icon(Icons.inbox_outlined,
                         size: 48, color: colors.textMuted),
                     const SizedBox(height: 8),
-                    Text('受信ボックスは空です',
+                    Text(AppLabels.inboxEmpty,
                         style: TextStyle(color: colors.textMuted)),
                   ],
                 ),
@@ -141,13 +143,13 @@ class _InboxPopup extends ConsumerWidget {
             );
           },
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => const Center(child: Text('エラーが発生しました')),
+          error: (_, _) => const Center(child: Text(AppLabels.errorGeneral)),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('閉じる'),
+          child: const Text(AppLabels.btnClose),
         ),
       ],
     );
@@ -229,17 +231,9 @@ class _InboxItem extends ConsumerWidget {
 
     if (!context.mounted) return;
 
-    // リマインダー → ポップアップを閉じてガントチャート/目標ページに遷移
+    // リマインダー → 該当の編集ダイアログを直接表示
     if (notification.notificationType == model.NotificationType.reminder) {
-      final isGoal = notification.dedupKey.startsWith('reminder:goal:');
-      // 受信ボックスポップアップを閉じる → さらに親ダイアログも閉じる
-      Navigator.of(context).pop(); // InboxPopup を閉じる
-      if (!context.mounted) return;
-      if (isGoal) {
-        context.go('/goals');
-      } else {
-        context.go('/gantt');
-      }
+      await _openReminderTarget(context, ref);
       return;
     }
 
@@ -250,6 +244,52 @@ class _InboxItem extends ConsumerWidget {
         notification: notification,
       ),
     );
+  }
+
+  /// リマインダーの対象（タスク/目標）の編集ダイアログを開く.
+  Future<void> _openReminderTarget(BuildContext context, WidgetRef ref) async {
+    // dedupKey形式: "reminder:task:TASK_ID:..." or "reminder:goal:GOAL_ID:..."
+    final parts = notification.dedupKey.split(':');
+    if (parts.length < 3) return;
+    final kind = parts[1]; // "task" or "goal"
+    final id = parts[2];
+
+    // 受信ボックスポップアップを閉じる
+    Navigator.of(context).pop();
+    if (!context.mounted) return;
+
+    if (kind == 'task') {
+      final taskService = ref.read(taskServiceProvider);
+      final task = await taskService.getTask(id);
+      if (task == null || !context.mounted) return;
+      final books = await ref.read(bookServiceProvider).getAllBooks();
+      final goals = await ref.read(goalServiceProvider).getAllGoals();
+      if (!context.mounted) return;
+      final result = await showTaskDialog(
+        context,
+        task: task,
+        books: books,
+        goals: goals,
+      );
+      if (result == null || result.closeRequested) return;
+      if (result.deleteRequested) {
+        await taskService.deleteTask(task.id);
+      } else {
+        await taskService.updateTask(
+          taskId: task.id,
+          title: result.title,
+          startDate: result.startDate,
+          endDate: result.endDate,
+          progress: result.progress,
+          memo: result.memo,
+          bookId: result.bookId,
+          goalId: result.goalId,
+        );
+      }
+    } else if (kind == 'goal') {
+      // 目標ページに遷移（目標の編集は目標ページで行う）
+      if (context.mounted) context.go('/goals');
+    }
   }
 }
 
@@ -276,9 +316,9 @@ class _NotificationDetailDialog extends StatelessWidget {
     };
 
     final typeLabel = switch (n.notificationType) {
-      model.NotificationType.reminder => 'リマインド',
-      model.NotificationType.achievement => '実績',
-      model.NotificationType.system => 'お知らせ',
+      model.NotificationType.reminder => AppLabels.inboxTypeReminder,
+      model.NotificationType.achievement => AppLabels.inboxTypeAchievement,
+      model.NotificationType.system => AppLabels.inboxTypeSystem,
     };
 
     return AlertDialog(
@@ -331,7 +371,7 @@ class _NotificationDetailDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('閉じる'),
+          child: const Text(AppLabels.btnClose),
         ),
       ],
     );

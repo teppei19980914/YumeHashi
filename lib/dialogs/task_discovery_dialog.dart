@@ -7,6 +7,7 @@ library;
 import 'package:flutter/material.dart';
 
 import '../data/task_templates.dart';
+import '../l10n/app_labels.dart';
 import '../models/goal.dart';
 import '../theme/app_theme.dart';
 
@@ -204,7 +205,7 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
                         color: theme.colorScheme.primary),
                     const SizedBox(width: 8),
                     Text(
-                      'タスク発見ガイド',
+                      AppLabels.taskDiscoveryTitle,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -263,7 +264,7 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
                     if (_currentPage > 0)
                       TextButton(
                         onPressed: () => _goToPage(_currentPage - 1),
-                        child: const Text('戻る'),
+                        child: const Text(AppLabels.btnBack),
                       )
                     else
                       const SizedBox.shrink(),
@@ -272,12 +273,12 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
                         onPressed: _canProceed
                             ? () => _goToPage(_currentPage + 1)
                             : null,
-                        child: const Text('次へ'),
+                        child: const Text(AppLabels.btnNext),
                       )
                     else
                       ElevatedButton(
                         onPressed: _submit,
-                        child: const Text('タスクを作成'),
+                        child: const Text(AppLabels.taskDiscoveryCreate),
                       ),
                   ],
                 ),
@@ -298,7 +299,7 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'どの目標に向けたタスクですか？',
+            AppLabels.taskDiscoveryGoalQuestion,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -306,7 +307,7 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
           ),
           const SizedBox(height: 8),
           Text(
-            '目標を達成するための具体的な行動を考えましょう。',
+            AppLabels.taskDiscoveryGoalDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textSecondary,
             ),
@@ -326,7 +327,7 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
                       color: colors.textMuted, size: 32),
                   const SizedBox(height: 8),
                   Text(
-                    '目標がまだありません。\n先に目標を作成してください。',
+                    AppLabels.taskDiscoveryNoGoals,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: colors.textSecondary,
                     ),
@@ -428,7 +429,7 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '「$goalTitle」を達成するための行動を考えましょう',
+                      AppLabels.taskDiscoveryThinkFor(goalTitle),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: theme.colorScheme.primary,
                         fontWeight: FontWeight.w600,
@@ -517,14 +518,14 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'テンプレートから選ぶ',
+            AppLabels.taskDiscoveryTemplateTitle,
             style: theme.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'そのまま使っても、自分なりにアレンジしてもOKです。\n「自分で考える」場合はそのまま「次へ」を押してください。',
+            AppLabels.taskDiscoveryTemplateDesc,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: colors.textSecondary,
             ),
@@ -586,7 +587,8 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '推奨期間: ${t.suggestedDurationDays}日間',
+                        AppLabels.taskDiscoverySuggestedDays(
+                            t.suggestedDurationDays),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                         ),
@@ -613,24 +615,28 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'タスクを具体化しよう',
+              AppLabels.taskDiscoveryFormTitle,
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 16),
-            Text('タスク名', style: theme.textTheme.titleSmall),
+            Text(AppLabels.taskDiscoveryFormName,
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             TextFormField(
               controller: _titleController,
               decoration: const InputDecoration(
-                hintText: '例: 参考書を1章読む',
+                hintText: AppLabels.taskDiscoveryFormNameHint,
               ),
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? '必須項目です' : null,
+                  v == null || v.trim().isEmpty
+                      ? AppLabels.validRequired
+                      : null,
             ),
             const SizedBox(height: 16),
-            Text('開始日', style: theme.textTheme.titleSmall),
+            Text(AppLabels.taskDiscoveryFormStartDate,
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             GestureDetector(
               onTap: () => _pickDate(isStart: true),
@@ -657,7 +663,8 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('終了日', style: theme.textTheme.titleSmall),
+            Text(AppLabels.taskDiscoveryFormEndDate,
+                style: theme.textTheme.titleSmall),
             const SizedBox(height: 4),
             GestureDetector(
               onTap: () => _pickDate(isStart: false),
@@ -699,7 +706,8 @@ class _TaskDiscoveryDialogState extends State<_TaskDiscoveryDialog> {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
-                        '紐づく目標: ${_selectedGoal!.what}',
+                        AppLabels.taskDiscoveryLinkedGoal(
+                            _selectedGoal!.what),
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: theme.colorScheme.primary,
                         ),

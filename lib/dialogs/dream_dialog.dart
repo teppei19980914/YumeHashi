@@ -3,6 +3,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_labels.dart';
 import '../models/dream.dart';
 import '../widgets/tutorial/tutorial_target_keys.dart';
 
@@ -118,7 +119,7 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
     final theme = Theme.of(context);
 
     return AlertDialog(
-      title: Text(_isEdit ? '夢を編集' : '新しい夢を追加'),
+      title: Text(_isEdit ? AppLabels.dreamDialogEdit : AppLabels.dreamDialogAdd),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
@@ -134,7 +135,7 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // カテゴリ選択
-                Text('カテゴリ', style: theme.textTheme.titleSmall),
+                Text(AppLabels.dreamCategory, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
@@ -182,37 +183,37 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
-                Text('タイトル', style: theme.textTheme.titleSmall),
+                Text(AppLabels.dreamTitle, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _titleController,
                   decoration: const InputDecoration(
-                    hintText: '例: 医者になる、世界一周する',
+                    hintText: AppLabels.dreamHintTitle,
                   ),
                   validator: (v) =>
-                      v == null || v.trim().isEmpty ? '必須項目です' : null,
+                      v == null || v.trim().isEmpty ? AppLabels.validRequired : null,
                 ),
                 const SizedBox(height: 16),
-                Text('説明', style: theme.textTheme.titleSmall),
+                Text(AppLabels.dreamDescription, style: theme.textTheme.titleSmall),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _descriptionController,
                   decoration: const InputDecoration(
-                    hintText: '例: 困っている人を助けられる医者になりたい',
+                    hintText: AppLabels.dreamHintDescription,
                   ),
                   maxLines: 4,
                   minLines: 2,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Why（なぜこの夢を叶えたいか）',
+                  AppLabels.dreamWhy,
                   style: theme.textTheme.titleSmall,
                 ),
                 const SizedBox(height: 4),
                 TextFormField(
                   controller: _whyController,
                   decoration: const InputDecoration(
-                    hintText: '例: 幼い頃に医者に助けられた経験がある',
+                    hintText: AppLabels.dreamHintWhy,
                   ),
                   maxLines: 3,
                   minLines: 2,
@@ -229,16 +230,16 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: const Text('削除'),
+            child: const Text(AppLabels.btnDelete),
           ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('キャンセル'),
+          child: const Text(AppLabels.btnCancel),
         ),
         ElevatedButton(
           key: _isEdit ? null : TutorialTargetKeys.dreamDialogSubmit,
           onPressed: _submit,
-          child: Text(_isEdit ? '更新' : '追加'),
+          child: Text(_isEdit ? AppLabels.btnUpdate : AppLabels.btnAdd),
         ),
       ],
     );
@@ -248,7 +249,7 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('夢を削除'),
+        title: const Text(AppLabels.dreamDialogDelete),
         content: Text(
           '「${widget.dream!.title}」を削除しますか？\n'
           '紐づく目標・タスクも削除されます。',
@@ -256,14 +257,14 @@ class _DreamDialogContentState extends State<_DreamDialogContent> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('削除'),
+            child: const Text(AppLabels.btnDelete),
           ),
         ],
       ),

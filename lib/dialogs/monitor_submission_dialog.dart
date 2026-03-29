@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
+import '../l10n/app_labels.dart';
 import '../services/feedback_service.dart' show feedbackEndpointUrl;
 import '../theme/app_theme.dart';
 
@@ -102,13 +103,13 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         });
       } else {
         setState(() {
-          _error = '送信に失敗しました。後ほど再度お試しください。';
+          _error = AppLabels.monitorSendFailed;
           _currentStep = 1;
         });
       }
     } on Exception {
       setState(() {
-        _error = '通信エラーが発生しました。後ほど再度お試しください。';
+        _error = AppLabels.monitorNetworkError;
         _currentStep = 1;
       });
     }
@@ -124,7 +125,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         children: [
           Icon(Icons.assignment_outlined, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          const Expanded(child: Text('モニターデータの提出')),
+          const Expanded(child: Text(AppLabels.monitorTitle)),
         ],
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -148,28 +149,28 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         0 => [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('あとで'),
+              child: const Text(AppLabels.btnLater),
             ),
             ElevatedButton(
               onPressed: () => setState(() => _currentStep = 1),
-              child: const Text('回答する'),
+              child: const Text(AppLabels.monitorAnswer),
             ),
           ],
         1 => [
             TextButton(
               onPressed: () => setState(() => _currentStep = 0),
-              child: const Text('戻る'),
+              child: const Text(AppLabels.btnBack),
             ),
             ElevatedButton(
               onPressed: _usabilityRating > 0 ? _submit : null,
-              child: const Text('提出する'),
+              child: const Text(AppLabels.monitorSubmit),
             ),
           ],
         2 => [],
         3 => [
             ElevatedButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('閉じる'),
+              child: const Text(AppLabels.btnClose),
             ),
           ],
         _ => [],
@@ -199,8 +200,8 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
               Expanded(
                 child: Text(
                   widget.remainingDays > 0
-                      ? '招待プランの残り日数: ${widget.remainingDays}日'
-                      : '招待プランの期限が終了しました',
+                      ? AppLabels.monitorRemainingDays(widget.remainingDays)
+                      : AppLabels.monitorExpired,
                   style: theme.textTheme.titleSmall?.copyWith(
                     color: widget.remainingDays > 0
                         ? colors.warning
@@ -214,13 +215,12 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         ),
         const SizedBox(height: 16),
         Text(
-          'モニターとしてアプリをご利用いただきありがとうございます。',
+          AppLabels.monitorThanks,
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 12),
         Text(
-          'アプリの改善のため、ご利用データと簡単なアンケートの'
-          '提出にご協力をお願いいたします。',
+          AppLabels.monitorRequestDesc,
           style: theme.textTheme.bodyMedium,
         ),
         const SizedBox(height: 16),
@@ -242,7 +242,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
                       color: theme.colorScheme.primary),
                   const SizedBox(width: 6),
                   Text(
-                    'データの取り扱いについて',
+                    AppLabels.monitorDataHandlingTitle,
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -252,9 +252,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
               ),
               const SizedBox(height: 8),
               Text(
-                '提出いただいたデータはアプリの改善を目的とした'
-                '参考資料としてのみ使用いたします。\n'
-                '第三者への提供や、改善目的以外での流用は一切行いません。',
+                AppLabels.monitorDataHandlingDesc,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colors.textSecondary,
                 ),
@@ -264,14 +262,14 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         ),
         const SizedBox(height: 12),
         Text(
-          '提出内容:',
+          AppLabels.monitorSubmissionContents,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 4),
-        _buildBullet('アプリの使いやすさに関するアンケート（3問）', colors),
-        _buildBullet('アプリ内の登録データ（夢・目標・タスク・書籍・活動ログ）', colors),
+        _buildBullet(AppLabels.monitorBullet1, colors),
+        _buildBullet(AppLabels.monitorBullet2, colors),
       ],
     );
   }
@@ -317,7 +315,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
 
         // Q1: 使いやすさ（5段階）
         Text(
-          'Q1. アプリの使いやすさはいかがでしたか？',
+          AppLabels.monitorQ1,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -341,8 +339,8 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         Center(
           child: Text(
             _usabilityRating > 0
-                ? ['', '使いにくい', 'やや使いにくい', '普通', '使いやすい', 'とても使いやすい'][_usabilityRating]
-                : '星をタップして評価してください',
+                ? ['', AppLabels.monitorRating1, AppLabels.monitorRating2, AppLabels.monitorRating3, AppLabels.monitorRating4, AppLabels.monitorRating5][_usabilityRating]
+                : AppLabels.monitorRatingHint,
             style: theme.textTheme.bodySmall?.copyWith(
               color: colors.textSecondary,
             ),
@@ -352,7 +350,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
 
         // Q2: 良かった点
         Text(
-          'Q2. 良かった点を教えてください（任意）',
+          AppLabels.monitorQ2,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -361,7 +359,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         TextFormField(
           controller: _goodPointController,
           decoration: const InputDecoration(
-            hintText: '例: 夢から目標に落とし込む流れがわかりやすい',
+            hintText: AppLabels.monitorQ2Hint,
           ),
           maxLines: 2,
         ),
@@ -369,7 +367,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
 
         // Q3: 改善点・要望
         Text(
-          'Q3. 改善点やほしい機能はありますか？（任意）',
+          AppLabels.monitorQ3,
           style: theme.textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
           ),
@@ -378,7 +376,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
         TextFormField(
           controller: _improvementController,
           decoration: const InputDecoration(
-            hintText: '例: 通知機能がほしい、画面遷移が分かりにくい',
+            hintText: AppLabels.monitorQ3Hint,
           ),
           maxLines: 2,
         ),
@@ -396,7 +394,7 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
             const CircularProgressIndicator(),
             const SizedBox(height: 16),
             Text(
-              'データを送信しています...',
+              AppLabels.monitorSending,
               style: theme.textTheme.bodyMedium,
             ),
           ],
@@ -415,14 +413,14 @@ class _MonitorSubmissionDialogState extends State<_MonitorSubmissionDialog> {
             Icon(Icons.check_circle, size: 48, color: colors.success),
             const SizedBox(height: 16),
             Text(
-              'ご協力ありがとうございます！',
+              AppLabels.monitorComplete,
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'いただいたデータはアプリの改善に活用させていただきます。',
+              AppLabels.monitorCompleteDesc,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: colors.textSecondary,
               ),

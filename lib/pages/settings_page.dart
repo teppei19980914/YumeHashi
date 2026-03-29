@@ -11,6 +11,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../app_version.dart';
 import '../dialogs/cloud_auth_dialog.dart';
 import '../dialogs/upgrade_dialog.dart';
 import '../providers/book_providers.dart';
@@ -22,6 +23,7 @@ import '../providers/service_providers.dart';
 import '../providers/theme_provider.dart';
 import '../services/invite_service.dart';
 import '../services/trial_limit_service.dart' show isTrialMode, isPremium;
+import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
 /// 通知有効/無効Provider.
@@ -46,10 +48,10 @@ class SettingsPage extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       children: [
         // テーマ設定
-        _SectionHeader(title: '外観', icon: Icons.palette_outlined),
+        _SectionHeader(title: AppLabels.settingsAppearance, icon: Icons.palette_outlined),
         Card(
           child: SwitchListTile(
-            title: const Text('ダークモード'),
+            title: const Text(AppLabels.settingsDarkMode),
             subtitle: Text(
               themeType == ThemeType.dark
                   ? 'Catppuccin Mocha'
@@ -65,13 +67,13 @@ class SettingsPage extends ConsumerWidget {
         const SizedBox(height: 24),
 
         // 通知設定
-        _SectionHeader(title: '通知', icon: Icons.notifications_outlined),
+        _SectionHeader(title: AppLabels.settingsNotifications, icon: Icons.notifications_outlined),
         Card(
           child: Column(
             children: [
               SwitchListTile(
-                title: const Text('実績通知'),
-                subtitle: const Text('実績達成時に通知を表示'),
+                title: const Text(AppLabels.settingsAchievementNotif),
+                subtitle: const Text(AppLabels.settingsAchievementNotifDesc),
                 value: notifAsync.valueOrNull ?? true,
                 onChanged: (value) async {
                   final service = ref.read(notificationServiceProvider);
@@ -82,8 +84,8 @@ class SettingsPage extends ConsumerWidget {
               ),
               const Divider(height: 1),
               SwitchListTile(
-                title: const Text('リリース通知'),
-                subtitle: const Text('新機能リリース時にお知らせを表示'),
+                title: const Text(AppLabels.settingsReleaseNotes),
+                subtitle: const Text(AppLabels.settingsReleaseNotesDesc),
                 value: ref.watch(sharedPreferencesProvider).getBool('release_notes_enabled') ?? true,
                 onChanged: (value) async {
                   await ref.read(sharedPreferencesProvider).setBool('release_notes_enabled', value);
@@ -97,7 +99,7 @@ class SettingsPage extends ConsumerWidget {
         const SizedBox(height: 24),
 
         // データ管理
-        _SectionHeader(title: 'データ管理', icon: Icons.storage_outlined),
+        _SectionHeader(title: AppLabels.settingsDataManagement, icon: Icons.storage_outlined),
         Card(
           child: Column(
             children: [
@@ -106,9 +108,9 @@ class SettingsPage extends ConsumerWidget {
                   Icons.file_upload_outlined,
                   color: colors.accent,
                 ),
-                title: const Text('データをエクスポート'),
+                title: const Text(AppLabels.settingsExportData),
                 subtitle: const Text(
-                  '夢・目標・タスク・書籍・活動ログ・通知をJSON形式でバックアップ',
+                  AppLabels.settingsExportDesc,
                 ),
                 onTap: () => _exportData(context, ref),
               ),
@@ -119,13 +121,13 @@ class SettingsPage extends ConsumerWidget {
                   color: isPremium ? colors.success : colors.textMuted,
                 ),
                 title: Text(
-                  'データをインポート',
+                  AppLabels.settingsImportData,
                   style: TextStyle(
                     color: isPremium ? null : colors.textMuted,
                   ),
                 ),
                 subtitle: Text(
-                  isPremium ? 'バックアップから復元' : 'プレミアムプランで利用可能',
+                  isPremium ? AppLabels.settingsImportRestoreDesc : AppLabels.settingsImportPremiumOnly,
                   style: TextStyle(
                     color: isPremium ? null : colors.textMuted,
                   ),
@@ -137,10 +139,10 @@ class SettingsPage extends ConsumerWidget {
                 leading: Icon(Icons.delete_forever_outlined,
                     color: colors.error),
                 title: Text(
-                  '全データを削除',
+                  AppLabels.settingsDeleteAll,
                   style: TextStyle(color: colors.error),
                 ),
-                subtitle: const Text('この操作は取り消せません'),
+                subtitle: const Text(AppLabels.settingsDeleteWarning),
                 onTap: () => _clearAllData(context, ref),
               ),
               // クラウドデータ復元（Web + サインイン済み）
@@ -148,8 +150,8 @@ class SettingsPage extends ConsumerWidget {
                 const Divider(height: 1),
                 ListTile(
                   leading: Icon(Icons.cloud_download, color: colors.success),
-                  title: const Text('クラウドからデータ復元'),
-                  subtitle: const Text('バックアップからデータを復元します'),
+                  title: const Text(AppLabels.settingsCloudRestore),
+                  subtitle: const Text(AppLabels.settingsCloudRestoreDesc),
                   onTap: () => _restoreFromCloud(context, ref),
                 ),
               ],
@@ -160,7 +162,7 @@ class SettingsPage extends ConsumerWidget {
 
         // アカウント（Web限定）
         if (kIsWeb) ...[
-          _SectionHeader(title: 'アカウント', icon: Icons.person_outlined),
+          _SectionHeader(title: AppLabels.settingsAccount, icon: Icons.person_outlined),
           _AccountCard(ref: ref, colors: colors),
           const SizedBox(height: 24),
         ],
@@ -171,12 +173,12 @@ class SettingsPage extends ConsumerWidget {
         // アップグレード（体験版かつサブスク・トライアル未加入時のみ）
         if (isTrialMode && !isPremium) ...[
           _SectionHeader(
-              title: 'プランのアップグレード', icon: Icons.rocket_launch),
+              title: AppLabels.settingsUpgradeSection, icon: Icons.rocket_launch),
           Card(
             child: ListTile(
               leading: Icon(Icons.star, color: colors.accent),
-              title: const Text('もっと自由に、もっと先へ'),
-              subtitle: const Text('ワンコインで全機能を利用可能'),
+              title: const Text(AppLabels.settingsUpgradeTitle),
+              subtitle: const Text(AppLabels.settingsUpgradeDesc),
               trailing: Icon(Icons.arrow_forward_ios,
                   size: 16, color: colors.textMuted),
               onTap: () => showUpgradeDialog(context),
@@ -187,14 +189,14 @@ class SettingsPage extends ConsumerWidget {
 
 
         // バージョン情報
-        _SectionHeader(title: 'アプリ情報', icon: Icons.info_outlined),
+        _SectionHeader(title: AppLabels.settingsAppInfo, icon: Icons.info_outlined),
         Card(
           child: Column(
             children: [
               const ListTile(
                 leading: Icon(Icons.apps),
-                title: Text('ユメログ'),
-                subtitle: Text('夢実現支援アプリ'),
+                title: Text(AppLabels.appName),
+                subtitle: Text(AppLabels.settingsAppSubtitle),
               ),
               const Divider(height: 1),
               ListTile(
@@ -202,20 +204,20 @@ class SettingsPage extends ConsumerWidget {
                   isPremium ? Icons.workspace_premium : Icons.rocket_launch,
                   color: isPremium ? colors.warning : colors.accent,
                 ),
-                title: const Text('ご利用プラン'),
+                title: const Text(AppLabels.settingsPlan),
                 subtitle: Text(_getPlanName(ref)),
               ),
               const Divider(height: 1),
               const ListTile(
                 leading: Icon(Icons.code),
-                title: Text('バージョン'),
-                subtitle: Text('1.0.0'),
+                title: Text(AppLabels.settingsVersion),
+                subtitle: Text(appVersion),
               ),
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.flutter_dash),
                 title: const Text('Flutter'),
-                subtitle: const Text('クロスプラットフォーム対応'),
+                subtitle: const Text(AppLabels.settingsPlatform),
                 trailing: Icon(
                   Icons.check_circle,
                   color: colors.success,
@@ -235,20 +237,18 @@ class SettingsPage extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('クラウドからデータ復元'),
+        title: const Text(AppLabels.settingsCloudRestore),
         content: const Text(
-          'クラウドに保存されたデータでローカルデータを上書きします。\n'
-          '現在のローカルデータは失われます。\n\n'
-          '復元しますか？',
+          AppLabels.settingsCloudRestoreConfirm,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('復元する'),
+            child: const Text(AppLabels.settingsRestoreButton),
           ),
         ],
       ),
@@ -263,7 +263,7 @@ class SettingsPage extends ConsumerWidget {
       if (json == null) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('クラウドにバックアップデータが見つかりません')),
+          const SnackBar(content: Text(AppLabels.cloudNoBackup)),
         );
         return;
       }
@@ -278,12 +278,12 @@ class SettingsPage extends ConsumerWidget {
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('クラウドからデータを復元しました')),
+        const SnackBar(content: Text(AppLabels.cloudRestored)),
       );
     } on Exception catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('復元に失敗しました: $e')),
+        SnackBar(content: Text(AppLabels.settingsRestoreError('$e'))),
       );
     }
   }
@@ -294,7 +294,7 @@ class SettingsPage extends ConsumerWidget {
     final inviteService = InviteService(prefs);
     final inviteStatus = inviteService.getStatus();
     if (inviteStatus.isActive) {
-      return '招待プラン（残り${inviteStatus.remainingDays}日）';
+      return AppLabels.settingsInvitePlanDays(inviteStatus.remainingDays ?? 0);
     }
 
     // プレミアムプラン
@@ -302,14 +302,14 @@ class SettingsPage extends ConsumerWidget {
       if (kIsWeb) {
         final syncService = FirestoreSyncService();
         return syncService.isSignedIn
-            ? 'プレミアムプラン（認証）'
-            : 'プレミアムプラン（未認証）';
+            ? AppLabels.settingsPremiumPlanAuth
+            : AppLabels.settingsPremiumPlanNoAuth;
       }
-      return 'プレミアムプラン';
+      return AppLabels.settingsPremiumPlan;
     }
 
     // スタータープラン
-    return 'スタータープラン';
+    return AppLabels.settingsStarterPlan;
   }
 
   Future<void> _exportData(BuildContext context, WidgetRef ref) async {
@@ -334,13 +334,13 @@ class SettingsPage extends ConsumerWidget {
       if (!context.mounted) return;
       if (saved) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$fileNameをエクスポートしました')),
+          SnackBar(content: Text(AppLabels.settingsExportSuccess(fileName))),
         );
       }
     } on Exception catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('エクスポートに失敗しました: $e')),
+        SnackBar(content: Text(AppLabels.settingsExportError('$e'))),
       );
     }
   }
@@ -350,15 +350,15 @@ class SettingsPage extends ConsumerWidget {
       await showDialog<void>(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('インポート不可'),
-          content: const Text(
-            'スタータープランではデータのインポートはご利用いただけません。\n'
-            'プレミアムプランにアップグレードしてご利用ください。',
+          title: const Text(AppLabels.importUnavailable),
+          content: Text(
+            '${AppLabels.importUnavailableMsg}\n'
+            '${AppLabels.settingsImportUpgradeMsg}',
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
+              child: const Text(AppLabels.btnClose),
             ),
           ],
         ),
@@ -378,7 +378,7 @@ class SettingsPage extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'インポートに失敗しました: ${validation.errorMessage}',
+            AppLabels.importError(validation.errorMessage ?? ''),
           ),
         ),
       );
@@ -389,25 +389,27 @@ class SettingsPage extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('データをインポート'),
+        title: const Text(AppLabels.importConfirmTitle),
         content: Text(
-          '以下のデータをインポートします。\n'
-          '既存データは全て上書きされます。\n\n'
-          '夢: ${validation.counts['dreams'] ?? 0}件\n'
-          '目標: ${validation.counts['goals'] ?? 0}件\n'
-          'タスク: ${validation.counts['tasks'] ?? 0}件\n'
-          '書籍: ${validation.counts['books'] ?? 0}件\n'
-          '活動ログ: ${validation.counts['study_logs'] ?? 0}件\n'
-          '通知: ${validation.counts['notifications'] ?? 0}件',
+          '${AppLabels.importConfirmMsg}\n'
+          '${AppLabels.settingsImportOverwriteWarning}\n\n'
+          '${AppLabels.settingsImportCounts(
+            dreams: validation.counts['dreams'] ?? 0,
+            goals: validation.counts['goals'] ?? 0,
+            tasks: validation.counts['tasks'] ?? 0,
+            books: validation.counts['books'] ?? 0,
+            studyLogs: validation.counts['study_logs'] ?? 0,
+            notifications: validation.counts['notifications'] ?? 0,
+          )}',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('インポート'),
+            child: const Text(AppLabels.importButton),
           ),
         ],
       ),
@@ -427,18 +429,20 @@ class SettingsPage extends ConsumerWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'インポート完了: 夢${result.dreamCount}件, '
-            '目標${result.goalCount}件, '
-            'タスク${result.taskCount}件, '
-            '書籍${result.bookCount}件, '
-            'ログ${result.studyLogCount}件',
+            AppLabels.settingsImportResult(
+              dreams: result.dreamCount,
+              goals: result.goalCount,
+              tasks: result.taskCount,
+              books: result.bookCount,
+              logs: result.studyLogCount,
+            ),
           ),
         ),
       );
     } on Exception catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('インポートに失敗しました: $e')),
+        SnackBar(content: Text(AppLabels.importError('$e'))),
       );
     }
   }
@@ -448,21 +452,21 @@ class SettingsPage extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('全データを削除'),
+        title: const Text(AppLabels.settingsDeleteAll),
         content: const Text(
-          'すべてのデータを削除します。\nこの操作は取り消せません。\n本当に削除しますか？',
+          AppLabels.settingsDeleteConfirmMsg,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('キャンセル'),
+            child: const Text(AppLabels.btnCancel),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: colors.error,
             ),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('削除する'),
+            child: const Text(AppLabels.btnDelete),
           ),
         ],
       ),
@@ -481,12 +485,12 @@ class SettingsPage extends ConsumerWidget {
 
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('全データを削除しました')),
+        const SnackBar(content: Text(AppLabels.settingsDeleteSuccess)),
       );
     } on Exception catch (e) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('削除に失敗しました: $e')),
+        SnackBar(content: Text(AppLabels.settingsDeleteError('$e'))),
       );
     }
   }
@@ -516,11 +520,11 @@ class _AccountCard extends StatelessWidget {
               isLinked ? Icons.verified_user : Icons.person_outline,
               color: isLinked ? colors.success : colors.warning,
             ),
-            title: Text(isLinked ? 'アカウント連携済み' : '匿名ユーザー'),
+            title: Text(isLinked ? AppLabels.authLinked : AppLabels.settingsAnonymousUser),
             subtitle: Text(
               isLinked
                   ? email ?? ''
-                  : 'メール連携するとデータを安全に保護できます',
+                  : AppLabels.settingsLinkEmailDesc,
             ),
           ),
           if (!isLinked) ...[
@@ -531,7 +535,7 @@ class _AccountCard extends StatelessWidget {
                 child: ElevatedButton.icon(
                   onPressed: () => _linkAccount(context),
                   icon: const Icon(Icons.link, size: 18),
-                  label: const Text('メールアドレスを連携する'),
+                  label: const Text(AppLabels.settingsLinkEmailButton),
                 ),
               ),
             ),
@@ -561,12 +565,12 @@ class _AccountCard extends StatelessWidget {
         }
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ログインしてデータを復元しました')),
+          const SnackBar(content: Text(AppLabels.cloudLoginRestored)),
         );
       } on Exception {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ログインしました（データ復元に失敗）')),
+          const SnackBar(content: Text(AppLabels.cloudLoginRestoreFailed)),
         );
       }
     } else {
@@ -575,7 +579,7 @@ class _AccountCard extends StatelessWidget {
       await syncService.uploadData(json);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('アカウントを連携しました')),
+        const SnackBar(content: Text(AppLabels.cloudAccountLinked)),
       );
     }
     (context as Element).markNeedsBuild();
@@ -599,7 +603,7 @@ class _InviteStatusCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(
-          title: '招待プラン',
+          title: AppLabels.settingsInvitePlanSection,
           icon: Icons.card_giftcard_outlined,
         ),
         Card(
@@ -609,15 +613,15 @@ class _InviteStatusCard extends StatelessWidget {
               color: inviteStatus.isActive ? colors.success : colors.error,
             ),
             title: Text(
-              inviteStatus.isActive ? '招待プラン利用中' : '招待プラン期限切れ',
+              inviteStatus.isActive ? AppLabels.settingsInviteActive : AppLabels.settingsInviteExpired,
             ),
             subtitle: Text(
               inviteStatus.isActive
-                  ? '${inviteStatus.name ?? ""}　'
-                      '残り${inviteStatus.remainingDays}日（全機能利用可能）'
-                  : '有効期限が終了しました。'
-                      '有効期限が終了しました。'
-                      'プレミアムプランへのアップグレードで引き続き全機能をご利用いただけます。',
+                  ? AppLabels.settingsInviteActiveDesc(
+                      inviteStatus.name ?? '',
+                      inviteStatus.remainingDays ?? 0,
+                    )
+                  : AppLabels.settingsInviteExpiredDesc,
             ),
           ),
         ),

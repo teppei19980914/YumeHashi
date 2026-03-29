@@ -138,7 +138,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('フィードバックで制限を解除'), findsOneWidget);
-    expect(find.text('フィードバックを送信'), findsOneWidget);
+    expect(find.text('アプリの感想を送信'), findsOneWidget);
   });
 
   testWidgets('feedbackServiceなしでフィードバックボタンが非表示',
@@ -151,7 +151,7 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('フィードバックを送信'), findsNothing);
+    expect(find.text('アプリの感想を送信'), findsNothing);
   });
 
   testWidgets('最大レベル時はフィードバックボタンが非表示', (tester) async {
@@ -168,7 +168,7 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('フィードバックを送信'), findsNothing);
+    expect(find.text('アプリの感想を送信'), findsNothing);
     expect(find.textContaining('完全に解除'), findsOneWidget);
   });
 
@@ -188,7 +188,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // フィードバックボタンではなく課金案内ボタンが表示
-    expect(find.text('フィードバックを送信'), findsNothing);
+    expect(find.text('アプリの感想を送信'), findsNothing);
     expect(find.text('無制限プランを見る'), findsOneWidget);
     expect(find.textContaining('フィードバックによる解除は上限に達しました'),
         findsOneWidget);

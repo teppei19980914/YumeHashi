@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_labels.dart';
 import '../services/inquiry_service.dart';
 
 /// お問い合わせダイアログを表示する.
@@ -63,7 +64,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
           Icon(Icons.mail_outlined,
               size: 24, color: theme.colorScheme.primary),
           const SizedBox(width: 8),
-          const Expanded(child: Text('お問い合わせ')),
+          const Expanded(child: Text(AppLabels.inquiryTitle)),
         ],
       ),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -96,8 +97,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        '追加開発や案件のご相談など、'
-                        'お気軽にお問い合わせください',
+                        AppLabels.inquiryDescription,
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.primary,
                           fontWeight: FontWeight.w500,
@@ -110,13 +110,13 @@ class _InquiryDialogState extends State<_InquiryDialog> {
               const SizedBox(height: 16),
 
               // カテゴリ選択
-              Text('カテゴリ *', style: theme.textTheme.labelLarge),
+              Text(AppLabels.feedbackCategory, style: theme.textTheme.labelLarge),
               const SizedBox(height: 8),
               DropdownButtonFormField<InquiryCategory>(
                 initialValue: _category,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'カテゴリを選択してください',
+                  hintText: AppLabels.feedbackSelectCategory,
                 ),
                 items: InquiryCategory.values
                     .map((c) => DropdownMenuItem(
@@ -129,7 +129,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
               const SizedBox(height: 16),
 
               // メールアドレス
-              Text('メールアドレス *', style: theme.textTheme.labelLarge),
+              Text(AppLabels.inquiryEmail, style: theme.textTheme.labelLarge),
               const SizedBox(height: 8),
               TextField(
                 controller: _emailController,
@@ -145,11 +145,11 @@ class _InquiryDialogState extends State<_InquiryDialog> {
               // テキスト入力
               Row(
                 children: [
-                  Text('お問い合わせ内容 *',
+                  Text(AppLabels.inquiryContent,
                       style: theme.textTheme.labelLarge),
                   const Spacer(),
                   Text(
-                    remaining > 0 ? 'あと$remaining文字' : '$textLength文字',
+                    remaining > 0 ? AppLabels.feedbackRemainingChars(remaining) : AppLabels.feedbackCharCount(textLength),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: remaining > 0
                           ? theme.colorScheme.error
@@ -166,9 +166,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
                 maxLines: 6,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  hintText: 'ご相談内容をご記入ください。\n\n'
-                      '開発の規模感・ご予算・スケジュール等を\n'
-                      'お伝えいただけるとスムーズです。',
+                  hintText: AppLabels.inquiryGuide,
                   alignLabelWithHint: true,
                 ),
                 onChanged: (_) => setState(() => _errorMessage = null),
@@ -183,8 +181,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      'メールアドレスはご返信のみに使用し、'
-                      '第三者に提供することはありません。',
+                      AppLabels.inquiryPrivacyNote,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: theme.hintColor,
                       ),
@@ -227,7 +224,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
         TextButton(
           onPressed:
               _submitting ? null : () => Navigator.of(context).pop(false),
-          child: const Text('キャンセル'),
+          child: const Text(AppLabels.btnCancel),
         ),
         FilledButton.icon(
           onPressed: _submitting ? null : _submit,
@@ -238,7 +235,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.send, size: 18),
-          label: Text(_submitting ? '送信中...' : '送信する'),
+          label: Text(_submitting ? AppLabels.btnSending : AppLabels.btnSend),
         ),
       ],
     );
@@ -246,7 +243,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
 
   Future<void> _submit() async {
     if (_category == null) {
-      setState(() => _errorMessage = 'カテゴリの選択は必須です');
+      setState(() => _errorMessage = AppLabels.inquiryCategoryRequired);
       return;
     }
 
@@ -279,7 +276,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
       Navigator.of(context).pop(true);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('お問い合わせを送信しました。ご連絡をお待ちください。'),
+          content: Text(AppLabels.inquirySuccess),
         ),
       );
     } else {

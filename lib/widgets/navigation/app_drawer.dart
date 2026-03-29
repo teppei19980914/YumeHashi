@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../l10n/app_labels.dart';
 import '../tutorial/tutorial_target_keys.dart';
 
 /// ナビゲーション項目の定義.
@@ -36,43 +37,43 @@ const navItems = [
   NavItem(
     icon: Icons.dashboard_outlined,
     selectedIcon: Icons.dashboard,
-    label: 'ダッシュボード',
+    label: AppLabels.pageHome,
     path: '/',
   ),
   NavItem(
     icon: Icons.auto_awesome_outlined,
     selectedIcon: Icons.auto_awesome,
-    label: '夢',
+    label: AppLabels.pageDreams,
     path: '/dreams',
   ),
   NavItem(
     icon: Icons.flag_outlined,
     selectedIcon: Icons.flag,
-    label: '目標',
+    label: AppLabels.pageGoals,
     path: '/goals',
   ),
   NavItem(
     icon: Icons.view_timeline_outlined,
     selectedIcon: Icons.view_timeline,
-    label: 'ガントチャート',
+    label: AppLabels.pageSchedule,
     path: '/gantt',
   ),
   NavItem(
     icon: Icons.menu_book_outlined,
     selectedIcon: Icons.menu_book,
-    label: '書籍',
+    label: AppLabels.pageBooks,
     path: '/books',
   ),
   NavItem(
     icon: Icons.stars_outlined,
     selectedIcon: Icons.stars,
-    label: '星座',
+    label: AppLabels.pageConstellations,
     path: '/constellations',
   ),
   NavItem(
     icon: Icons.bar_chart_outlined,
     selectedIcon: Icons.bar_chart,
-    label: '統計',
+    label: AppLabels.pageStats,
     path: '/stats',
   ),
 ];
@@ -81,7 +82,7 @@ const navItems = [
 const settingsItem = NavItem(
   icon: Icons.settings_outlined,
   selectedIcon: Icons.settings,
-  label: '設定',
+  label: AppLabels.pageSettings,
   path: '/settings',
 );
 
@@ -103,7 +104,7 @@ class AppDrawer extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 48, 16, 8),
             child: Align(
               alignment: Alignment.centerLeft,
-              child: Text('ユメログ', style: theme.textTheme.titleLarge),
+              child: Text(AppLabels.appName, style: theme.textTheme.titleLarge),
             ),
           ),
           const Divider(indent: 16, endIndent: 16),

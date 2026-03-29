@@ -424,7 +424,7 @@ void main() {
   /// ドロワー経由でページに移動するヘルパー.
   ///
   /// GoRouterシングルトンの状態に依存せず、どのページからでも遷移できる.
-  /// ボトムナビゲーションが無いページ（ガントチャート等）からも安全に遷移可能.
+  /// ボトムナビゲーションが無いページ（スケジュール等）からも安全に遷移可能.
   Future<void> navigateViaDrawer(WidgetTester tester, String label) async {
     // ダイアログが残っている場合は閉じる
     while (find.byType(AlertDialog).evaluate().isNotEmpty) {
@@ -452,7 +452,7 @@ void main() {
   // ヘルパー: ボトムナビゲーションタブをインデックスでタップする.
   // AppDrawerにも同じアイコンが存在するため、アイコン検索ではなく
   // NavigationDestination のインデックスでタップする.
-  // 0=ホーム, 1=夢, 2=目標, 3=ガントチャート
+  // 0=ホーム, 1=夢, 2=目標, 3=スケジュール
   // ─────────────────────────────────────────────────────────────────────────
   Future<void> tapBottomNav(WidgetTester tester, int index) async {
     // GoRouterシングルトンの状態でボトムナビがない場合、ドロワー経由でホームに戻る
@@ -512,10 +512,10 @@ void main() {
     // 目標を追加ボタンが表示される
     expect(find.text('目標を追加'), findsOneWidget);
 
-    // ─── ガントチャートページ ──────────────────────────
+    // ─── スケジュールページ ──────────────────────────
     await tapBottomNav(tester, 3);
     // AppBarタイトル + ボトムナビラベルの2件が表示される
-    expect(find.text('ガントチャート'), findsWidgets);
+    expect(find.text('スケジュール'), findsWidgets);
 
     // ─── ホームへ戻る ────────────────────────────────
     await tapBottomNav(tester, 0);
@@ -531,8 +531,8 @@ void main() {
     await tester.pumpAndSettle();
 
     // ドロワーが開く（Drawer内のナビゲーション項目が表示される）
-    // 「ガントチャート」はドロワー + ボトムナビの2件
-    expect(find.text('ガントチャート'), findsWidgets);
+    // 「スケジュール」はドロワー + ボトムナビの2件
+    expect(find.text('スケジュール'), findsWidgets);
     expect(find.text('書籍'), findsOneWidget);
     expect(find.text('設定'), findsOneWidget);
   });
@@ -958,7 +958,7 @@ void main() {
       const feedback2 =
           'テスト用フィードバック（2回目）: ダッシュボードの統計表示が非常に参考になります。'
           '学習時間の推移が一目でわかり、モチベーション維持に役立っています。'
-          'ガントチャート機能との連携があると学習計画をより効率的に管理できると思います。';
+          'スケジュール機能との連携があると学習計画をより効率的に管理できると思います。';
 
       await submitFeedback(tester, feedback2);
 
@@ -1063,7 +1063,7 @@ void main() {
   });
 
   // ─────────────────────────────────────────────────────────────────────────
-  // タスク CRUD テスト（ガントチャート経由）
+  // タスク CRUD テスト（スケジュール経由）
   // ─────────────────────────────────────────────────────────────────────────
 
   testWidgets('タスクを追加できる', (tester) async {
@@ -1076,8 +1076,8 @@ void main() {
     await navigateViaDrawer(tester, '目標');
     await addGoal(tester, 'タスク用目標');
 
-    // ドロワー経由でガントチャートへ移動
-    await navigateViaDrawer(tester, 'ガントチャート');
+    // ドロワー経由でスケジュールへ移動
+    await navigateViaDrawer(tester, 'スケジュール');
 
     // 目標ドロップダウンで目標を選択
     await tester.tap(find.byType(DropdownButton<String>));
@@ -1091,7 +1091,7 @@ void main() {
     // タスクを追加
     await addTask(tester, 'テスト追加タスク');
 
-    // ガントチャートが表示される（空状態が消える）
+    // スケジュールが表示される（空状態が消える）
     expect(find.text('タスクがありません'), findsNothing);
   });
 
@@ -1106,7 +1106,7 @@ void main() {
     await navigateViaDrawer(tester, '目標');
     await addGoal(tester, 'タスク用目標');
 
-    await navigateViaDrawer(tester, 'ガントチャート');
+    await navigateViaDrawer(tester, 'スケジュール');
 
     await tester.tap(find.byType(DropdownButton<String>));
     await tester.pumpAndSettle();
@@ -1115,7 +1115,7 @@ void main() {
 
     await addTask(tester, '編集前タスク');
 
-    // ガントチャート上の行0をタップして編集ダイアログを開く
+    // スケジュール上の行0をタップして編集ダイアログを開く
     final customPaint = find.byType(CustomPaint).last;
     final chartRect = tester.getRect(customPaint);
     // headerHeight=70, rowHeight=40 → 行0中央 y=90
@@ -1147,7 +1147,7 @@ void main() {
     await navigateViaDrawer(tester, '目標');
     await addGoal(tester, 'タスク用目標');
 
-    await navigateViaDrawer(tester, 'ガントチャート');
+    await navigateViaDrawer(tester, 'スケジュール');
 
     await tester.tap(find.byType(DropdownButton<String>));
     await tester.pumpAndSettle();
@@ -1156,7 +1156,7 @@ void main() {
 
     await addTask(tester, '削除対象タスク');
 
-    // ガントチャート上の行0をタップして編集ダイアログを開く
+    // スケジュール上の行0をタップして編集ダイアログを開く
     final customPaint = find.byType(CustomPaint).last;
     final chartRect = tester.getRect(customPaint);
     await tester.tapAt(Offset(chartRect.left + 100, chartRect.top + 90));
@@ -1178,19 +1178,19 @@ void main() {
   });
 
   // ─────────────────────────────────────────────────────────────────────────
-  // ボトムナビ: ガントチャートタブ
+  // ボトムナビ: スケジュールタブ
   // ─────────────────────────────────────────────────────────────────────────
 
-  testWidgets('ボトムナビからガントチャートページに遷移できる', (tester) async {
+  testWidgets('ボトムナビからスケジュールページに遷移できる', (tester) async {
     await tester.pumpWidget(await buildApp());
     await tester.pumpAndSettle();
 
-    // ガントチャートタブ（index=3）をタップ
+    // スケジュールタブ（index=3）をタップ
     await tapBottomNav(tester, 3);
 
-    // ガントチャートページが表示される（AppBarタイトル + ボトムナビラベル）
-    expect(find.text('ガントチャート'), findsWidgets);
-    // ボトムナビにガントチャートアイコンがアクティブ
+    // スケジュールページが表示される（AppBarタイトル + ボトムナビラベル）
+    expect(find.text('スケジュール'), findsWidgets);
+    // ボトムナビにスケジュールアイコンがアクティブ
     expect(findNavBarIcon(Icons.view_timeline), findsOneWidget);
   });
 
