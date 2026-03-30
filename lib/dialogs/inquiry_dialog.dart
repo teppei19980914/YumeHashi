@@ -163,7 +163,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
               const SizedBox(height: 8),
               TextField(
                 controller: _textController,
-                maxLines: 6,
+                maxLines: 5,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: AppLabels.inquiryGuide,

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_labels.dart';
 import '../services/feedback_service.dart';
+import '../services/trial_limit_service.dart' show isPremium;
 
 /// フィードバックダイアログを表示する.
 ///
@@ -80,42 +81,44 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 解除レベル情報
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withAlpha(15),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(
-                    color: theme.colorScheme.primary.withAlpha(40),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      currentLevel >= feedbackUnlockableLevel
-                          ? Icons.favorite
-                          : Icons.lock_open,
-                      size: 20,
-                      color: theme.colorScheme.primary,
+              // 解除レベル情報（プレミアムプランでは非表示）
+              if (!isPremium) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primary.withAlpha(15),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withAlpha(40),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
                         currentLevel >= feedbackUnlockableLevel
-                            ? AppLabels.feedbackThanksMessage
-                            : AppLabels.feedbackUnlockNext(nextLevel, currentLevel, feedbackMaxLevel),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w500,
+                            ? Icons.favorite
+                            : Icons.lock_open,
+                        size: 20,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          currentLevel >= feedbackUnlockableLevel
+                              ? AppLabels.feedbackThanksMessage
+                              : AppLabels.feedbackUnlockNext(nextLevel, currentLevel, feedbackMaxLevel),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
+              ],
 
               // カテゴリ選択
               Text(AppLabels.feedbackCategory, style: theme.textTheme.labelLarge),
@@ -158,7 +161,7 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
               const SizedBox(height: 8),
               TextField(
                 controller: _controller,
-                maxLines: 8,
+                maxLines: 5,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   hintText: AppLabels.feedbackGuide,
@@ -263,11 +266,13 @@ class _FeedbackDialogState extends State<_FeedbackDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            widget.feedbackService.isFeedbackMaxLevel
+            isPremium
                 ? AppLabels.feedbackSuccessMax
-                : result.newLevel >= feedbackMaxLevel
-                    ? AppLabels.feedbackSuccessUnlockMax(result.newLevel)
-                    : AppLabels.feedbackSuccessUnlock(result.newLevel),
+                : widget.feedbackService.isFeedbackMaxLevel
+                    ? AppLabels.feedbackSuccessMax
+                    : result.newLevel >= feedbackMaxLevel
+                        ? AppLabels.feedbackSuccessUnlockMax(result.newLevel)
+                        : AppLabels.feedbackSuccessUnlock(result.newLevel),
           ),
         ),
       );

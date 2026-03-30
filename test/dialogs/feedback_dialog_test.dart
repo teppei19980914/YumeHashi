@@ -94,13 +94,13 @@ void main() {
     expect(find.text('あと15文字'), findsOneWidget);
   });
 
-  testWidgets('解除レベル情報が表示される', (tester) async {
+  testWidgets('非体験版（プレミアム）では解除レベル情報が非表示', (tester) async {
     await tester.pumpWidget(wrap());
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('レベル1に解除されます'), findsOneWidget);
-    expect(find.textContaining('現在: レベル0'), findsOneWidget);
+    // テスト環境は非Web = isPremium = true なので制限解除案内は非表示
+    expect(find.textContaining('レベル'), findsNothing);
   });
 
   testWidgets('匿名送信の注記が表示される', (tester) async {
