@@ -137,7 +137,7 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('フィードバックで制限を解除'), findsOneWidget);
+    expect(find.text('アプリの感想を送って制限を解除'), findsOneWidget);
     expect(find.text('アプリの感想を送信'), findsOneWidget);
   });
 
@@ -190,7 +190,7 @@ void main() {
     // フィードバックボタンではなく課金案内ボタンが表示
     expect(find.text('アプリの感想を送信'), findsNothing);
     expect(find.text('無制限プランを見る'), findsOneWidget);
-    expect(find.textContaining('フィードバックによる解除は上限に達しました'),
+    expect(find.textContaining('アプリの感想を送ることによる制限解除は上限に達しました'),
         findsOneWidget);
   });
 }

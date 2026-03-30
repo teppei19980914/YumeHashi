@@ -9,13 +9,11 @@ import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'app_version.dart';
 import 'dialogs/app_guide_dialog.dart';
 import 'services/firestore_sync_service.dart' show FirestoreSyncService;
 import 'services/sync_manager.dart';
 import 'dialogs/help_dialog.dart';
 import 'dialogs/monitor_submission_dialog.dart';
-import 'dialogs/release_notes_dialog.dart';
 import 'services/invite_service.dart';
 import 'pages/book_page.dart';
 import 'pages/constellation_page.dart';
@@ -175,13 +173,11 @@ class _AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<_AppShell> {
   bool _resetChecked = false;
-  bool _releaseNotesChecked = false;
   bool _monitorChecked = false;
   bool _cloudAuthChecked = false;
   bool _inboxChecked = false;
 
 
-  static const _seenVersionKey = 'release_notes_seen_version';
   static const _monitorSubmittedKey = 'monitor_data_submitted';
 
   /// 受信ボックスのチェック（リマインダー自動生成 + 開発者通知読み込み）.
@@ -408,42 +404,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
     GoRouter.of(context).go('/');
   }
 
-  /// リリースノートの確認と表示.
-  ///
-  /// app_version.dart の appVersion / releaseNotes を参照し、
-  /// 前回表示バージョンと異なればポップアップ表示する.
-  void _checkReleaseNotes() {
-    if (_releaseNotesChecked) return;
-    _releaseNotesChecked = true;
 
-    if (_disableInboxCheck) return; // テスト環境ではスキップ
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted) return;
-
-      final prefs = ref.read(sharedPreferencesProvider);
-      final seenVersion = prefs.getString(_seenVersionKey);
-      // 初回アクセス（seenVersionが未保存）はスキップしてバージョンだけ保存
-      if (seenVersion == null) {
-        await prefs.setString(_seenVersionKey, appVersion);
-        return;
-      }
-      if (seenVersion == appVersion) return;
-      // リリース通知がOFFの場合はバージョンだけ更新してスキップ
-      if (!(prefs.getBool('release_notes_enabled') ?? true)) {
-        await prefs.setString(_seenVersionKey, appVersion);
-        return;
-      }
-
-      await prefs.setString(_seenVersionKey, appVersion);
-      if (!mounted) return;
-      await showReleaseNotesDialog(
-        context,
-        version: appVersion,
-        notes: releaseNotes,
-      );
-    });
-  }
 
   /// ルート変更を検知してチュートリアルステップを自動進行する.
   void _checkTutorialRouteAdvance(TutorialStep step) {
@@ -487,8 +448,6 @@ class _AppShellState extends ConsumerState<_AppShell> {
     }
 
     // リリースノートの確認
-    _checkReleaseNotes();
-
     // モニターデータ提出の確認
     _checkMonitorSubmission();
 

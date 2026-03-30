@@ -34,7 +34,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('ご意見・お問い合わせ'), findsOneWidget);
-    expect(find.text('フィードバックを送る'), findsOneWidget);
+    expect(find.text('アプリの感想を送る'), findsOneWidget);
     expect(find.text('お問い合わせ'), findsOneWidget);
   });
 

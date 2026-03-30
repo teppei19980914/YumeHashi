@@ -21,7 +21,7 @@ const appVersion = '1.0.0';
 const releaseHistory = <ReleaseEntry>[
   ReleaseEntry(
     version: '1.0.0',
-    date: '2026-03-29',
+    date: '2026-04-01',
     notes: [
       '初回リリース',
     ],
