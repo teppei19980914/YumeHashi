@@ -277,13 +277,13 @@ void main() {
 
       await tester.pumpWidget(_buildApp(
         prefs: prefs,
-        body: const Center(child: Text('スケジュール')),
+        body: const Center(child: Text('活動予定')),
       ));
       await tester.pump();
       await tester.pump();
 
       expect(
-        find.textContaining('スケジュールで目標達成までの道のりを可視化しよう'),
+        find.textContaining('活動予定で目標達成までの道のりを可視化しよう'),
         findsOneWidget,
       );
       expect(
@@ -302,7 +302,7 @@ void main() {
 
       await tester.pumpWidget(_buildApp(
         prefs: prefs,
-        body: const Center(child: Text('スケジュール')),
+        body: const Center(child: Text('活動予定')),
       ));
       await tester.pump();
       await tester.pump();

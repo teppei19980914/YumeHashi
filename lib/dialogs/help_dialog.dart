@@ -3,6 +3,8 @@ library;
 
 import 'package:flutter/material.dart';
 import '../l10n/app_labels.dart';
+import '../services/html_launcher_service.dart';
+import '../services/release_notes_page_service.dart';
 import '../services/trial_limit_service.dart';
 
 /// ヘルプダイアログを表示する.
@@ -24,6 +26,11 @@ class _HelpDialogState extends State<_HelpDialog>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final bool _showTrialTab = isTrialMode && !isPremium;
+
+  Future<void> _openReleaseNotes() async {
+    final html = generateReleaseNotesHtml();
+    await openHtmlInNewTab(html);
+  }
 
   @override
   void initState() {
@@ -88,6 +95,12 @@ class _HelpDialogState extends State<_HelpDialog>
         ),
       ),
       actions: [
+        OutlinedButton.icon(
+          onPressed: _openReleaseNotes,
+          icon: const Icon(Icons.update, size: 16),
+          label: const Text(AppLabels.helpUpdateInfo),
+        ),
+        const SizedBox(width: 8),
         FilledButton(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text(AppLabels.btnClose),

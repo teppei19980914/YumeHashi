@@ -42,11 +42,11 @@ void main() {
 
   group('BookGanttService', () {
     group('getScheduledBooks', () {
-      test('スケジュール付き書籍のみ返す', () async {
+      test('活動予定付き書籍のみ返す', () async {
         final book1 = await bookService.createBook('Book 1');
         await bookService.createBook('Book 2'); // no schedule
 
-        // book1にスケジュールを設定
+        // book1に活動予定を設定
         final updated = book1.copyWith(
           startDate: DateTime(2025, 3, 1),
           endDate: DateTime(2025, 3, 31),
@@ -64,7 +64,7 @@ void main() {
     });
 
     group('getUnscheduledBooks', () {
-      test('スケジュールなし書籍のみ返す', () async {
+      test('活動予定なし書籍のみ返す', () async {
         await bookService.createBook('Book 1'); // no schedule
         final book2 = await bookService.createBook('Book 2');
         final updated = book2.copyWith(
@@ -84,7 +84,7 @@ void main() {
     });
 
     group('booksToTasks', () {
-      test('スケジュール付き書籍をTaskに変換する', () {
+      test('活動予定付き書籍をTaskに変換する', () {
         final books = [
           Book(
             title: 'Test Book',
@@ -101,7 +101,7 @@ void main() {
         expect(tasks.first.progress, 50);
       });
 
-      test('スケジュールなし書籍は除外する', () {
+      test('活動予定なし書籍は除外する', () {
         final books = [
           Book(title: 'No Schedule'),
         ];
@@ -143,7 +143,7 @@ void main() {
     });
 
     group('createBookWithSchedule', () {
-      test('スケジュール付き書籍を作成する', () async {
+      test('活動予定付き書籍を作成する', () async {
         final book = await service.createBookWithSchedule(
           title: 'New Book',
           startDate: DateTime(2025, 3, 1),
@@ -168,7 +168,7 @@ void main() {
     });
 
     group('updateBookSchedule', () {
-      test('スケジュールを更新する', () async {
+      test('活動予定を更新する', () async {
         final book = await bookService.createBook('Test');
         final updated = await service.updateBookSchedule(
           bookId: book.id,
@@ -248,7 +248,7 @@ void main() {
     });
 
     group('setBookSchedule', () {
-      test('既存書籍にスケジュールを設定する', () async {
+      test('既存書籍に活動予定を設定する', () async {
         final book = await bookService.createBook('テスト書籍');
         final result = await service.setBookSchedule(
           bookId: book.id,
@@ -285,7 +285,7 @@ void main() {
     });
 
     group('clearBookSchedule', () {
-      test('スケジュールをクリアする', () async {
+      test('活動予定をクリアする', () async {
         final book = await service.createBookWithSchedule(
           title: 'テスト',
           startDate: DateTime(2025, 4, 1),

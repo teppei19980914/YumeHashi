@@ -17,7 +17,7 @@ void main() {
         Goal(
           id: 'goal-1',
           dreamId: 'dream-1',
-          whenTarget: '2026-12-31',
+          whenTarget: '2026-04-30',
           whenType: WhenType.date,
           what: 'TOEIC 900点',
           how: '毎日1時間',
@@ -26,7 +26,7 @@ void main() {
         Goal(
           id: 'goal-2',
           dreamId: 'dream-1',
-          whenTarget: '2026-06-30',
+          whenTarget: '2026-05-15',
           whenType: WhenType.date,
           what: 'AWS資格取得',
           how: '週末に学習',
@@ -84,7 +84,7 @@ void main() {
       expect(result.fileName, matches(RegExp(r'gantt_\d{8}\.xlsx')));
     });
 
-    test('スケジュールシートが作成される', () {
+    test('活動予定シートが作成される', () {
       final tasks = createTestTasks();
       final goals = createTestGoals();
       final result = service.exportAs(
@@ -94,7 +94,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      expect(excel.tables.containsKey('スケジュール'), isTrue);
+      expect(excel.tables.containsKey('活動予定'), isTrue);
     });
 
     test('ヘッダー行に固定列と日付列が含まれる', () {
@@ -107,7 +107,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      final sheet = excel.tables['スケジュール']!;
+      final sheet = excel.tables['活動予定']!;
       final headerRow = sheet.row(0);
 
       expect(_cellText(headerRow[0]), '目標名');
@@ -130,7 +130,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      final sheet = excel.tables['スケジュール']!;
+      final sheet = excel.tables['活動予定']!;
 
       // ヘッダー(1) + タスク(3) + マイルストーン(2) = 6行
       expect(sheet.maxRows, 6);
@@ -153,7 +153,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      final sheet = excel.tables['スケジュール']!;
+      final sheet = excel.tables['活動予定']!;
       expect(_cellText(sheet.row(1)[0]), '不明');
     });
   });
@@ -170,7 +170,7 @@ void main() {
 
       final html = utf8.decode(result.bytes);
       expect(html, contains('<!DOCTYPE html>'));
-      expect(html, contains('スケジュール'));
+      expect(html, contains('活動予定'));
     });
 
     test('タスク名が含まれる', () {
@@ -233,7 +233,7 @@ void main() {
       );
 
       final excel = Excel.decodeBytes(result.bytes);
-      final sheet = excel.tables['スケジュール']!;
+      final sheet = excel.tables['活動予定']!;
       // ヘッダー(1) + タスク(3) + マイルストーン(2) = 6行
       expect(sheet.maxRows, 6);
     });

@@ -98,8 +98,12 @@ jobs:
 
       - run: flutter pub get
 
-      - name: Stamp deploy timestamp
+      - name: Sync version and stamp deploy timestamp
         run: |
+          # pubspec.yaml からバージョンを読み取り app_version.dart に同期
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          sed -i "s|const appVersion = '.*';|const appVersion = '$VERSION';|" lib/app_version.dart
+          # デプロイ日時をスタンプ
           DEPLOY_TIME=$(TZ=Asia/Tokyo date '+%Y/%m/%d')
           sed -i "s|const deployedAt = '.*';|const deployedAt = '$DEPLOY_TIME';|" lib/app_version.dart
 

@@ -26,7 +26,7 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('読書スケジュールを追加'), findsOneWidget);
+    expect(find.text('読書活動予定を追加'), findsOneWidget);
     expect(find.text('追加'), findsOneWidget);
   });
 
@@ -42,7 +42,7 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('読書スケジュールを編集'), findsOneWidget);
+    expect(find.text('読書活動予定を編集'), findsOneWidget);
     expect(find.text('Flutter実践入門'), findsOneWidget);
     expect(find.text('2026-03-01'), findsOneWidget);
     expect(find.text('2026-03-31'), findsOneWidget);
@@ -60,7 +60,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // ダイアログはまだ表示されている（バリデーションエラー）
-    expect(find.text('読書スケジュールを追加'), findsOneWidget);
+    expect(find.text('読書活動予定を追加'), findsOneWidget);
     expect(find.text('書籍名は必須です'), findsOneWidget);
   });
 
@@ -116,12 +116,12 @@ void main() {
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('読書スケジュールを追加'), findsOneWidget);
+    expect(find.text('読書活動予定を追加'), findsOneWidget);
 
     await tester.tap(find.text('キャンセル'));
     await tester.pumpAndSettle();
 
-    expect(find.text('読書スケジュールを追加'), findsNothing);
+    expect(find.text('読書活動予定を追加'), findsNothing);
   });
 
   testWidgets('コンテンツがスクロール可能である', (tester) async {
@@ -135,6 +135,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SingleChildScrollView), findsOneWidget);
-    expect(find.text('読書スケジュールを追加'), findsOneWidget);
+    expect(find.text('読書活動予定を追加'), findsOneWidget);
   });
 }

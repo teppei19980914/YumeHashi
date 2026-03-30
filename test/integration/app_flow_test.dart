@@ -40,9 +40,9 @@ void main() {
     await navigateViaDrawerInTest(tester, '目標');
     expect(find.text('目標'), findsWidgets);
 
-    // スケジュールページ
-    await navigateViaDrawerInTest(tester, 'スケジュール');
-    expect(find.text('スケジュール'), findsWidgets);
+    // 活動予定ページ
+    await navigateViaDrawerInTest(tester, '活動予定');
+    expect(find.text('活動予定'), findsWidgets);
 
     // 書籍ページ
     await navigateViaDrawerInTest(tester, '書籍');

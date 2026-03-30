@@ -10,6 +10,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show HardwareKeyboard, LogicalKeyboardKey;
 import 'package:intl/intl.dart' hide TextDirection;
 
 import '../../l10n/app_labels.dart';
@@ -415,11 +416,18 @@ class GanttChartState extends State<GanttChart> {
     final dy = event.scrollDelta.dy;
     final dx = event.scrollDelta.dx;
 
-    // Shift+ホイール: ブラウザが dx にデルタを入れる → 横スクロール
-    if (dx != 0 && dy == 0) {
+    final isShift = HardwareKeyboard.instance.logicalKeysPressed.any(
+      (key) =>
+          key == LogicalKeyboardKey.shiftLeft ||
+          key == LogicalKeyboardKey.shiftRight,
+    );
+
+    // Shift+ホイール → 横スクロール（dy または dx のどちらにデルタが来ても対応）
+    if (isShift || (dx != 0 && dy == 0)) {
+      final delta = dx != 0 ? dx : dy;
       final current = _horizontalController.offset;
       final max = _horizontalController.position.maxScrollExtent;
-      _horizontalController.jumpTo((current + dx).clamp(0.0, max));
+      _horizontalController.jumpTo((current + delta).clamp(0.0, max));
       return;
     }
 

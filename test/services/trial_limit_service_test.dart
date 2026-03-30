@@ -19,7 +19,7 @@ void main() {
       expect(isPremium, isTrue);
     });
 
-    test('非Web環境ではスケジュール利用可能', () {
+    test('非Web環境では活動予定利用可能', () {
       expect(canUseGanttChart, isTrue);
     });
 

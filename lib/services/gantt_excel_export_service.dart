@@ -104,7 +104,7 @@ class GanttExcelExportService {
       ..writeln('<html lang="ja"><head>')
       ..writeln('<meta charset="UTF-8">')
       ..writeln('<meta name="viewport" content="width=device-width,initial-scale=1">')
-      ..writeln('<title>スケジュール - ${df.format(DateTime.now())}</title>')
+      ..writeln('<title>活動予定 - ${df.format(DateTime.now())}</title>')
       ..writeln('<style>')
       ..writeln('* { margin: 0; padding: 0; box-sizing: border-box; }')
       ..writeln('body { font-family: -apple-system, "Segoe UI", sans-serif; background: #1e1e2e; color: #cdd6f4; padding: 20px; }')
@@ -127,7 +127,7 @@ class GanttExcelExportService {
       ..writeln('.weekend { background: #1e1e2e; }')
       ..writeln('.legend { margin-top: 16px; font-size: 11px; color: #6c7086; }')
       ..writeln('</style></head><body>')
-      ..writeln('<h1>スケジュール</h1>')
+      ..writeln('<h1>活動予定</h1>')
       ..writeln('<div class="subtitle">エクスポート日: ${df.format(DateTime.now())} | '
           'タスク数: ${tasks.length} | '
           '期間: ${df.format(earliest)} ～ ${df.format(latest)}</div>')
@@ -183,8 +183,9 @@ class GanttExcelExportService {
       buf.writeln('</tr>');
     }
 
-    // マイルストーン行
+    // マイルストーン行（タスク範囲内のもののみ）
     for (final ms in milestones) {
+      if (ms.date.isBefore(earliest) || ms.date.isAfter(latest)) continue;
       final msDay = ms.date.difference(earliest).inDays;
       final msColor = _sanitizeHexColor(ms.color);
       buf.write('<tr>');
@@ -209,7 +210,7 @@ class GanttExcelExportService {
 
     buf
       ..writeln('</table></div>')
-      ..writeln('<div class="legend">ユメログ - スケジュールエクスポート</div>')
+      ..writeln('<div class="legend">ユメログ - 活動予定エクスポート</div>')
       ..writeln('</body></html>');
 
     return GanttExportResult(
@@ -279,17 +280,21 @@ class GanttExcelExportService {
       );
     }
 
-    // マイルストーン行
-    for (final ms in milestones) {
-      buf.writeln(
-        '${_csvEscape('\u{25C6} ${ms.label}')},'
-        '目標期限,'
-        '${df.format(ms.date)},'
-        ','
-        ','
-        '目標期限,'
-        '',
-      );
+    // マイルストーン行（タスク範囲内のもののみ）
+    if (sorted.isNotEmpty) {
+      final (earliest, latest) = _dateRange(sorted);
+      for (final ms in milestones) {
+        if (ms.date.isBefore(earliest) || ms.date.isAfter(latest)) continue;
+        buf.writeln(
+          '${_csvEscape('\u{25C6} ${ms.label}')},'
+          '目標期限,'
+          '${df.format(ms.date)},'
+          ','
+          ','
+          '目標期限,'
+          '',
+        );
+      }
     }
 
     return GanttExportResult(
@@ -307,7 +312,7 @@ class GanttExcelExportService {
     Map<String, Goal> goalMap,
     List<GanttMilestone> milestones,
   ) {
-    final sheet = excel['スケジュール'];
+    final sheet = excel['活動予定'];
     if (tasks.isEmpty) return;
 
     final sortedTasks = _sortTasks(tasks, goalMap);
@@ -409,10 +414,13 @@ class GanttExcelExportService {
       }
     }
 
-    // マイルストーン行
+    // マイルストーン行（タスク範囲内のもののみ）
     final dateFmtMs = DateFormat('yyyy/MM/dd');
-    for (var m = 0; m < milestones.length; m++) {
-      final ms = milestones[m];
+    final filteredMs = milestones.where(
+      (ms) => !ms.date.isBefore(earliest) && !ms.date.isAfter(latest),
+    ).toList();
+    for (var m = 0; m < filteredMs.length; m++) {
+      final ms = filteredMs[m];
       final row = sortedTasks.length + 1 + m;
       final msColor = _sanitizeHexColor(ms.color);
 
@@ -466,6 +474,9 @@ class GanttExcelExportService {
       });
   }
 
+  /// タスクの開始日〜終了日のみで日付範囲を計算する.
+  ///
+  /// マイルストーン（目標期限）は範囲に含めない（アプリ画面と同じ動作）.
   (DateTime, DateTime) _dateRange(
     List<Task> sorted, [
     List<GanttMilestone> milestones = const [],
@@ -476,10 +487,7 @@ class GanttExcelExportService {
       if (task.startDate.isBefore(earliest)) earliest = task.startDate;
       if (task.endDate.isAfter(latest)) latest = task.endDate;
     }
-    for (final ms in milestones) {
-      if (ms.date.isBefore(earliest)) earliest = ms.date;
-      if (ms.date.isAfter(latest)) latest = ms.date;
-    }
+    // マイルストーンは範囲内にあれば表示されるが、範囲を引き延ばさない
     return (earliest, latest);
   }
 

@@ -25,7 +25,7 @@
 1. **横展開チェック** — 以下を必ず実施:
    - `grep -rn '旧文言' lib/ test/` で旧文言の残留を検索（0件であること）
    - `replace_all` 実行後は意図しない箇所が置換されていないか確認
-   - `app_labels.dart` 編集後は `grep -rn '活動予定' lib/` で禁止語の混入を確認
+   - `app_labels.dart` 編集後は `grep -rn 'ガントチャート' lib/` で禁止語の混入を確認
 2. **セキュリティチェック** — XSS、インジェクション、バリデーション、機密情報
 3. **パフォーマンスチェック** — N+1禁止、Paint キャッシュ、RepaintBoundary
 4. **デプロイチェック** — `flutter analyze` → `flutter test` → `flutter build web` をローカルで実行し全て成功を確認
