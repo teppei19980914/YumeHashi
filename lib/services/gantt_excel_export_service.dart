@@ -99,119 +99,213 @@ class GanttExcelExportService {
     final totalDays = latest.difference(earliest).inDays + 1;
     final df = DateFormat('yyyy/MM/dd');
 
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    // 目標別にタスクをグルーピング
+    final goalGroups = <String, List<Task>>{};
+    for (final task in sorted) {
+      goalGroups.putIfAbsent(task.goalId, () => []).add(task);
+    }
+
     final buf = StringBuffer()
       ..writeln('<!DOCTYPE html>')
       ..writeln('<html lang="ja"><head>')
       ..writeln('<meta charset="UTF-8">')
       ..writeln('<meta name="viewport" content="width=device-width,initial-scale=1">')
-      ..writeln('<title>活動予定 - ${df.format(DateTime.now())}</title>')
+      ..writeln('<title>活動予定 - ${df.format(now)}</title>')
       ..writeln('<style>')
-      ..writeln('* { margin: 0; padding: 0; box-sizing: border-box; }')
-      ..writeln('body { font-family: -apple-system, "Segoe UI", sans-serif; background: #1e1e2e; color: #cdd6f4; padding: 20px; }')
-      ..writeln('h1 { font-size: 18px; margin-bottom: 4px; }')
-      ..writeln('.subtitle { color: #6c7086; font-size: 12px; margin-bottom: 16px; }')
-      ..writeln('.gantt-container { overflow-x: auto; }')
-      ..writeln('table { border-collapse: collapse; min-width: 100%; }')
-      ..writeln('th, td { padding: 6px 8px; font-size: 12px; white-space: nowrap; border: 1px solid #313244; }')
-      ..writeln('th { background: #313244; color: #cdd6f4; font-weight: 600; position: sticky; top: 0; }')
-      ..writeln('.goal-name { color: #89b4fa; font-weight: 600; }')
-      ..writeln('.progress-cell { text-align: center; font-weight: 600; border-radius: 4px; }')
-      ..writeln('.p100 { background: #a6e3a1; color: #1e1e2e; }')
-      ..writeln('.p50 { background: #f9e2af; color: #1e1e2e; }')
-      ..writeln('.p1 { background: #fab387; color: #1e1e2e; }')
-      ..writeln('.p0 { background: #f38ba8; color: #1e1e2e; }')
-      ..writeln('.bar { min-width: 18px; height: 100%; }')
-      ..writeln('.bar-done { opacity: 1.0; }')
-      ..writeln('.bar-remain { opacity: 0.3; }')
-      ..writeln('.date-header { font-size: 10px; text-align: center; min-width: 24px; padding: 4px 2px; }')
-      ..writeln('.weekend { background: #1e1e2e; }')
-      ..writeln('.legend { margin-top: 16px; font-size: 11px; color: #6c7086; }')
-      ..writeln('</style></head><body>')
-      ..writeln('<h1>活動予定</h1>')
-      ..writeln('<div class="subtitle">エクスポート日: ${df.format(DateTime.now())} | '
-          'タスク数: ${tasks.length} | '
-          '期間: ${df.format(earliest)} ～ ${df.format(latest)}</div>')
-      ..writeln('<div class="gantt-container"><table>');
+      ..writeln('''
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Hiragino Sans', 'Noto Sans JP', -apple-system, sans-serif; background: #1e1e2e; color: #cdd6f4; }
+.header { background: linear-gradient(135deg, #1e1e2e 0%, #313244 100%); padding: 32px 24px; border-bottom: 3px solid #89b4fa; }
+.header h1 { font-size: 1.4em; margin-bottom: 4px; }
+.header-meta { color: #6c7086; font-size: 0.8em; display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+.header-meta span { background: #313244; padding: 2px 10px; border-radius: 12px; }
+.container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 24px; }
+.summary-card { background: #313244; border-radius: 10px; padding: 16px; text-align: center; }
+.summary-card .num { font-size: 1.6em; font-weight: bold; }
+.summary-card .label { font-size: 0.75em; color: #a6adc8; margin-top: 2px; }
+.sc-blue .num { color: #89b4fa; }
+.sc-green .num { color: #a6e3a1; }
+.sc-yellow .num { color: #f9e2af; }
+.sc-red .num { color: #f38ba8; }
+.goal-section { margin-bottom: 28px; }
+.goal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 2px solid #45475a; }
+.goal-color { width: 4px; height: 28px; border-radius: 2px; }
+.goal-title { font-size: 1.05em; font-weight: 600; }
+.goal-progress { margin-left: auto; font-size: 0.8em; color: #a6adc8; }
+.task-row { background: #313244; border-radius: 10px; padding: 14px 16px; margin-bottom: 8px; }
+.task-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.task-title { font-weight: 500; font-size: 0.95em; flex: 1; min-width: 120px; }
+.badge { padding: 2px 10px; border-radius: 12px; font-size: 0.7em; font-weight: 600; }
+.badge-done { background: #a6e3a1; color: #1e1e2e; }
+.badge-wip { background: #89b4fa; color: #1e1e2e; }
+.badge-todo { background: #45475a; color: #a6adc8; }
+.task-dates { font-size: 0.75em; color: #6c7086; }
+.progress-bar { height: 8px; background: #45475a; border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.progress-text { font-size: 0.75em; color: #a6adc8; margin-top: 4px; text-align: right; }
+.timeline { margin-top: 10px; position: relative; height: 6px; background: #45475a; border-radius: 3px; }
+.tl-bar { position: absolute; height: 100%; border-radius: 3px; }
+.tl-done { opacity: 1; }
+.tl-remain { opacity: 0.3; }
+.tl-today { position: absolute; top: -4px; width: 2px; height: 14px; background: #f38ba8; border-radius: 1px; }
+.milestone { background: #313244; border-radius: 10px; padding: 12px 16px; margin-bottom: 8px; border-left: 4px solid; display: flex; align-items: center; gap: 12px; }
+.ms-diamond { font-size: 1.1em; }
+.ms-info { flex: 1; }
+.ms-label { font-weight: 600; font-size: 0.9em; }
+.ms-date { font-size: 0.75em; color: #a6adc8; }
+.footer { text-align: center; padding: 20px; color: #45475a; font-size: 0.75em; border-top: 1px solid #313244; margin-top: 24px; }
+@media (max-width: 600px) { .task-top { flex-direction: column; align-items: flex-start; } }
+''')
+      ..writeln('</style></head><body>');
 
-    // ヘッダー行
-    buf.write('<tr><th>目標</th><th>タスク</th><th>進捗</th>'
-        '<th>ステータス</th><th>開始日</th><th>終了日</th>');
-    for (var d = 0; d < totalDays; d++) {
-      final date = earliest.add(Duration(days: d));
-      final isWeekend = date.weekday == 6 || date.weekday == 7;
-      buf.write('<th class="date-header${isWeekend ? ' weekend' : ''}">'
-          '${date.month}/${date.day}</th>');
-    }
-    buf.writeln('</tr>');
+    // ヘッダー
+    final completedCount = sorted.where((t) => t.progress >= 100).length;
+    final wipCount =
+        sorted.where((t) => t.progress > 0 && t.progress < 100).length;
+    final todoCount = sorted.where((t) => t.progress == 0).length;
 
-    // タスク行
-    for (final task in sorted) {
-      final goalName = _goalName(task.goalId, goalMap);
-      final goalColor = _goalHexColor(task.goalId, goalMap);
-      final pClass = task.progress >= 100
-          ? 'p100'
-          : task.progress >= 50
-              ? 'p50'
-              : task.progress > 0
-                  ? 'p1'
-                  : 'p0';
+    buf.writeln('<div class="header">');
+    buf.writeln('<h1>活動予定</h1>');
+    buf.writeln('<div class="header-meta">');
+    buf.writeln('<span>エクスポート: ${df.format(now)}</span>');
+    buf.writeln('<span>期間: ${df.format(earliest)} ～ ${df.format(latest)}</span>');
+    buf.writeln('<span>タスク数: ${tasks.length}</span>');
+    buf.writeln('</div></div>');
 
-      buf.write('<tr>');
-      buf.write('<td class="goal-name">${_escapeHtml(goalName)}</td>');
-      buf.write('<td>${_escapeHtml(task.title)}</td>');
-      buf.write('<td class="progress-cell $pClass">${task.progress}%</td>');
-      buf.write('<td>${_statusLabels[task.status] ?? "未着手"}</td>');
-      buf.write('<td>${df.format(task.startDate)}</td>');
-      buf.write('<td>${df.format(task.endDate)}</td>');
+    buf.writeln('<div class="container">');
 
-      final taskStartDay = task.startDate.difference(earliest).inDays;
-      final taskEndDay = task.endDate.difference(earliest).inDays;
-      final taskDuration = taskEndDay - taskStartDay + 1;
-      final progressDays = (taskDuration * task.progress / 100).round();
+    // サマリーカード
+    buf.writeln('<div class="summary">');
+    buf.writeln(
+        '<div class="summary-card sc-blue"><div class="num">${tasks.length}</div><div class="label">全タスク</div></div>');
+    buf.writeln(
+        '<div class="summary-card sc-green"><div class="num">$completedCount</div><div class="label">完了</div></div>');
+    buf.writeln(
+        '<div class="summary-card sc-yellow"><div class="num">$wipCount</div><div class="label">進行中</div></div>');
+    buf.writeln(
+        '<div class="summary-card sc-red"><div class="num">$todoCount</div><div class="label">未着手</div></div>');
+    buf.writeln('</div>');
 
-      for (var d = 0; d < totalDays; d++) {
-        if (d >= taskStartDay && d <= taskEndDay) {
-          final isDone = (d - taskStartDay) < progressDays;
-          buf.write('<td class="bar ${isDone ? 'bar-done' : 'bar-remain'}" '
-              'style="background:#$goalColor;"></td>');
-        } else {
-          final date = earliest.add(Duration(days: d));
-          final isWeekend = date.weekday == 6 || date.weekday == 7;
-          buf.write('<td${isWeekend ? ' class="weekend"' : ''}></td>');
+    // 目標別セクション
+    for (final entry in goalGroups.entries) {
+      final goalId = entry.key;
+      final goalTasks = entry.value;
+      final goalName = _goalName(goalId, goalMap);
+      final goalColor = _goalHexColor(goalId, goalMap);
+      final goalCompleted =
+          goalTasks.where((t) => t.progress >= 100).length;
+
+      buf.writeln('<div class="goal-section">');
+      buf.writeln('<div class="goal-header">');
+      buf.writeln('<div class="goal-color" style="background:#$goalColor;"></div>');
+      buf.writeln(
+          '<div class="goal-title">${_escapeHtml(goalName)}</div>');
+      buf.writeln(
+          '<div class="goal-progress">$goalCompleted / ${goalTasks.length} 完了</div>');
+      buf.writeln('</div>');
+
+      for (final task in goalTasks) {
+        final statusBadge = task.progress >= 100
+            ? 'badge-done'
+            : task.progress > 0
+                ? 'badge-wip'
+                : 'badge-todo';
+        final statusLabel = _statusLabels[task.status] ?? '未着手';
+        final duration = task.endDate.difference(task.startDate).inDays + 1;
+        final progressColor = task.progress >= 100
+            ? '#a6e3a1'
+            : task.progress >= 50
+                ? '#f9e2af'
+                : task.progress > 0
+                    ? '#fab387'
+                    : '#45475a';
+
+        buf.writeln('<div class="task-row">');
+        buf.writeln('<div class="task-top">');
+        buf.writeln(
+            '<div class="task-title">${_escapeHtml(task.title)}</div>');
+        buf.writeln(
+            '<span class="badge $statusBadge">$statusLabel</span>');
+        buf.writeln(
+            '<div class="task-dates">${df.format(task.startDate)} ～ ${df.format(task.endDate)}（$duration日間）</div>');
+        buf.writeln('</div>');
+
+        // プログレスバー
+        buf.writeln('<div class="progress-bar">');
+        buf.writeln(
+            '<div class="progress-fill" style="width:${task.progress}%;background:$progressColor;"></div>');
+        buf.writeln('</div>');
+        buf.writeln(
+            '<div class="progress-text">${task.progress}%</div>');
+
+        // タイムライン（日付位置ベース）
+        if (totalDays > 0) {
+          final startPct =
+              (task.startDate.difference(earliest).inDays / totalDays * 100)
+                  .clamp(0.0, 100.0);
+          final endPct =
+              ((task.endDate.difference(earliest).inDays + 1) /
+                      totalDays *
+                      100)
+                  .clamp(0.0, 100.0);
+          final barWidth = endPct - startPct;
+          final donePct = barWidth * task.progress / 100;
+          final todayPct =
+              (today.difference(earliest).inDays / totalDays * 100)
+                  .clamp(0.0, 100.0);
+
+          buf.writeln('<div class="timeline">');
+          buf.writeln(
+              '<div class="tl-bar tl-remain" style="left:${startPct.toStringAsFixed(1)}%;width:${barWidth.toStringAsFixed(1)}%;background:#$goalColor;"></div>');
+          buf.writeln(
+              '<div class="tl-bar tl-done" style="left:${startPct.toStringAsFixed(1)}%;width:${donePct.toStringAsFixed(1)}%;background:#$goalColor;"></div>');
+          buf.writeln(
+              '<div class="tl-today" style="left:${todayPct.toStringAsFixed(1)}%;" title="今日"></div>');
+          buf.writeln('</div>');
         }
+
+        buf.writeln('</div>');
       }
-      buf.writeln('</tr>');
+
+      buf.writeln('</div>');
     }
 
-    // マイルストーン行（タスク範囲内のもののみ）
-    for (final ms in milestones) {
-      if (ms.date.isBefore(earliest) || ms.date.isAfter(latest)) continue;
-      final msDay = ms.date.difference(earliest).inDays;
-      final msColor = _sanitizeHexColor(ms.color);
-      buf.write('<tr>');
-      buf.write('<td class="goal-name" style="color:#$msColor;">'
-          '\u{25C6} ${_escapeHtml(ms.label)}</td>');
-      buf.write('<td>目標期限</td>');
-      buf.write('<td></td><td></td>');
-      buf.write('<td>${df.format(ms.date)}</td>');
-      buf.write('<td></td>');
-      for (var d = 0; d < totalDays; d++) {
-        if (d == msDay) {
-          buf.write('<td style="background:#$msColor;text-align:center;'
-              'color:#fff;font-weight:bold;">\u{25C6}</td>');
-        } else {
-          final date = earliest.add(Duration(days: d));
-          final isWeekend = date.weekday == 6 || date.weekday == 7;
-          buf.write('<td${isWeekend ? ' class="weekend"' : ''}></td>');
-        }
+    // マイルストーン（タスク範囲内のみ）
+    final visibleMs = milestones
+        .where(
+            (ms) => !ms.date.isBefore(earliest) && !ms.date.isAfter(latest))
+        .toList();
+    if (visibleMs.isNotEmpty) {
+      buf.writeln('<div class="goal-section">');
+      buf.writeln('<div class="goal-header">');
+      buf.writeln(
+          '<div class="goal-color" style="background:#f9e2af;"></div>');
+      buf.writeln('<div class="goal-title">目標期限</div>');
+      buf.writeln('</div>');
+      for (final ms in visibleMs) {
+        final msColor = _sanitizeHexColor(ms.color);
+        buf.writeln(
+            '<div class="milestone" style="border-color:#$msColor;">');
+        buf.writeln(
+            '<div class="ms-diamond" style="color:#$msColor;">\u{25C6}</div>');
+        buf.writeln('<div class="ms-info">');
+        buf.writeln(
+            '<div class="ms-label">${_escapeHtml(ms.label)}</div>');
+        buf.writeln(
+            '<div class="ms-date">${df.format(ms.date)}</div>');
+        buf.writeln('</div></div>');
       }
-      buf.writeln('</tr>');
+      buf.writeln('</div>');
     }
 
-    buf
-      ..writeln('</table></div>')
-      ..writeln('<div class="legend">ユメログ - 活動予定エクスポート</div>')
-      ..writeln('</body></html>');
+    buf.writeln('</div>');
+    buf.writeln(
+        '<div class="footer">ユメログ - 活動予定エクスポート</div>');
+    buf.writeln('</body></html>');
 
     return GanttExportResult(
       bytes: Uint8List.fromList(utf8.encode(buf.toString())),

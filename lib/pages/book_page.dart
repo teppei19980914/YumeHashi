@@ -92,15 +92,13 @@ class _BookPageState extends ConsumerState<BookPage> {
                   : LayoutBuilder(
                       builder: (context, constraints) {
                         final availableWidth = constraints.maxWidth - 8;
-                        // 最小幅42px、最大幅60pxで収まる冊数を算出
+                        // 最小幅40pxで収まる冊数を算出
                         final booksPerShelf =
-                            (availableWidth / 44)
+                            (availableWidth / 42)
                                 .floor()
-                                .clamp(2, 20);
-                        // 棚幅を均等分配して動的に本の幅を決定
-                        final bookWidth =
-                            (availableWidth / booksPerShelf - 2)
-                                .clamp(40.0, 60.0);
+                                .clamp(2, 50);
+                        // 棚幅を冊数で完全等分（余白なし）
+                        final bookWidth = availableWidth / booksPerShelf - 2;
                         return _Bookshelf(
                           books: books,
                           booksPerShelf: booksPerShelf,
