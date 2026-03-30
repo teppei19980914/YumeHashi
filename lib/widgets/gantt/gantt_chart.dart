@@ -402,9 +402,10 @@ class GanttChartState extends State<GanttChart> {
 
   /// マウスホイールでのスクロール制御.
   ///
-  /// ガントチャートは横幅が常に広いため:
-  /// - 通常ホイール → 横スクロール
-  /// - Shift+ホイール → 縦スクロール
+  /// マウスホイールでのスクロール制御.
+  ///
+  /// - 通常ホイール → 縦スクロール
+  /// - Shift+ホイール → 横スクロール
   ///
   /// Web ブラウザは Shift+ホイールを横スクロールとして扱い、
   /// scrollDelta.dx にデルタを格納するため、dx も考慮する.
@@ -414,19 +415,19 @@ class GanttChartState extends State<GanttChart> {
     final dy = event.scrollDelta.dy;
     final dx = event.scrollDelta.dx;
 
-    // Shift+ホイール: ブラウザが dx にデルタを入れる → 縦スクロールに変換
+    // Shift+ホイール: ブラウザが dx にデルタを入れる → 横スクロール
     if (dx != 0 && dy == 0) {
-      final current = _verticalController.offset;
-      final max = _verticalController.position.maxScrollExtent;
-      _verticalController.jumpTo((current + dx).clamp(0.0, max));
+      final current = _horizontalController.offset;
+      final max = _horizontalController.position.maxScrollExtent;
+      _horizontalController.jumpTo((current + dx).clamp(0.0, max));
       return;
     }
 
-    // 通常ホイール → 横スクロール
+    // 通常ホイール → 縦スクロール
     if (dy != 0) {
-      final current = _horizontalController.offset;
-      final max = _horizontalController.position.maxScrollExtent;
-      _horizontalController.jumpTo((current + dy).clamp(0.0, max));
+      final current = _verticalController.offset;
+      final max = _verticalController.position.maxScrollExtent;
+      _verticalController.jumpTo((current + dy).clamp(0.0, max));
     }
   }
 }
@@ -525,20 +526,20 @@ class _LabelBodyPainter extends CustomPainter {
         final y = r * rowH;
 
         if (r == group.startRow) {
-          // 先頭行: 上段に目標名、下段にタスク名
+          // 先頭行: 上段に目標名（小さく）、下段にタスク名
           _drawText(canvas, group.name,
-              Offset(10, y + 2),
-              group.color, 9,
+              Offset(10, y + 1),
+              group.color, 8,
               fontWeight: FontWeight.w600, maxWidth: size.width - 16);
           _drawText(canvas, tasks[r].title,
-              Offset(10, y + rowH / 2 + 2),
+              Offset(10, y + 14),
               textColor, 9,
               maxWidth: size.width - 16);
         } else {
-          // 2行目以降: タスク名のみ中央表示
+          // 2行目以降: タスク名のみ
           _drawText(canvas, tasks[r].title,
-              Offset(10, y + rowH / 2 - 5),
-              textColor, 10,
+              Offset(10, y + 4),
+              textColor, 9,
               maxWidth: size.width - 16);
         }
       }

@@ -193,12 +193,6 @@ class SettingsPage extends ConsumerWidget {
         Card(
           child: Column(
             children: [
-              const ListTile(
-                leading: Icon(Icons.apps),
-                title: Text(AppLabels.appName),
-                subtitle: Text(AppLabels.settingsAppSubtitle),
-              ),
-              const Divider(height: 1),
               ListTile(
                 leading: Icon(
                   isPremium ? Icons.workspace_premium : Icons.rocket_launch,

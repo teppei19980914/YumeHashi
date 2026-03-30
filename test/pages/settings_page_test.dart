@@ -75,12 +75,11 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('ユメログ'),
+      find.text('1.0.0'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
 
-    expect(find.text('ユメログ'), findsOneWidget);
     expect(find.text('1.0.0'), findsOneWidget);
   });
 
