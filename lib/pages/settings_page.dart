@@ -188,10 +188,12 @@ class SettingsPage extends ConsumerWidget {
         // アカウント情報（Web限定）
         if (kIsWeb) ...[
           _SectionHeader(title: AppLabels.settingsAccount, icon: Icons.person_outlined),
-          _AccountCard(ref: ref, colors: colors),
           Card(
             child: Column(
               children: [
+                // アカウント連携状態
+                ...buildAccountTiles(ref, colors, context),
+                const Divider(height: 1),
                 // ご利用プラン
                 ListTile(
                   leading: Icon(
@@ -201,6 +203,18 @@ class SettingsPage extends ConsumerWidget {
                   title: const Text(AppLabels.settingsPlan),
                   subtitle: Text(_getPlanName(ref)),
                 ),
+                // アップグレード（体験版かつ未加入時のみ）
+                if (isTrialMode && !isPremium) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(Icons.star, color: colors.accent),
+                    title: const Text(AppLabels.settingsUpgradeTitle),
+                    subtitle: const Text(AppLabels.settingsUpgradeDesc),
+                    trailing: Icon(Icons.arrow_forward_ios,
+                        size: 16, color: colors.textMuted),
+                    onTap: () => showUpgradeDialog(context),
+                  ),
+                ],
                 // サブスク管理（サブスク契約者 or 開発者のみ）
                 if (_isSubscriptionActive(ref) || isDeveloperMode) ...[
                   const Divider(height: 1),
@@ -223,23 +237,6 @@ class SettingsPage extends ConsumerWidget {
 
         // 招待プラン
         _InviteStatusCard(ref: ref, colors: colors),
-
-        // アップグレード（体験版かつサブスク・トライアル未加入時のみ）
-        if (isTrialMode && !isPremium) ...[
-          _SectionHeader(
-              title: AppLabels.settingsUpgradeSection, icon: Icons.rocket_launch),
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.star, color: colors.accent),
-              title: const Text(AppLabels.settingsUpgradeTitle),
-              subtitle: const Text(AppLabels.settingsUpgradeDesc),
-              trailing: Icon(Icons.arrow_forward_ios,
-                  size: 16, color: colors.textMuted),
-              onTap: () => showUpgradeDialog(context),
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
 
         // バージョン情報
         _SectionHeader(title: AppLabels.settingsAppInfo, icon: Icons.info_outlined),
@@ -543,91 +540,78 @@ class SettingsPage extends ConsumerWidget {
 /// 招待プラン状態カード.
 ///
 /// 招待コードが有効な場合のみ表示する.
-/// アカウントカード.
-class _AccountCard extends StatelessWidget {
-  const _AccountCard({required this.ref, required this.colors});
 
-  final WidgetRef ref;
-  final AppColors colors;
+/// アカウント連携のタイル一覧を構築する.
+List<Widget> buildAccountTiles(WidgetRef ref, AppColors colors, BuildContext context) {
+  final syncService = FirestoreSyncService();
+  final isLinked = syncService.isLinked;
+  final email = syncService.email;
 
-  @override
-  Widget build(BuildContext context) {
-    final syncService = FirestoreSyncService();
-    final isLinked = syncService.isLinked;
-    final email = syncService.email;
-
-    return Card(
-      child: Column(
-        children: [
-          ListTile(
-            leading: Icon(
-              isLinked ? Icons.verified_user : Icons.person_outline,
-              color: isLinked ? colors.success : colors.warning,
-            ),
-            title: Text(isLinked ? AppLabels.authLinked : AppLabels.settingsAnonymousUser),
-            subtitle: Text(
-              isLinked
-                  ? email ?? ''
-                  : AppLabels.settingsLinkEmailDesc,
-            ),
-          ),
-          if (!isLinked) ...[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () => _linkAccount(context),
-                  icon: const Icon(Icons.link, size: 18),
-                  label: const Text(AppLabels.settingsLinkEmailButton),
-                ),
-              ),
-            ),
-          ],
-        ],
+  return [
+    ListTile(
+      leading: Icon(
+        isLinked ? Icons.verified_user : Icons.person_outline,
+        color: isLinked ? colors.success : colors.warning,
       ),
-    );
-  }
+      title: Text(isLinked ? AppLabels.authLinked : AppLabels.settingsAnonymousUser),
+      subtitle: Text(
+        isLinked
+            ? email ?? ''
+            : AppLabels.settingsLinkEmailDesc,
+      ),
+    ),
+    if (!isLinked)
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _linkAccountAction(context, ref),
+            icon: const Icon(Icons.link, size: 18),
+            label: const Text(AppLabels.settingsLinkEmailButton),
+          ),
+        ),
+      ),
+  ];
+}
 
-  Future<void> _linkAccount(BuildContext context) async {
-    final result = await showCloudAuthDialog(context);
-    if (result == null || result == CloudAuthResult.skipped) return;
-    if (!context.mounted) return;
+/// アカウント連携処理.
+Future<void> _linkAccountAction(BuildContext context, WidgetRef ref) async {
+  final result = await showCloudAuthDialog(context);
+  if (result == null || result == CloudAuthResult.skipped) return;
+  if (!context.mounted) return;
 
-    final syncService = FirestoreSyncService();
-    final exportService = ref.read(dataExportServiceProvider);
+  final syncService = FirestoreSyncService();
+  final exportService = ref.read(dataExportServiceProvider);
 
-    if (result == CloudAuthResult.loggedIn) {
-      // ログイン成功 → クラウドからデータを自動復元
-      try {
-        final json = await syncService.downloadData();
-        if (json != null) {
-          await exportService.importData(json);
-          ref.invalidate(dreamListProvider);
-          ref.invalidate(goalListProvider);
-          ref.invalidate(bookListProvider);
-        }
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppLabels.cloudLoginRestored)),
-        );
-      } on Exception {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(AppLabels.cloudLoginRestoreFailed)),
-        );
+  if (result == CloudAuthResult.loggedIn) {
+    try {
+      final json = await syncService.downloadData();
+      if (json != null) {
+        await exportService.importData(json);
+        ref.invalidate(dreamListProvider);
+        ref.invalidate(goalListProvider);
+        ref.invalidate(bookListProvider);
       }
-    } else {
-      // アカウント連携成功 → ローカルデータをアップロード
-      final json = await exportService.exportData();
-      await syncService.uploadData(json);
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(AppLabels.cloudAccountLinked)),
+        const SnackBar(content: Text(AppLabels.cloudLoginRestored)),
+      );
+    } on Exception {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppLabels.cloudLoginRestoreFailed)),
       );
     }
-    (context as Element).markNeedsBuild();
+  } else {
+    final json = await exportService.exportData();
+    await syncService.uploadData(json);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text(AppLabels.cloudAccountLinked)),
+    );
   }
+  (context as Element).markNeedsBuild();
 }
 
 class _InviteStatusCard extends StatelessWidget {

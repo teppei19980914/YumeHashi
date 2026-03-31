@@ -795,21 +795,8 @@ class _TimelineBodyPainter extends CustomPainter {
                 const Radius.circular(4)),
             Paint()..color = barColor);
       }
-      // 進捗率のみ表示（タスク名は左列で確認）
-      if (geo.width > 40) {
-        _drawText(canvas, '${task.progress}%',
-            Offset(geo.x + 6, y + 5), textColor, 10);
-      }
+      // タスク名・進捗率は左列で確認するためバー上には表示しない
     }
-  }
-
-  void _drawText(Canvas canvas, String text, Offset offset, Color color,
-      double fontSize, {FontWeight fontWeight = FontWeight.normal}) {
-    TextPainter(
-      text: TextSpan(text: text, style: TextStyle(
-          color: color, fontSize: fontSize, fontWeight: fontWeight)),
-      textDirection: TextDirection.ltr,
-    )..layout()..paint(canvas, offset);
   }
 
   @override
