@@ -59,6 +59,7 @@ class _InquiryDialogState extends State<_InquiryDialog> {
     final remaining = inquiryMinLength - textLength;
 
     return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       title: Row(
         children: [
           Icon(Icons.mail_outlined,
@@ -67,7 +68,6 @@ class _InquiryDialogState extends State<_InquiryDialog> {
           const Expanded(child: Text(AppLabels.inquiryTitle)),
         ],
       ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
         child: SingleChildScrollView(

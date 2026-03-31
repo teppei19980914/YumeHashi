@@ -20,6 +20,45 @@ const _trialStartedAtKey = 'premium_trial_started_at';
 /// 無料トライアル期間（日数）.
 const trialDurationDays = 7;
 
+/// Customer Portal を開いたことを示すフラグ.
+///
+/// Portal からタブ復帰時にサブスク状態を再検証するために使用する.
+/// Portal を開く前に true にし、検証完了後に false に戻す.
+bool portalOpenPending = false;
+
+/// サブスク検証のスロットル間隔.
+const _verifyInterval = Duration(minutes: 5);
+
+/// 最後にサブスク検証を実行した時刻.
+DateTime? _lastVerifiedAt;
+
+/// プレミアム画面アクセス時にサブスク状態を検証する.
+///
+/// 前回検証から [_verifyInterval] 以内の場合はスキップする.
+/// バックグラウンドで実行し、結果に応じて [onStateChanged] を呼ぶ.
+void verifySubscriptionOnAccess({
+  required SharedPreferences prefs,
+  required String? userKey,
+  required void Function(bool active) onStateChanged,
+}) {
+  if (userKey == null || userKey.isEmpty) return;
+
+  final now = DateTime.now();
+  if (_lastVerifiedAt != null &&
+      now.difference(_lastVerifiedAt!) < _verifyInterval) {
+    return; // スロットル: 前回検証から間もない場合はスキップ
+  }
+  _lastVerifiedAt = now;
+
+  // バックグラウンドで検証（UIをブロックしない）
+  final service = StripeService(prefs);
+  service.verifySubscription(userKey: userKey).then((active) {
+    if (active != null) {
+      onStateChanged(active);
+    }
+  });
+}
+
 /// Stripe連携サービス.
 class StripeService {
   /// StripeServiceを作成する.
@@ -71,6 +110,65 @@ class StripeService {
       _subscriptionActivatedAtKey,
       DateTime.now().millisecondsSinceEpoch,
     );
+  }
+
+  /// Stripe Customer Portal のURLを取得する.
+  ///
+  /// ユーザーが自分でサブスクリプションの解約・変更を行えるポータル.
+  Future<String?> createCustomerPortalUrl({String? userKey}) async {
+    try {
+      final response = await _httpClient.post(
+        Uri.parse(stripeEndpointUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'action': 'portal',
+          'userKey': userKey ?? '',
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode != 200) return null;
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      return json['url'] as String?;
+    } on Exception {
+      return null;
+    }
+  }
+
+  /// サーバーに問い合わせてサブスクリプション状態を検証・同期する.
+  ///
+  /// Stripe の実際の契約状態を取得し、ローカルの状態を更新する.
+  /// - 契約中なのにローカルが未有効 → 有効化
+  /// - 解約済みなのにローカルが有効 → クリア
+  ///
+  /// 通信エラー時はローカル状態を変更せず null を返す.
+  Future<bool?> verifySubscription({String? userKey}) async {
+    try {
+      final response = await _httpClient.post(
+        Uri.parse(stripeEndpointUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'action': 'status',
+          'userKey': userKey ?? '',
+        }),
+      ).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode != 200) return null;
+
+      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final active = json['active'] as bool? ?? false;
+
+      // ローカル状態をStripe実状態に同期
+      if (active && !isSubscriptionActive) {
+        await activateSubscription();
+      } else if (!active && isSubscriptionActive) {
+        await clearSubscription();
+      }
+
+      return active;
+    } on Exception {
+      return null;
+    }
   }
 
   /// サブスクリプション状態をクリアする.

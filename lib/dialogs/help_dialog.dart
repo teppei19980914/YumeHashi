@@ -28,7 +28,8 @@ class _HelpDialogState extends State<_HelpDialog>
   final bool _showTrialTab = isTrialMode && !isPremium;
 
   Future<void> _openReleaseNotes() async {
-    final html = generateReleaseNotesHtml();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final html = generateReleaseNotesHtml(isDarkMode: isDark);
     await openHtmlInNewTab(html);
   }
 

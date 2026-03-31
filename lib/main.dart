@@ -124,11 +124,13 @@ Future<void> _initInviteCodeAsync(SharedPreferences prefs) async {
 /// サブスクリプション状態を非同期で処理する.
 ///
 /// URLパラメータ `?subscription=success` を検出して有効化するか、
-/// 保存済みのサブスクリプション状態を復元する.
+/// サーバーに問い合わせてStripeの実契約状態とローカル状態を同期する.
 Future<void> _initSubscriptionAsync(SharedPreferences prefs) async {
   if (!kIsWeb) return;
 
   final stripeService = StripeService(prefs);
+  final configService = RemoteConfigService(prefs);
+  final userKey = configService.savedUserKey;
 
   // ?subscription=success パラメータの検出
   final subscriptionParam = _getUrlParam('subscription');
@@ -136,9 +138,18 @@ Future<void> _initSubscriptionAsync(SharedPreferences prefs) async {
     await stripeService.activateSubscription();
   }
 
-  // サブスクリプション有効ならプレミアム機能を解放
+  // サーバーに問い合わせてStripe実契約状態を検証・同期
+  // userKeyがある場合のみ検証（匿名ユーザーは検証不可）
+  if (userKey != null && userKey.isNotEmpty) {
+    await stripeService.verifySubscription(userKey: userKey);
+  }
+
+  // ローカル状態に基づいてプレミアム機能を制御
   if (stripeService.isSubscriptionActive) {
     setSubscriptionPremium(enabled: true);
+  } else {
+    // 解約済みの場合は明示的にプレミアムを無効化
+    setSubscriptionPremium(enabled: false);
   }
 
   // 無料トライアル有効ならプレミアム機能を解放

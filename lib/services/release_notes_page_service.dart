@@ -5,7 +5,21 @@ import '../app_version.dart';
 import '../l10n/app_labels.dart';
 
 /// リリース履歴をHTMLページとして生成する.
-String generateReleaseNotesHtml() {
+///
+/// [isDarkMode] が true の場合はダークテーマ、false の場合はライトテーマで生成する.
+String generateReleaseNotesHtml({bool isDarkMode = true}) {
+  // テーマに応じたカラー定義
+  final bg = isDarkMode ? '#1e1e2e' : '#eff1f5';
+  final headerBg = isDarkMode
+      ? 'linear-gradient(135deg, #1e1e2e 0%, #313244 100%)'
+      : 'linear-gradient(135deg, #dce0e8 0%, #ccd0da 100%)';
+  final textColor = isDarkMode ? '#cdd6f4' : '#4c4f69';
+  final mutedColor = isDarkMode ? '#a6adc8' : '#6c6f85';
+  final cardBg = isDarkMode ? '#313244' : '#ffffff';
+  final accent = isDarkMode ? '#89b4fa' : '#1e66f5';
+  final green = isDarkMode ? '#a6e3a1' : '#40a02b';
+  final borderColor = isDarkMode ? '#45475a' : '#ccd0da';
+  final footerColor = isDarkMode ? '#45475a' : '#bcc0cc';
   final buf = StringBuffer()
     ..writeln('<!DOCTYPE html>')
     ..writeln('<html lang="ja"><head>')
@@ -17,47 +31,47 @@ String generateReleaseNotesHtml() {
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
   font-family: 'Hiragino Sans', 'Noto Sans JP', -apple-system, sans-serif;
-  background: #1e1e2e; color: #cdd6f4; line-height: 1.8;
+  background: $bg; color: $textColor; line-height: 1.8;
 }
 .header {
-  background: linear-gradient(135deg, #1e1e2e 0%, #313244 100%);
+  background: $headerBg;
   padding: 40px 20px; text-align: center;
-  border-bottom: 3px solid #89b4fa;
+  border-bottom: 3px solid $accent;
 }
-.header h1 { font-size: 1.6em; color: #cdd6f4; margin-bottom: 4px; }
-.header p { color: #a6adc8; font-size: 0.9em; }
+.header h1 { font-size: 1.6em; color: $textColor; margin-bottom: 4px; }
+.header p { color: $mutedColor; font-size: 0.9em; }
 .container { max-width: 760px; margin: 0 auto; padding: 32px 20px; }
 .version-card {
-  background: #313244; border-radius: 12px; padding: 24px;
-  margin-bottom: 24px; border-left: 4px solid #89b4fa;
+  background: $cardBg; border-radius: 12px; padding: 24px;
+  margin-bottom: 24px; border-left: 4px solid $accent;
 }
 .version-header {
   display: flex; align-items: center; gap: 12px;
   margin-bottom: 12px; flex-wrap: wrap;
 }
 .version-tag {
-  background: #89b4fa; color: #1e1e2e; padding: 4px 12px;
+  background: $accent; color: $bg; padding: 4px 12px;
   border-radius: 16px; font-weight: bold; font-size: 0.9em;
 }
-.version-date { color: #a6adc8; font-size: 0.85em; }
+.version-date { color: $mutedColor; font-size: 0.85em; }
 .version-latest {
-  background: #a6e3a1; color: #1e1e2e; padding: 2px 8px;
+  background: $green; color: $bg; padding: 2px 8px;
   border-radius: 8px; font-size: 0.75em; font-weight: bold;
 }
 .notes-list { list-style: none; padding: 0; }
 .notes-list li {
   padding: 6px 0 6px 24px; position: relative;
-  color: #bac2de; font-size: 0.95em;
+  color: $mutedColor; font-size: 0.95em;
 }
 .notes-list li::before {
   content: '\\2714'; position: absolute; left: 0;
-  color: #a6e3a1; font-size: 0.85em;
+  color: $green; font-size: 0.85em;
 }
 .footer {
-  text-align: center; padding: 24px; color: #6c7086;
-  font-size: 0.8em; border-top: 1px solid #313244;
+  text-align: center; padding: 24px; color: $footerColor;
+  font-size: 0.8em; border-top: 1px solid $borderColor;
 }
-a { color: #89b4fa; text-decoration: none; }
+a { color: $accent; text-decoration: none; }
 a:hover { text-decoration: underline; }
 ''')
     ..writeln('</style></head><body>')

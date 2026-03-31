@@ -14,6 +14,7 @@ class BookDialogResult {
     required this.category,
     required this.why,
     required this.description,
+    this.status,
     this.deleteRequested = false,
   });
 
@@ -28,6 +29,9 @@ class BookDialogResult {
 
   /// 内容メモ.
   final String description;
+
+  /// ステータス（編集時のみ）.
+  final BookStatus? status;
 
   /// 削除リクエスト.
   final bool deleteRequested;
@@ -61,6 +65,7 @@ class _BookDialogContentState extends State<_BookDialogContent> {
   late final TextEditingController _whyController;
   late final TextEditingController _descriptionController;
   late BookCategory _selectedCategory;
+  late BookStatus _selectedStatus;
 
   bool get _isEdit => widget.book != null;
 
@@ -74,6 +79,7 @@ class _BookDialogContentState extends State<_BookDialogContent> {
     _descriptionController =
         TextEditingController(text: widget.book?.description ?? '');
     _selectedCategory = widget.book?.category ?? BookCategory.other;
+    _selectedStatus = widget.book?.status ?? BookStatus.unread;
   }
 
   @override
@@ -133,6 +139,24 @@ class _BookDialogContentState extends State<_BookDialogContent> {
                     if (v != null) setState(() => _selectedCategory = v);
                   },
                 ),
+                if (_isEdit) ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<BookStatus>(
+                    initialValue: _selectedStatus,
+                    decoration: const InputDecoration(
+                      labelText: AppLabels.scheduleStatus,
+                    ),
+                    items: BookStatus.values
+                        .map((s) => DropdownMenuItem(
+                              value: s,
+                              child: Text(s.label),
+                            ))
+                        .toList(),
+                    onChanged: (v) {
+                      if (v != null) setState(() => _selectedStatus = v);
+                    },
+                  ),
+                ],
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _whyController,
@@ -221,6 +245,7 @@ class _BookDialogContentState extends State<_BookDialogContent> {
         category: _selectedCategory,
         why: _whyController.text.trim(),
         description: _descriptionController.text.trim(),
+        status: _isEdit ? _selectedStatus : null,
       ),
     );
   }

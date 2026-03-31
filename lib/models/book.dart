@@ -58,6 +58,13 @@ enum BookStatus {
   /// JSON保存用の値.
   final String value;
 
+  /// 表示用ラベル.
+  String get label => switch (this) {
+        BookStatus.unread => AppLabels.bookStatusUnread,
+        BookStatus.reading => AppLabels.bookStatusReading,
+        BookStatus.completed => AppLabels.bookStatusCompleted,
+      };
+
   /// 文字列値からBookStatusを生成する.
   static BookStatus fromValue(String value) {
     return BookStatus.values.firstWhere(

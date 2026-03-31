@@ -240,6 +240,8 @@ class AppLabels {
   static const settingsCloudRestoreDesc = 'バックアップからデータを復元します';
   static const settingsUpgradeTitle = 'もっと自由に、もっと先へ';
   static const settingsUpgradeDesc = 'ワンコインで全機能を利用可能';
+  static const settingsManageSubscription = 'サブスクリプション管理';
+  static const settingsManageSubscriptionDesc = 'プラン変更・解約はこちら';
   static const settingsVersion = 'バージョン';
   static const settingsLastDeploy = '最終更新日';
   static const settingsPlatform = 'クロスプラットフォーム対応';
@@ -782,10 +784,8 @@ class AppLabels {
   static const helpFaqPremiumCancelQ =
       'プレミアムプランを解約したい場合はどうすればよいですか？';
   static const helpFaqPremiumCancelA =
-      '画面右上のメールアイコンから「お問い合わせ」を選択し、'
-      '解約希望の旨をお伝えください。\n'
-      'その際、プレミアムプラン申込時に入力したメールアドレスを'
-      '必ずご記載ください（契約の特定に必要です）。\n\n'
+      '設定画面の「サブスクリプション管理」から、'
+      'ご自身で解約手続きを行えます。\n\n'
       '解約後は次回更新日以降に課金が停止され、'
       'スタータープランに移行します。\n'
       '登録済みのデータはそのまま残ります。';
@@ -825,8 +825,8 @@ class AppLabels {
       '設定ページの「全データを削除」でアプリ内のデータを消去し、'
       'ブラウザのブックマークを削除すれば完了です。\n\n'
       '【重要】プレミアムプランをご契約中の場合は、'
-      '必ず事前にメールアイコンの「お問い合わせ」から'
-      '解約をご連絡ください。\n'
+      '必ず事前に設定ページの「サブスクリプション管理」から'
+      '解約手続きを行ってください。\n'
       '解約手続きを行わない場合、毎月の請求が継続されます。';
 
   // FAQ Q&A: 書籍

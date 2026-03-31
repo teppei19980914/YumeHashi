@@ -17,7 +17,11 @@ import '../services/study_stats_types.dart';
 import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
-import '../services/trial_limit_service.dart' show isPremium, isTrialMode;
+import '../providers/theme_provider.dart' show sharedPreferencesProvider;
+import '../services/remote_config_service.dart';
+import '../services/stripe_service.dart' show verifySubscriptionOnAccess;
+import '../services/trial_limit_service.dart'
+    show isPremium, isTrialMode, setSubscriptionPremium;
 import '../widgets/premium/premium_gate.dart';
 import '../widgets/stats/goal_stats_section.dart';
 
@@ -39,6 +43,14 @@ class StatsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // プレミアム画面アクセス時にサブスク状態をバックグラウンド検証
+    final prefs = ref.read(sharedPreferencesProvider);
+    verifySubscriptionOnAccess(
+      prefs: prefs,
+      userKey: RemoteConfigService(prefs).savedUserKey,
+      onStateChanged: (active) => setSubscriptionPremium(enabled: active),
+    );
+
     final theme = Theme.of(context);
     final colors = theme.appColors;
 

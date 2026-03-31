@@ -40,9 +40,12 @@ class BookGanttService {
   }
 
   /// スケジュール未設定書籍を取得する.
+  /// スケジュール未設定かつ読了でない書籍を取得する.
   Future<List<Book>> getUnscheduledBooks() async {
     final books = await _bookService.getAllBooks();
-    return books.where((b) => !b.hasSchedule).toList();
+    return books
+        .where((b) => !b.hasSchedule && b.status != BookStatus.completed)
+        .toList();
   }
 
   /// BookリストからTaskリストへ変換する.

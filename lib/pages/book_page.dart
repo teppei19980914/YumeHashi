@@ -422,6 +422,10 @@ class _BookCover extends ConsumerWidget {
           why: result.why,
           description: result.description,
         );
+    if (result.status != null) {
+      await ref.read(bookListProvider.notifier).updateStatus(
+            book.id, result.status!);
+    }
   }
 
 }

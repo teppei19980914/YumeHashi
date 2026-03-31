@@ -133,6 +133,136 @@ void main() {
     });
   });
 
+  group('verifySubscription', () {
+    test('サーバーがactive=trueを返すとローカルが有効化される', () async {
+      final mockClient = MockClient((request) async {
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+        expect(body['action'], 'status');
+        expect(body['userKey'], 'test-user');
+        return http.Response(jsonEncode({'active': true}), 200);
+      });
+
+      final service = StripeService(prefs, httpClient: mockClient);
+      expect(service.isSubscriptionActive, isFalse);
+
+      final result =
+          await service.verifySubscription(userKey: 'test-user');
+      expect(result, isTrue);
+      expect(service.isSubscriptionActive, isTrue);
+      expect(service.activatedAt, isNotNull);
+    });
+
+    test('サーバーがactive=falseを返すとローカルがクリアされる', () async {
+      final mockClient = MockClient((_) async {
+        return http.Response(jsonEncode({'active': false}), 200);
+      });
+
+      final service = StripeService(prefs, httpClient: mockClient);
+      // 先にローカルを有効化
+      await service.activateSubscription();
+      expect(service.isSubscriptionActive, isTrue);
+
+      final result =
+          await service.verifySubscription(userKey: 'test-user');
+      expect(result, isFalse);
+      expect(service.isSubscriptionActive, isFalse);
+      expect(service.activatedAt, isNull);
+    });
+
+    test('ローカルとサーバーが一致している場合は状態を変更しない', () async {
+      final mockClient = MockClient((_) async {
+        return http.Response(jsonEncode({'active': true}), 200);
+      });
+
+      final service = StripeService(prefs, httpClient: mockClient);
+      await service.activateSubscription();
+      final originalActivatedAt = service.activatedAt;
+
+      final result =
+          await service.verifySubscription(userKey: 'test-user');
+      expect(result, isTrue);
+      expect(service.isSubscriptionActive, isTrue);
+      // activatedAtが変更されていないことを確認
+      expect(service.activatedAt, originalActivatedAt);
+    });
+
+    test('通信エラー時はnullを返しローカル状態を変更しない', () async {
+      final mockClient = MockClient((_) async {
+        return http.Response('error', 500);
+      });
+
+      final service = StripeService(prefs, httpClient: mockClient);
+      await service.activateSubscription();
+
+      final result =
+          await service.verifySubscription(userKey: 'test-user');
+      expect(result, isNull);
+      // ローカル状態は変更されていない
+      expect(service.isSubscriptionActive, isTrue);
+    });
+
+    test('例外発生時はnullを返しローカル状態を変更しない', () async {
+      final mockClient = MockClient((_) async {
+        throw Exception('network error');
+      });
+
+      final service = StripeService(prefs, httpClient: mockClient);
+      final result =
+          await service.verifySubscription(userKey: 'test-user');
+      expect(result, isNull);
+      expect(service.isSubscriptionActive, isFalse);
+    });
+
+    test('userKeyなしでも送信できる', () async {
+      final mockClient = MockClient((request) async {
+        final body = jsonDecode(request.body) as Map<String, dynamic>;
+        expect(body['userKey'], '');
+        return http.Response(jsonEncode({'active': false}), 200);
+      });
+
+      final service = StripeService(prefs, httpClient: mockClient);
+      final result = await service.verifySubscription();
+      expect(result, isFalse);
+    });
+  });
+
+  group('verifySubscriptionOnAccess', () {
+    test('userKeyがnullの場合はコールバックが呼ばれない', () async {
+      var called = false;
+      verifySubscriptionOnAccess(
+        prefs: prefs,
+        userKey: null,
+        onStateChanged: (_) => called = true,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(called, isFalse);
+    });
+
+    test('userKeyが空の場合はコールバックが呼ばれない', () async {
+      var called = false;
+      verifySubscriptionOnAccess(
+        prefs: prefs,
+        userKey: '',
+        onStateChanged: (_) => called = true,
+      );
+      await Future<void>.delayed(Duration.zero);
+      expect(called, isFalse);
+    });
+  });
+
+  group('portalOpenPending', () {
+    test('初期値はfalse', () {
+      expect(portalOpenPending, isFalse);
+    });
+
+    test('設定と解除ができる', () {
+      portalOpenPending = true;
+      expect(portalOpenPending, isTrue);
+      portalOpenPending = false;
+      expect(portalOpenPending, isFalse);
+    });
+  });
+
   test('定数 stripeEndpointUrlが定義されている', () {
     expect(stripeEndpointUrl, isNotEmpty);
     expect(stripeEndpointUrl, contains('script.google.com'));

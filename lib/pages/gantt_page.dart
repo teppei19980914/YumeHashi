@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dialogs/book_schedule_dialog.dart';
+import '../providers/book_providers.dart';
 import '../l10n/app_labels.dart';
 import '../dialogs/reading_log_dialog.dart';
 import '../dialogs/task_dialog.dart';
@@ -19,8 +20,11 @@ import '../services/study_stats_types.dart' show GanttMilestone;
 import '../providers/dashboard_providers.dart';
 import '../providers/gantt_providers.dart';
 import '../providers/service_providers.dart';
+import '../providers/theme_provider.dart' show sharedPreferencesProvider;
 import '../services/file_save_service.dart' as file_io;
 import '../services/task_study_log_logic.dart';
+import '../services/remote_config_service.dart';
+import '../services/stripe_service.dart' show verifySubscriptionOnAccess;
 import '../services/trial_limit_service.dart';
 import '../services/tutorial_service.dart';
 import '../theme/app_theme.dart';
@@ -43,6 +47,17 @@ class _GanttPageState extends ConsumerState<GanttPage> {
 
   @override
   Widget build(BuildContext context) {
+    // プレミアム画面アクセス時にサブスク状態をバックグラウンド検証
+    final prefs = ref.read(sharedPreferencesProvider);
+    verifySubscriptionOnAccess(
+      prefs: prefs,
+      userKey: RemoteConfigService(prefs).savedUserKey,
+      onStateChanged: (active) {
+        setSubscriptionPremium(enabled: active);
+        if (mounted) setState(() {});
+      },
+    );
+
     // プレミアム機能: Web体験版ではゲートを表示
     if (!canUseGanttChart) {
       return const PremiumGate(
@@ -494,6 +509,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
       );
     }
     ref.invalidate(ganttTasksProvider);
+    ref.invalidate(bookListProvider);
   }
 
   Future<void> _editBookSchedule(

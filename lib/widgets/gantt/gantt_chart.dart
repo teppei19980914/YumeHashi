@@ -584,7 +584,7 @@ class _LabelBodyPainter extends CustomPainter {
     TextPainter(
       text: TextSpan(text: text, style: TextStyle(
           color: color, fontSize: fontSize, fontWeight: fontWeight)),
-      textDirection: TextDirection.ltr, maxLines: 2, ellipsis: '...',
+      textDirection: TextDirection.ltr, maxLines: 1, ellipsis: '...',
     )..layout(maxWidth: maxWidth ?? double.infinity)..paint(canvas, offset);
   }
 
@@ -795,8 +795,11 @@ class _TimelineBodyPainter extends CustomPainter {
                 const Radius.circular(4)),
             Paint()..color = barColor);
       }
-      _drawText(canvas, '${task.title} (${task.progress}%)',
-          Offset(geo.x + 6, y + 5), textColor, 11);
+      // 進捗率のみ表示（タスク名は左列で確認）
+      if (geo.width > 40) {
+        _drawText(canvas, '${task.progress}%',
+            Offset(geo.x + 6, y + 5), textColor, 10);
+      }
     }
   }
 

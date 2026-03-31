@@ -29,9 +29,11 @@ import 'providers/dream_providers.dart';
 import 'providers/goal_providers.dart';
 import 'providers/service_providers.dart';
 import 'providers/theme_provider.dart';
-import 'services/remote_config_service.dart' show resetPendingKey;
+import 'services/remote_config_service.dart'
+    show RemoteConfigService, resetPendingKey;
+import 'services/stripe_service.dart' show StripeService, portalOpenPending;
 import 'services/trial_limit_service.dart'
-    show isPremium, setInvitePremium, setDeveloperMode;
+    show isPremium, setInvitePremium, setDeveloperMode, setSubscriptionPremium;
 import 'theme/app_theme.dart';
 import 'l10n/app_labels.dart';
 import 'widgets/navigation/app_drawer.dart';
@@ -180,6 +182,23 @@ class _AppShellState extends ConsumerState<_AppShell> {
 
   static const _monitorSubmittedKey = 'monitor_data_submitted';
 
+  /// Customer Portal からタブ復帰時にサブスク状態を再検証する.
+  Future<void> _verifySubscriptionOnResume() async {
+    if (!kIsWeb || !portalOpenPending) return;
+    portalOpenPending = false;
+
+    final prefs = ref.read(sharedPreferencesProvider);
+    final stripeService = StripeService(prefs);
+    final userKey = RemoteConfigService(prefs).savedUserKey;
+    if (userKey == null || userKey.isEmpty) return;
+
+    final active = await stripeService.verifySubscription(userKey: userKey);
+    if (active == null) return; // 通信エラー時は変更しない
+
+    setSubscriptionPremium(enabled: active);
+    if (mounted) setState(() {}); // UIを再描画
+  }
+
   /// 受信ボックスのチェック（リマインダー自動生成 + 開発者通知読み込み）.
   void _checkInbox() {
     if (_inboxChecked) return;
@@ -268,6 +287,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
       AppLifecycleListener(
         onHide: () => syncManager.syncOnExit(),
         onPause: () => syncManager.syncOnExit(),
+        onShow: () => _verifySubscriptionOnResume(),
       );
 
       // 開発者判定: 認証メールが開発者のものなら全機能解放

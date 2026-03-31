@@ -11,7 +11,10 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:url_launcher/url_launcher.dart';
+
 import '../app_version.dart';
+import '../services/stripe_service.dart';
 import '../dialogs/cloud_auth_dialog.dart';
 import '../dialogs/upgrade_dialog.dart';
 import '../providers/book_providers.dart';
@@ -22,6 +25,7 @@ import '../services/firestore_sync_service.dart';
 import '../providers/service_providers.dart';
 import '../providers/theme_provider.dart';
 import '../services/invite_service.dart';
+import '../services/remote_config_service.dart';
 import '../services/trial_limit_service.dart' show isTrialMode, isPremium;
 import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
@@ -36,6 +40,26 @@ final _notificationsEnabledProvider = FutureProvider<bool>((ref) async {
 class SettingsPage extends ConsumerWidget {
   /// SettingsPageを作成する.
   const SettingsPage({super.key});
+
+  bool _isSubscriptionActive(WidgetRef ref) {
+    final prefs = ref.read(sharedPreferencesProvider);
+    return StripeService(prefs).isSubscriptionActive;
+  }
+
+  Future<void> _openCustomerPortal(BuildContext context, WidgetRef ref) async {
+    final prefs = ref.read(sharedPreferencesProvider);
+    final stripeService = StripeService(prefs);
+    final userKey = RemoteConfigService(prefs).savedUserKey;
+    final url = await stripeService.createCustomerPortalUrl(userKey: userKey);
+    if (url != null) {
+      portalOpenPending = true;
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } else if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text(AppLabels.errorRetryLater)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -182,6 +206,20 @@ class SettingsPage extends ConsumerWidget {
               trailing: Icon(Icons.arrow_forward_ios,
                   size: 16, color: colors.textMuted),
               onTap: () => showUpgradeDialog(context),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+        // サブスク管理（契約者のみ表示）
+        if (_isSubscriptionActive(ref)) ...[
+          Card(
+            child: ListTile(
+              leading: Icon(Icons.manage_accounts, color: colors.accent),
+              title: const Text(AppLabels.settingsManageSubscription),
+              subtitle: const Text(AppLabels.settingsManageSubscriptionDesc),
+              trailing: Icon(Icons.open_in_new,
+                  size: 16, color: colors.textMuted),
+              onTap: () => _openCustomerPortal(context, ref),
             ),
           ),
           const SizedBox(height: 24),
