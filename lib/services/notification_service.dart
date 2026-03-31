@@ -200,11 +200,9 @@ class NotificationService {
     try {
       final items =
           (json.decode(jsonStr) as List).cast<Map<String, dynamic>>();
+      final now = DateTime.now();
 
-      // 既存のシステム通知を全削除
-      await _notificationDao.deleteByType(NotificationType.system.value);
-
-      // JSONの内容で再作成
+      // 差分同期: 既存通知の既読状態を保持し、新規のみ追加
       final created = <Notification>[];
       for (final item in items) {
         final dedupKey = item['dedup_key']?.toString() ?? '';
@@ -212,6 +210,10 @@ class NotificationService {
         final dateStr = item['date']?.toString() ?? '';
         final createdAt =
             dateStr.isNotEmpty ? DateTime.tryParse(dateStr) : null;
+        // 予約通知: dateが未来の場合はスキップ（次回起動時に再判定）
+        if (createdAt != null && createdAt.isAfter(now)) continue;
+        // 既に存在する通知はスキップ（既読状態を保持）
+        if (await _notificationDao.existsByDedupKey(dedupKey)) continue;
         final notification = Notification(
           notificationType: NotificationType.system,
           title: item['title']?.toString() ?? '',

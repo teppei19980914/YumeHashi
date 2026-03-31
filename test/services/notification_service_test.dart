@@ -32,23 +32,28 @@ void main() {
         expect(result.notifications.first.title, 'お知らせ');
       });
 
-      test('再同期で既存のシステム通知が上書きされる', () async {
+      test('再同期で既存の通知は保持され新規のみ追加される', () async {
         const jsonStr1 =
             '[{"dedup_key":"sys:v1","title":"旧お知らせ","message":"旧"}]';
         await service.syncSystemNotificationsFromJson(jsonStr1);
 
         const jsonStr2 =
-            '[{"dedup_key":"sys:v2","title":"新お知らせ","message":"新"}]';
-        await service.syncSystemNotificationsFromJson(jsonStr2);
+            '[{"dedup_key":"sys:v1","title":"旧お知らせ","message":"旧"},'
+            '{"dedup_key":"sys:v2","title":"新お知らせ","message":"新"}]';
+        final result =
+            await service.syncSystemNotificationsFromJson(jsonStr2);
+
+        // 新規のsys:v2のみ追加される
+        expect(result.notifications.length, 1);
+        expect(result.notifications.first.title, '新お知らせ');
 
         final all = await service.getAllNotifications();
         final systemNotifs =
             all.where((n) => n.notificationType == NotificationType.system);
-        expect(systemNotifs.length, 1);
-        expect(systemNotifs.first.title, '新お知らせ');
+        expect(systemNotifs.length, 2);
       });
 
-      test('空JSONで既存のシステム通知が全削除される', () async {
+      test('空JSONで再同期しても既存の通知は保持される', () async {
         const jsonStr =
             '[{"dedup_key":"sys:v1","title":"A","message":"B"}]';
         await service.syncSystemNotificationsFromJson(jsonStr);
@@ -58,7 +63,7 @@ void main() {
         final all = await service.getAllNotifications();
         final systemNotifs =
             all.where((n) => n.notificationType == NotificationType.system);
-        expect(systemNotifs, isEmpty);
+        expect(systemNotifs.length, 1);
       });
 
       test('リマインダー通知はシステム同期で削除されない', () async {
@@ -100,15 +105,41 @@ void main() {
       test('dateを指定するとcreatedAtに反映される', () async {
         const jsonStr = '['
             '{"dedup_key":"sys:dated","title":"日付指定","message":"テスト",'
-            '"date":"2026-04-01"}'
+            '"date":"2025-01-01"}'
             ']';
         final result =
             await service.syncSystemNotificationsFromJson(jsonStr);
         expect(result.notifications.length, 1);
         final all = await service.getAllNotifications();
-        expect(all.first.createdAt.year, 2026);
-        expect(all.first.createdAt.month, 4);
+        expect(all.first.createdAt.year, 2025);
+        expect(all.first.createdAt.month, 1);
         expect(all.first.createdAt.day, 1);
+      });
+
+      test('未来の日付の通知はスキップされる（予約通知）', () async {
+        const jsonStr = '['
+            '{"dedup_key":"sys:future","title":"未来の通知","message":"テスト",'
+            '"date":"2099-12-31"}'
+            ']';
+        final result =
+            await service.syncSystemNotificationsFromJson(jsonStr);
+        expect(result.notifications, isEmpty);
+
+        final all = await service.getAllNotifications();
+        expect(all, isEmpty);
+      });
+
+      test('過去の通知は表示され未来の通知はスキップされる', () async {
+        const jsonStr = '['
+            '{"dedup_key":"sys:past","title":"過去の通知","message":"A",'
+            '"date":"2025-01-01"},'
+            '{"dedup_key":"sys:future","title":"未来の通知","message":"B",'
+            '"date":"2099-12-31"}'
+            ']';
+        final result =
+            await service.syncSystemNotificationsFromJson(jsonStr);
+        expect(result.notifications.length, 1);
+        expect(result.notifications.first.title, '過去の通知');
       });
     });
   });
