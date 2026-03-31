@@ -26,7 +26,8 @@ import '../providers/service_providers.dart';
 import '../providers/theme_provider.dart';
 import '../services/invite_service.dart';
 import '../services/remote_config_service.dart';
-import '../services/trial_limit_service.dart' show isTrialMode, isPremium;
+import '../services/trial_limit_service.dart'
+    show isTrialMode, isPremium, isDeveloperMode;
 import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
@@ -184,10 +185,39 @@ class SettingsPage extends ConsumerWidget {
         ),
         const SizedBox(height: 24),
 
-        // アカウント（Web限定）
+        // アカウント情報（Web限定）
         if (kIsWeb) ...[
           _SectionHeader(title: AppLabels.settingsAccount, icon: Icons.person_outlined),
           _AccountCard(ref: ref, colors: colors),
+          Card(
+            child: Column(
+              children: [
+                // ご利用プラン
+                ListTile(
+                  leading: Icon(
+                    isPremium ? Icons.workspace_premium : Icons.rocket_launch,
+                    color: isPremium ? colors.warning : colors.accent,
+                  ),
+                  title: const Text(AppLabels.settingsPlan),
+                  subtitle: Text(_getPlanName(ref)),
+                ),
+                // サブスク管理（サブスク契約者 or 開発者のみ）
+                if (_isSubscriptionActive(ref) || isDeveloperMode) ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: Icon(Icons.manage_accounts, color: colors.accent),
+                    title: const Text(AppLabels.settingsManageSubscription),
+                    subtitle: const Text(AppLabels.settingsManageSubscriptionDesc),
+                    trailing: Icon(Icons.open_in_new,
+                        size: 16, color: colors.textMuted),
+                    onTap: isDeveloperMode && !_isSubscriptionActive(ref)
+                        ? null
+                        : () => _openCustomerPortal(context, ref),
+                  ),
+                ],
+              ],
+            ),
+          ),
           const SizedBox(height: 24),
         ],
 
@@ -210,36 +240,12 @@ class SettingsPage extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
         ],
-        // サブスク管理（契約者のみ表示）
-        if (_isSubscriptionActive(ref)) ...[
-          Card(
-            child: ListTile(
-              leading: Icon(Icons.manage_accounts, color: colors.accent),
-              title: const Text(AppLabels.settingsManageSubscription),
-              subtitle: const Text(AppLabels.settingsManageSubscriptionDesc),
-              trailing: Icon(Icons.open_in_new,
-                  size: 16, color: colors.textMuted),
-              onTap: () => _openCustomerPortal(context, ref),
-            ),
-          ),
-          const SizedBox(height: 24),
-        ],
-
 
         // バージョン情報
         _SectionHeader(title: AppLabels.settingsAppInfo, icon: Icons.info_outlined),
         Card(
           child: Column(
             children: [
-              ListTile(
-                leading: Icon(
-                  isPremium ? Icons.workspace_premium : Icons.rocket_launch,
-                  color: isPremium ? colors.warning : colors.accent,
-                ),
-                title: const Text(AppLabels.settingsPlan),
-                subtitle: Text(_getPlanName(ref)),
-              ),
-              const Divider(height: 1),
               const ListTile(
                 leading: Icon(Icons.code),
                 title: Text(AppLabels.settingsVersion),

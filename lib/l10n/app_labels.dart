@@ -246,7 +246,7 @@ class AppLabels {
   static const settingsLastDeploy = '最終更新日';
   static const settingsPlatform = 'クロスプラットフォーム対応';
   static const settingsPlan = 'ご利用プラン';
-  static const settingsAccount = 'アカウント';
+  static const settingsAccount = 'アカウント情報';
   static const settingsAppInfo = 'アプリ情報';
   static const settingsAppearance = '外観';
   static const settingsNotifications = '通知設定';

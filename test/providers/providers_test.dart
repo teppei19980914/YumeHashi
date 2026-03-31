@@ -247,6 +247,112 @@ void main() {
       expect(books.first.status, BookStatus.completed);
       expect(books.first.summary, '要約');
     });
+
+    test('createBookはstateに即時追加される', () async {
+      await container
+          .read(bookListProvider.notifier)
+          .createBook('即時追加テスト');
+      final books = await container.read(bookListProvider.future);
+      expect(books.length, 1);
+      expect(books.first.title, '即時追加テスト');
+
+      // 2冊目を追加して既存の本も維持されることを確認
+      await container
+          .read(bookListProvider.notifier)
+          .createBook('2冊目');
+      final books2 = await container.read(bookListProvider.future);
+      expect(books2.length, 2);
+      expect(books2.map((b) => b.title), containsAll(['即時追加テスト', '2冊目']));
+    });
+
+    test('updateBookInfoはstateのwhy・descriptionを即時更新する', () async {
+      await container
+          .read(bookListProvider.notifier)
+          .createBook('情報更新テスト');
+      var books = await container.read(bookListProvider.future);
+      final id = books.first.id;
+
+      await container.read(bookListProvider.notifier).updateBookInfo(
+            id,
+            title: '更新後タイトル',
+            category: BookCategory.it,
+            why: '技術力向上のため',
+            description: 'Flutterの入門書',
+          );
+      books = await container.read(bookListProvider.future);
+      expect(books.length, 1);
+      expect(books.first.title, '更新後タイトル');
+      expect(books.first.category, BookCategory.it);
+      expect(books.first.why, '技術力向上のため');
+      expect(books.first.description, 'Flutterの入門書');
+    });
+
+    test('updateStatusはstateのステータスを即時更新する', () async {
+      await container
+          .read(bookListProvider.notifier)
+          .createBook('ステータス即時更新');
+      var books = await container.read(bookListProvider.future);
+      final id = books.first.id;
+      expect(books.first.status, BookStatus.unread);
+
+      await container
+          .read(bookListProvider.notifier)
+          .updateStatus(id, BookStatus.reading);
+      books = await container.read(bookListProvider.future);
+      expect(books.first.status, BookStatus.reading);
+
+      // さらにcompletedに変更
+      await container
+          .read(bookListProvider.notifier)
+          .updateStatus(id, BookStatus.completed);
+      books = await container.read(bookListProvider.future);
+      expect(books.first.status, BookStatus.completed);
+    });
+
+    test('deleteBookはstateから即時削除される', () async {
+      await container
+          .read(bookListProvider.notifier)
+          .createBook('削除対象');
+      await container
+          .read(bookListProvider.notifier)
+          .createBook('残る本');
+      var books = await container.read(bookListProvider.future);
+      expect(books.length, 2);
+
+      final deleteId =
+          books.firstWhere((b) => b.title == '削除対象').id;
+      await container
+          .read(bookListProvider.notifier)
+          .deleteBook(deleteId);
+      books = await container.read(bookListProvider.future);
+      expect(books.length, 1);
+      expect(books.first.title, '残る本');
+    });
+
+    test('updateBookInfoは対象以外のBookを変更しない', () async {
+      await container
+          .read(bookListProvider.notifier)
+          .createBook('本A');
+      await container
+          .read(bookListProvider.notifier)
+          .createBook('本B');
+      var books = await container.read(bookListProvider.future);
+      final idA = books.firstWhere((b) => b.title == '本A').id;
+
+      await container.read(bookListProvider.notifier).updateBookInfo(
+            idA,
+            title: '本A更新',
+            category: BookCategory.business,
+            why: '理由A',
+            description: '説明A',
+          );
+      books = await container.read(bookListProvider.future);
+      final bookA = books.firstWhere((b) => b.id == idA);
+      final bookB = books.firstWhere((b) => b.id != idA);
+      expect(bookA.title, '本A更新');
+      expect(bookB.title, '本B');
+      expect(bookB.why, '');
+    });
   });
 
   group('GanttProviders', () {

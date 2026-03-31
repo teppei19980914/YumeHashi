@@ -6,6 +6,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -96,7 +97,8 @@ class StripeService {
 
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return json['url'] as String?;
-    } on Object {
+    } on Object catch (e) {
+      debugPrint('[StripeService] createCheckoutUrl error: $e');
       return null;
     }
   }
@@ -130,7 +132,8 @@ class StripeService {
 
       final json = jsonDecode(response.body) as Map<String, dynamic>;
       return json['url'] as String?;
-    } on Object {
+    } on Object catch (e) {
+      debugPrint('[StripeService] createCustomerPortalUrl error: $e');
       return null;
     }
   }
@@ -166,7 +169,8 @@ class StripeService {
       }
 
       return active;
-    } on Object {
+    } on Object catch (e) {
+      debugPrint('[StripeService] verifySubscription error: $e');
       return null;
     }
   }
