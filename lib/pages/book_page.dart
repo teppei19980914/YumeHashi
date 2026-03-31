@@ -415,7 +415,6 @@ class _BookCover extends ConsumerWidget {
       return;
     }
 
-    debugPrint('[BookEdit] why="${result.why}" desc="${result.description}"');
     await ref.read(bookListProvider.notifier).updateBookInfo(
           book.id,
           title: result.title,
@@ -427,10 +426,6 @@ class _BookCover extends ConsumerWidget {
       await ref.read(bookListProvider.notifier).updateStatus(
             book.id, result.status!);
     }
-    // 保存後にDBの値を確認
-    final books = await ref.read(bookListProvider.future);
-    final saved = books.firstWhere((b) => b.id == book.id);
-    debugPrint('[BookEdit] saved: why="${saved.why}" desc="${saved.description}"');
   }
 
 }
