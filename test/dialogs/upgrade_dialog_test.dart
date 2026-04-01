@@ -35,7 +35,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('プレミアムプラン'), findsOneWidget);
-    expect(find.text('¥480/月'), findsOneWidget);
+    expect(find.text('¥200/月'), findsOneWidget);
   });
 
   testWidgets('トライアル未開始時は両方のボタンが表示される', (tester) async {

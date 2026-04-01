@@ -172,7 +172,7 @@ class _FaqTabState extends State<_FaqTab> {
     _FaqItem(
       question: AppLabels.helpFaqPremiumSubscribeQ,
       answer: AppLabels.helpFaqPremiumSubscribeA,
-      keywords: ['プレミアム', '契約', '申し込み', '料金', '価格', '480', 'サブスク', 'アップグレード'],
+      keywords: ['プレミアム', '契約', '申し込み', '料金', '価格', '200', 'サブスク', 'アップグレード'],
     ),
     _FaqItem(
       question: AppLabels.helpFaqStarterLimitQ,

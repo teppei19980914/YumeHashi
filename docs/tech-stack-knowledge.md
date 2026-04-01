@@ -350,7 +350,7 @@ Checkout → Flutter Setup → pub get → flutter analyze → flutter test --co
 
 | 項目 | 詳細 |
 |------|------|
-| **役割** | サブスクリプション月額決済（¥480/月） |
+| **役割** | サブスクリプション月額決済（¥200/月） |
 | **連携方式** | Stripe Checkout（ホスト型決済画面） |
 | **フロー** | アプリ → GAS → Stripe Checkout Session → Stripe 決済画面 → コールバック |
 | **月額費用** | 0 円（決済発生時のみ手数料） |

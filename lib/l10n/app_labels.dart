@@ -239,7 +239,7 @@ class AppLabels {
   static const settingsCloudRestore = 'クラウドからデータ復元';
   static const settingsCloudRestoreDesc = 'バックアップからデータを復元します';
   static const settingsUpgradeTitle = 'もっと自由に、もっと先へ';
-  static const settingsUpgradeDesc = 'ワンコインで全機能を利用可能';
+  static const settingsUpgradeDesc = '月額200円で全機能を利用可能';
   static const settingsManageSubscription = 'サブスクリプション管理';
   static const settingsManageSubscriptionDesc = 'プラン変更・解約はこちら';
   static const settingsVersion = 'バージョン';
@@ -541,7 +541,7 @@ class AppLabels {
   // ── アップグレードダイアログ ──────────────────────────────────
   static const upgradeTitle = 'もっと自由に、もっと先へ';
   static const upgradeSubtitle =
-      'ワンコインで、あなたの「やりたい」を全力でサポートします。';
+      '月額200円で、あなたの「やりたい」を全力でサポートします。';
   static const upgradeFeature1Title = 'やりたいことを、制限なく追いかけられる';
   static const upgradeFeature1Desc = '夢・目標・タスク・書籍を好きなだけ登録';
   static const upgradeFeature2Title = 'やるべきことが一目でわかる';
@@ -554,8 +554,8 @@ class AppLabels {
       '要望した機能を最優先で利用可能';
   static const upgradePlanName = 'プレミアムプラン';
   static const upgradeTrialDesc = '初回7日間無料 ── まず試してみてください';
-  static const upgradePaidDesc = '月額ワンコインで全機能を利用可能';
-  static const upgradePrice = '¥480/月';
+  static const upgradePaidDesc = '月額200円で全機能を利用可能';
+  static const upgradePrice = '¥200/月';
   static const upgradeTrialButton = '7日間無料で試してみる';
   static const upgradeProcessing = '処理中...';
   static String upgradeSubscribeNow(String price) => 'すぐに申し込む（$price）';
@@ -769,7 +769,7 @@ class AppLabels {
   static const helpFaqPremiumSubscribeA =
       '画面右上のメールアイコン横の実績アイコンの隣にある'
       '設定ページの「プランのアップグレード」から申し込めます。\n'
-      '月額480円（税込）で全機能をご利用いただけます。\n'
+      '月額200円（税込）で全機能をご利用いただけます。\n'
       '初回7日間の無料トライアルもご用意しています。';
   static const helpFaqStarterLimitQ = 'スタータープランの制限を解除するには？';
   static const helpFaqStarterLimitA =
@@ -880,7 +880,7 @@ class AppLabels {
       'アプリの感想送信で段階的に登録上限が緩和されます';
   static const helpPlanPremiumName = 'プレミアムプラン';
   static const helpPlanPremiumDesc =
-      '月額480円（税込）で全機能を制限なくご利用いただけます。\n'
+      '月額200円（税込）で全機能を制限なくご利用いただけます。\n'
       '初回7日間の無料トライアルもご用意しています。';
   static const helpPlanPremiumUpgradeHint =
       '設定ページの「プランのアップグレード」からお申し込みください。';
