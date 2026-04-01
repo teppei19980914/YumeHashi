@@ -202,6 +202,9 @@ class NotificationService {
           (json.decode(jsonStr) as List).cast<Map<String, dynamic>>();
       final now = DateTime.now();
 
+      // 旧ロジック（全削除→再作成）で発生した重複を除去
+      await _notificationDao.removeDuplicates();
+
       // 差分同期: 既存通知の既読状態を保持し、新規のみ追加
       final created = <Notification>[];
       for (final item in items) {

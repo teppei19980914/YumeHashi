@@ -77,6 +77,24 @@ class NotificationDao extends DatabaseAccessor<AppDatabase>
         .go();
   }
 
+  /// 同じ dedup_key を持つ重複通知を除去する（最古の1件のみ残す）.
+  Future<int> removeDuplicates() async {
+    final all = await getAll();
+    final seen = <String>{};
+    var removed = 0;
+    // createdAt降順なので、新しい方が先に来る → 古い方（後から来る）を残す
+    // 逆順にして古い方を先に処理
+    for (final n in all.reversed) {
+      if (n.dedupKey.isNotEmpty && seen.contains(n.dedupKey)) {
+        await deleteById(n.id);
+        removed++;
+      } else {
+        seen.add(n.dedupKey);
+      }
+    }
+    return removed;
+  }
+
   /// Notificationを削除する.
   Future<bool> deleteById(String notificationId) async {
     final count = await (delete(notifications)

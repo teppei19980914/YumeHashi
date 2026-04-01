@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'dialogs/app_guide_dialog.dart';
+import 'services/demo_data_service.dart' show isDemoDataSeeded, seedDemoData;
 import 'services/firestore_sync_service.dart' show FirestoreSyncService;
 import 'services/sync_manager.dart';
 import 'dialogs/help_dialog.dart';
@@ -175,6 +176,7 @@ class _AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<_AppShell> {
   bool _resetChecked = false;
+  bool _demoChecked = false;
   bool _monitorChecked = false;
   bool _cloudAuthChecked = false;
   bool _inboxChecked = false;
@@ -197,6 +199,13 @@ class _AppShellState extends ConsumerState<_AppShell> {
 
     setSubscriptionPremium(enabled: active);
     if (mounted) setState(() {}); // UIを再描画
+  }
+
+  /// ローカル実行（localhost）かどうかを判定する.
+  static bool _isLocalhost() {
+    if (!kIsWeb) return true; // デスクトップ版はローカル実行
+    final host = Uri.base.host;
+    return host == 'localhost' || host == '127.0.0.1';
   }
 
   /// 受信ボックスのチェック（リマインダー自動生成 + 開発者通知読み込み）.
@@ -459,6 +468,35 @@ class _AppShellState extends ConsumerState<_AppShell> {
           await service.clearAllData();
           await prefs.remove(resetPendingKey);
           // リセット後、全Providerのキャッシュを更新してUIに反映
+          ref.invalidate(dreamListProvider);
+          ref.invalidate(goalListProvider);
+          ref.invalidate(bookListProvider);
+          ref.invalidate(allLogsProvider);
+        });
+      }
+    }
+
+    // ローカル実行時はプレミアム（開発者モード）として動作
+    if (!_demoChecked && !_disableInboxCheck && _isLocalhost()) {
+      setDeveloperMode(enabled: true);
+    }
+
+    // デモデータ投入（ローカル実行時のみ・初回のみ）
+    if (!_demoChecked && !_disableInboxCheck && _isLocalhost()) {
+      _demoChecked = true;
+      final prefs = ref.read(sharedPreferencesProvider);
+      if (!isDemoDataSeeded(prefs)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted) return;
+          await seedDemoData(
+            prefs: prefs,
+            dreamService: ref.read(dreamServiceProvider),
+            goalService: ref.read(goalServiceProvider),
+            taskService: ref.read(taskServiceProvider),
+            bookService: ref.read(bookServiceProvider),
+            studyLogService: ref.read(studyLogServiceProvider),
+          );
+          if (!mounted) return;
           ref.invalidate(dreamListProvider);
           ref.invalidate(goalListProvider);
           ref.invalidate(bookListProvider);
