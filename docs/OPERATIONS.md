@@ -9,7 +9,8 @@
 5. [管理ファイル一覧](#5-管理ファイル一覧)
 6. [Claude Code 設定（Skills / Hooks / Agents）](#6-claude-code-設定skills--hooks--agents)
 7. [GitHub Actions（自動処理）](#7-github-actions自動処理)
-8. [トラブルシューティング](#8-トラブルシューティング)
+8. [ストレステスト運用](#8-ストレステスト運用)
+9. [トラブルシューティング](#9-トラブルシューティング)
 
 ---
 
@@ -484,9 +485,128 @@ flutter analyze → flutter test --coverage
 - PR のマージ可否判定に使用
 - デプロイは行わない
 
+### stress-test.yml（毎週日曜 12:00 JST / 手動実行可）
+
+```
+データ件数テスト → 画面描画テスト → 同時アクセステスト → 結果コミット → 閾値超過時にIssue起票
+```
+
+- 通常テスト（`test/`）とは分離されており、CI/CDには影響しない
+- 結果は `test_stress/results/` に JSON で自動コミット
+- 閾値超過時は `performance` ラベル付きの GitHub Issue を自動作成
+- 詳細は [8. ストレステスト運用](#8-ストレステスト運用) を参照
+
 ---
 
-## 8. トラブルシューティング
+## 8. ストレステスト運用
+
+### パフォーマンス閾値
+
+**全操作 1秒以内**（ユーザー体感ベース）
+
+| 環境 | 閾値 | 理由 |
+|---|---|---|
+| 本番（Web WASM） | 1秒以内 | ユーザー体験の基準 |
+| テスト（インメモリSQLite） | 2秒以内 | Web WASMの3〜5倍高速なため、2秒 ≒ 実環境1秒 |
+
+### テスト構成
+
+| # | テスト種別 | ファイル | テスト数 | 結果JSON |
+|---|---|---|---|---|
+| 1 | データ件数 | `test_stress/data_volume_stress_test.dart` | 16件 | `latest.json` |
+| 2 | 画面描画 | `test_stress/rendering_stress_test.dart` | 10件 | `latest_rendering.json` |
+| 3 | 同時アクセス | `test_stress/concurrent_access_stress_test.dart` | 10件 | `latest_concurrent.json` |
+| | **合計** | | **36件** | |
+
+### 運用フロー
+
+```
+1. 開発者がコミット & プッシュ（通常の開発サイクル）
+        │
+        ▼
+2. 毎週日曜 12:00（GitHub Actions が自動実行）
+   ├─ データ件数テスト（1万件INSERT、統計計算、エクスポート/インポート）
+   ├─ 画面描画テスト（ガントチャート200タスク、本棚200冊、1000行リスト）
+   └─ 同時アクセステスト（API 50同時、DB 100同時、同期デバウンス）
+        │
+   ┌────┴────┐
+   │         │
+ 全パス    閾値超過
+   │         │
+   ▼         ▼
+ 何もなし   GitHub Issue 自動起票
+            （ラベル: performance, bug）
+             │
+             ▼
+3. 開発者が GitHub 通知で Issue を確認
+   （ボトルネック一覧・全計測結果・対応方法が記載済み）
+             │
+             ▼
+4. Claude Code セッションで /fix-performance を実行
+             │
+             ▼
+5. Claude Code が自動で改善
+   ├─ test_stress/results/latest.json を読み込み
+   ├─ ボトルネックのソースコードを特定
+   ├─ 修正を実施
+   └─ 再計測で閾値以内を確認
+             │
+             ▼
+6. 開発者がコミット & プッシュ → Issue クローズ
+```
+
+### 手動実行
+
+```bash
+# 全ストレステストを実行
+flutter test test_stress/data_volume_stress_test.dart
+flutter test test_stress/rendering_stress_test.dart
+flutter test test_stress/concurrent_access_stress_test.dart
+
+# GitHub Actions を手動実行（Actions タブ → Stress Test → Run workflow）
+```
+
+### Issue の重複防止
+
+- 既に `performance` ラベルのオープンIssueがある場合、新規Issueは作成せず既存Issueにコメント追加
+- 修正完了後にIssueをクローズすれば、次回の閾値超過で新規Issueが作成される
+
+### 結果ファイルの読み方
+
+`test_stress/results/latest.json` の構造:
+
+```json
+{
+  "timestamp": "2026-04-02T...",
+  "all_passed": true,
+  "measurements": [
+    {
+      "label": "活動ログ 10000件",
+      "ms": 825,
+      "threshold_ms": 2000,
+      "passed": true
+    }
+  ],
+  "bottlenecks": []
+}
+```
+
+- `all_passed: true` — 全計測が閾値以内
+- `bottlenecks` — 閾値超過した項目の一覧（空なら問題なし）
+
+### よくあるボトルネックと改善パターン
+
+| パターン | 原因 | 改善方法 |
+|---|---|---|
+| INSERT/DELETEが遅い | ループ内で1件ずつDB操作 | `db.batch()` でバッチ処理に変更 |
+| 統計計算が遅い | 全件をメモリ上でスキャン | 日付範囲フィルタをSQL `WHERE` に押し込む |
+| クエリが遅い | ループ内で `existsByDedupKey` | 一括取得して `Set` でフィルタ |
+| N+1クエリ | 目標ごとにタスクを個別取得 | `getByGoalIds(List)` で一括取得 |
+| CustomPainter が遅い | `paint()` 内で Paint オブジェクト生成 | コンストラクタでキャッシュ |
+
+---
+
+## 9. トラブルシューティング
 
 ### デプロイ後にリリースノートポップアップが表示されない
 

@@ -8,7 +8,7 @@ library;
 /// アプリの現在バージョン番号.
 ///
 /// pubspec.yaml の version と一致させること.
-const appVersion = '1.0.1';
+const appVersion = '1.0.2';
 
 /// 最終デプロイ日時.
 ///
@@ -25,6 +25,21 @@ const deployedAt = '---';
 ///
 /// 最新エントリ（先頭）がリリースノートポップアップに使用される.
 const releaseHistory = <ReleaseEntry>[
+  ReleaseEntry(
+    version: '1.0.2',
+    date: '2026-04-03',
+    notes: [
+      'サブスク料金を月額200円に変更',
+      '読書活動予定のプルダウンに読書中の書籍も表示されるよう修正',
+      'ストレステスト基盤の導入（データ件数・画面描画・同時アクセスの3軸36テスト）',
+      '週次ストレステスト自動実行（GitHub Actions）と閾値超過時のIssue自動起票',
+      'パフォーマンス改善スキル（/fix-performance）の追加',
+      'デモデータ投入機能の追加（ローカル実行時のみ）',
+      'ローカル実行時の開発者モード自動有効化',
+      'LP・Qiita・Wantedly向け資材をAI駆動開発比較型に刷新',
+      'LT用スライドの再構成（技術比較→成果物体験の導線）',
+    ],
+  ),
   ReleaseEntry(
     version: '1.0.1',
     date: '2026-04-01',

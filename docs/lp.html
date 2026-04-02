@@ -3,56 +3,51 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ユメログ - 夢を行動に変えるアプリ</title>
+<title>AI駆動開発で3週間でアプリを作った話 — ユメログ</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Hiragino Sans', 'Noto Sans JP', sans-serif; color: #1e1e2e; line-height: 1.8; }
-  a { color: #4A9EFF; text-decoration: none; }
+  a { color: #89b4fa; text-decoration: none; }
 
   .hero { background: linear-gradient(135deg, #1e1e2e 0%, #313244 100%); color: #cdd6f4; text-align: center; padding: 80px 20px; }
-  .hero h1 { font-size: 2.4em; margin-bottom: 8px; color: #cdd6f4; }
-  .hero .tagline { font-size: 1.1em; color: #a6adc8; margin-bottom: 8px; }
-  .hero .catch { font-size: 1.3em; font-weight: bold; color: #89b4fa; margin-bottom: 32px; }
+  .hero h1 { font-size: 2.2em; margin-bottom: 12px; color: #cdd6f4; line-height: 1.4; }
+  .hero .tagline { font-size: 1.1em; color: #a6adc8; margin-bottom: 32px; }
   .hero .cta { display: inline-block; background: #89b4fa; color: #1e1e2e; padding: 16px 40px; border-radius: 8px; font-size: 1.1em; font-weight: bold; transition: background 0.2s; }
   .hero .cta:hover { background: #74c7ec; }
 
-  .section { max-width: 720px; margin: 0 auto; padding: 60px 20px; }
+  .section { max-width: 800px; margin: 0 auto; padding: 60px 20px; }
   .section h2 { font-size: 1.6em; margin-bottom: 24px; color: #1e1e2e; border-bottom: 3px solid #89b4fa; padding-bottom: 8px; display: inline-block; }
   .section h3 { font-size: 1.2em; margin: 24px 0 8px; color: #313244; }
   .section p { margin-bottom: 16px; color: #4c4f69; }
 
-  .pain { background: #f5f5f5; }
-  .pain blockquote { background: #fff; border-left: 4px solid #89b4fa; padding: 16px 20px; margin-bottom: 16px; border-radius: 0 8px 8px 0; font-size: 1.05em; color: #313244; font-weight: 500; }
+  .dark { background: #1e1e2e; color: #cdd6f4; }
+  .dark h2 { color: #cdd6f4; border-color: #89b4fa; }
+  .dark p { color: #a6adc8; }
+  .dark .lead { font-size: 1.3em; font-weight: bold; color: #89b4fa; margin-bottom: 16px; }
 
-  .concept { background: #1e1e2e; color: #cdd6f4; }
-  .concept h2 { color: #cdd6f4; border-color: #89b4fa; }
-  .concept .lead { font-size: 1.3em; font-weight: bold; color: #89b4fa; margin-bottom: 16px; }
-  .concept p { color: #a6adc8; }
+  .light { background: #f5f5f5; }
 
-  .steps { background: #fff; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #e6e9ef; font-size: 0.95em; }
+  th { background: #313244; color: #cdd6f4; font-weight: 600; }
+  td { color: #4c4f69; }
+  .highlight { color: #89b4fa; font-weight: bold; }
+  .success { color: #40a02b; font-weight: bold; }
+
   .step-num { display: inline-block; background: #89b4fa; color: #1e1e2e; width: 32px; height: 32px; border-radius: 50%; text-align: center; line-height: 32px; font-weight: bold; margin-right: 8px; }
   .tree { background: #f5f5f5; padding: 16px 20px; border-radius: 8px; font-family: monospace; font-size: 0.95em; line-height: 1.6; margin: 12px 0 16px; color: #313244; }
 
-  .features { background: #f5f5f5; }
-  .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
-  .feature-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-  .feature-card h3 { margin: 0 0 8px; font-size: 1.05em; color: #1e1e2e; }
-  .feature-card p { margin: 0; font-size: 0.9em; color: #4c4f69; }
+  .feature-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .feature-card { background: #fff; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .feature-card h3 { margin: 0 0 6px; font-size: 1em; color: #1e1e2e; }
+  .feature-card p { margin: 0; font-size: 0.85em; color: #6c6f85; }
   @media (max-width: 600px) { .feature-grid { grid-template-columns: 1fr; } }
 
-  .scenes { background: #fff; }
-  .scene-list { list-style: none; }
-  .scene-list li { padding: 12px 0; border-bottom: 1px solid #e6e9ef; }
-  .scene-list li:last-child { border: none; }
-  .scene-list strong { color: #1e1e2e; }
-  .scene-list span { color: #6c6f85; display: block; margin-top: 4px; font-size: 0.9em; }
-
-  .story { background: #f5f5f5; }
-  .story blockquote { background: #fff; padding: 24px; border-radius: 12px; font-style: italic; color: #4c4f69; line-height: 2; }
-  .story blockquote strong { color: #1e1e2e; font-style: normal; }
+  blockquote { background: #fff; padding: 24px; border-radius: 12px; font-style: italic; color: #4c4f69; line-height: 2; border-left: 4px solid #89b4fa; }
+  blockquote strong { color: #1e1e2e; font-style: normal; }
 
   .cta-section { background: linear-gradient(135deg, #1e1e2e 0%, #313244 100%); color: #cdd6f4; text-align: center; padding: 60px 20px; }
-  .cta-section h2 { color: #cdd6f4; font-size: 1.6em; margin-bottom: 12px; border: none; display: block; }
+  .cta-section h2 { color: #cdd6f4; font-size: 1.5em; margin-bottom: 12px; border: none; display: block; }
   .cta-section p { color: #a6adc8; margin-bottom: 24px; }
   .cta-section .cta { display: inline-block; background: #89b4fa; color: #1e1e2e; padding: 16px 40px; border-radius: 8px; font-size: 1.1em; font-weight: bold; }
 
@@ -62,41 +57,95 @@
 <body>
 
 <div class="hero">
-  <h1>ユメログ</h1>
-  <p class="tagline">夢を持つことで、大きな壁も乗り越えられる。</p>
-  <p class="catch">あなたの「やりたいこと」を、行動に変えるアプリ。</p>
-  <a href="https://teppei19980914.github.io/GrowthEngine/" class="cta">無料で体験する →</a>
+  <h1>スクラッチ開発未経験エンジニアが<br>AI駆動開発で3週間でアプリを作った話</h1>
+  <p class="tagline">Flutter未経験から、プロダクション品質のWebアプリを21日で完成させた記録</p>
+  <a href="https://teppei19980914.github.io/GrowthEngine/" class="cta">成果物を見る →</a>
 </div>
 
-<div class="pain">
+<!-- 開発者スペック -->
+<div class="light">
   <div class="section">
-    <h2>こんな悩み、ありませんか？</h2>
-    <blockquote>やりたいことはあるけど、何から始めればいいか分からない</blockquote>
-    <blockquote>目標を立てても、いつの間にか忘れてしまう</blockquote>
-    <blockquote>毎日忙しくて、夢に向かう時間が取れない</blockquote>
-    <p>ユメログは、そんなあなたのために作られました。</p>
+    <h2>開発者のスペック</h2>
+    <p>まず前提として、自分のスペックです。<strong>フレームワークも言語もアーキテクチャ設計も全て未経験</strong>の状態からスタートしています。</p>
+    <table>
+      <tr><td>年齢</td><td>27歳</td></tr>
+      <tr><td>IT業界経験</td><td>約5年（パッケージ開発・ローコード開発）</td></tr>
+      <tr><td>スクラッチ開発経験</td><td class="highlight">なし</td></tr>
+      <tr><td>Flutter / Dart 経験</td><td class="highlight">なし（本プロジェクトが初）</td></tr>
+    </table>
   </div>
 </div>
 
-<div class="concept">
+<!-- Before -->
+<div class="section">
+  <h2>Before: 従来の開発なら、どれくらいかかるか</h2>
+  <p>今回作ったアプリの規模: <strong>コード約48,000行 / テスト813件 / 32機能 / 8画面 / 6テーブル</strong></p>
+  <p>IPA ソフトウェア開発データ白書 + COCOMO II モデルで試算すると…</p>
+  <table>
+    <tr><td>フレームワーク学習</td><td>1〜2ヶ月</td><td style="color:#6c6f85">Flutter / Dart / Drift / Riverpod</td></tr>
+    <tr><td>設計・開発・テスト</td><td>4〜7ヶ月</td><td style="color:#6c6f85">生産性 50〜100行/人日（IPA中央値）</td></tr>
+    <tr><td style="font-weight:bold">合計</td><td style="color:#e64553; font-weight:bold">6〜9ヶ月</td><td style="color:#6c6f85">1人で新規スクラッチ開発の場合</td></tr>
+  </table>
+</div>
+
+<!-- After -->
+<div class="dark">
   <div class="section">
-    <h2>ユメログとは</h2>
-    <p class="lead">止まっている人を動かし、動いている人を支える。</p>
-    <p>人は慣性で行動します。動いている人は動き続け、止まっている人は止まり続けます。</p>
-    <p>ユメログは「最初の一歩」を踏み出すきっかけと、動き続けるための仕組みを提供します。</p>
+    <h2>After: AI駆動開発の実績</h2>
+    <table>
+      <tr><th>指標</th><th>従来開発（推定）</th><th>AI駆動開発（実績）</th><th>効果</th></tr>
+      <tr><td>開発期間</td><td>6〜9ヶ月</td><td class="highlight">21日</td><td class="success">6〜9倍 短縮</td></tr>
+      <tr><td>コード生産速度</td><td>50〜100行/日</td><td class="highlight">2,281行/日</td><td class="success">23〜46倍</td></tr>
+      <tr><td>テスト密度</td><td>0〜3件/KLOC</td><td class="highlight">16.9件/KLOC</td><td class="success">6倍以上</td></tr>
+      <tr><td>学習コスト</td><td>1〜2ヶ月</td><td class="highlight">0日</td><td class="success">省略</td></tr>
+    </table>
+    <p style="color:#f9e2af; font-weight:bold;">最もインパクトが大きいのは「学習コスト0日」。Flutterを一切学ばずに初日からコードを書き始めました。</p>
   </div>
 </div>
 
-<div class="steps">
+<!-- 工程別比較 -->
+<div class="section">
+  <h2>工程別の比較 — テスト工程が消滅</h2>
+  <table>
+    <tr><th>工程</th><th>AI駆動（実績）</th><th>従来（推定）</th><th>短縮率</th></tr>
+    <tr><td>企画</td><td class="highlight">1日</td><td>1〜2週間</td><td class="success">70〜85%</td></tr>
+    <tr><td>要件定義</td><td class="highlight">1日</td><td>2〜4週間</td><td class="success">80〜90%</td></tr>
+    <tr><td>仕様検討</td><td class="highlight">2日</td><td>3〜6週間</td><td class="success">80〜90%</td></tr>
+    <tr><td>設計</td><td class="highlight">1日</td><td>2〜4週間</td><td class="success">80〜90%</td></tr>
+    <tr><td>開発</td><td class="highlight">14日</td><td>3〜6ヶ月</td><td class="success">85〜95%</td></tr>
+    <tr><td style="font-weight:bold; color:#df8e1d;">テスト</td><td class="highlight">開発と並行</td><td>1〜2ヶ月</td><td class="success" style="font-weight:bold">90〜95%</td></tr>
+    <tr style="background:#89b4fa"><td style="color:#1e1e2e; font-weight:bold">合計</td><td style="color:#1e1e2e; font-weight:bold">約21日</td><td style="color:#1e1e2e">7〜14ヶ月</td><td style="color:#1e1e2e; font-weight:bold">約90%</td></tr>
+  </table>
+</div>
+
+<!-- なぜ可能か -->
+<div class="dark">
   <div class="section">
-    <h2>3ステップで、夢を行動に変える</h2>
+    <h2>なぜこれが可能なのか</h2>
+    <p class="lead">魔法ではなく「仕組み」— Claude Code の5段階最適化</p>
+    <table>
+      <tr><th>Level</th><th>追加要素</th><th>何が自動化されるか</th></tr>
+      <tr><td>1</td><td>素のプロンプト</td><td>なし（毎回手動で指示）</td></tr>
+      <tr><td>2</td><td>+ CLAUDE.md</td><td>プロジェクトルールの自動読み込み</td></tr>
+      <tr><td>3</td><td>+ Skills</td><td>手順書のオンデマンド注入</td></tr>
+      <tr><td>4</td><td>+ Hooks</td><td>コードフォーマット・テスト自動実行</td></tr>
+      <tr><td class="highlight">5</td><td class="highlight">+ Agents</td><td class="highlight">セキュリティ・性能レビューが並行自動実行</td></tr>
+    </table>
+    <p style="color:#f9e2af; font-weight:bold;">Level 5 まで育てると、人間がやるのは「何を作るか決める」ことと「動作確認する」ことだけ。</p>
+  </div>
+</div>
+
+<!-- で、何を作ったの？ -->
+<div class="light">
+  <div class="section">
+    <h2>で、何を作ったの？</h2>
+    <p>この仕組みで作ったのが <strong>ユメログ (YumeLog)</strong> — 夢を行動に変えるアプリです。</p>
 
     <h3><span class="step-num">1</span>書き出す</h3>
-    <p>夢を言葉にして書き出すだけ。脳がそれを「目標」として認識し始めます。</p>
-    <p style="color:#6c6f85; font-style:italic;">「ITエンジニアになりたい」「英語を話せるようになりたい」— 小さな一言で十分です。</p>
+    <p>夢を言葉にして書き出す。脳がそれを「目標」として認識し始めます。</p>
 
     <h3><span class="step-num">2</span>分解する</h3>
-    <p>夢を目標に、目標をタスクに分解。大きな壁が、毎日の小さな行動に変わります。</p>
+    <p>夢を目標に、目標をタスクに分解。大きな壁が毎日の小さな行動に。</p>
     <div class="tree">
       夢: ITエンジニアになる<br>
       　└ 目標: AWS資格を取得する（3ヶ月以内）<br>
@@ -105,72 +154,35 @@
     </div>
 
     <h3><span class="step-num">3</span>続ける</h3>
-    <p>活動の積み重ねが星座として輝きます。12の星座を完成させる旅が、あなたの成長の証になります。</p>
-  </div>
-</div>
+    <p>活動の積み重ねが星座として輝きます。</p>
 
-<div class="features">
-  <div class="section">
-    <h2>主な機能</h2>
     <div class="feature-grid">
-      <div class="feature-card">
-        <h3>夢・目標・タスク管理</h3>
-        <p>夢→目標→タスクの階層で整理。発見ガイドが「何を目標にすればいいか」をサポート。</p>
-      </div>
-      <div class="feature-card">
-        <h3>スケジュール</h3>
-        <p>タスクをタイムラインで可視化。期限リマインドやExcel書き出しにも対応。</p>
-      </div>
-      <div class="feature-card">
-        <h3>書籍管理</h3>
-        <p>本棚風UIで書籍を管理。読書スケジュールや読了レビューも記録。</p>
-      </div>
-      <div class="feature-card">
-        <h3>統計・分析</h3>
-        <p>活動時間・連続記録・目標別の進捗を可視化。頑張りを数字で実感。</p>
-      </div>
-      <div class="feature-card">
-        <h3>星座システム</h3>
-        <p>活動を積み重ねると星が灯り、12の星座が完成。ゲーム感覚で継続。</p>
-      </div>
-      <div class="feature-card">
-        <h3>ダッシュボード</h3>
-        <p>今日の状況、連続記録、自己ベスト。必要な情報をカスタマイズして一画面に。</p>
-      </div>
+      <div class="feature-card"><h3>夢・目標・タスク管理</h3><p>階層で整理 + 発見ガイド</p></div>
+      <div class="feature-card"><h3>活動予定</h3><p>タイムライン + リマインド</p></div>
+      <div class="feature-card"><h3>書籍管理</h3><p>本棚風UI + 読了レビュー</p></div>
+      <div class="feature-card"><h3>統計・分析</h3><p>グラフで活動を可視化</p></div>
+      <div class="feature-card"><h3>星座システム</h3><p>ゲーム感覚で継続</p></div>
+      <div class="feature-card"><h3>ダッシュボード</h3><p>カスタマイズ表示</p></div>
     </div>
   </div>
 </div>
 
-<div class="scenes">
-  <div class="section">
-    <h2>こんな時に使えます</h2>
-    <ul class="scene-list">
-      <li><strong>資格取得を目指している</strong><span>試験日を目標に設定し、学習タスクをスケジュールで管理</span></li>
-      <li><strong>キャリアチェンジを考えている</strong><span>「なりたい姿」を夢に書き出し、必要なスキルを目標に分解</span></li>
-      <li><strong>読書習慣をつけたい</strong><span>書籍を登録し、読書スケジュールを設定。読了レビューで学びを定着</span></li>
-      <li><strong>毎日の活動を見える化したい</strong><span>活動ログを記録し、統計で振り返り。連続記録でモチベーション維持</span></li>
-      <li><strong>新年の目標を「今年こそ」達成したい</strong><span>夢→目標→タスクに分解し、毎日の行動に落とし込む</span></li>
-    </ul>
-  </div>
+<!-- 開発者の想い -->
+<div class="section">
+  <h2>開発の背景</h2>
+  <blockquote>
+    学生時代、夢を持てず将来に希望を見出せない時期がありました。<br><br>
+    本との出会いを通じて「生き生きと生きるには夢が必要」と気づき、
+    夢を言語化し行動に移す仕組みをアプリとして形にしました。<br><br>
+    <strong>このアプリ自体が、AI駆動開発における私の「最初の一歩」です。</strong>
+  </blockquote>
 </div>
 
-<div class="story">
-  <div class="section">
-    <h2>開発者の想い</h2>
-    <blockquote>
-      学生時代、夢を持てず将来に希望を見出せない時期がありました。<br><br>
-      本との出会いを通じて「生き生きと生きるには夢が必要」と気づき、<br>
-      夢を言語化し行動に移す仕組みをアプリとして形にしました。<br><br>
-      <strong>ユメログは「最初の一歩」を支えるアプリです。</strong><br><br>
-      一歩踏み出せば、自然と前に進めます。
-    </blockquote>
-  </div>
-</div>
-
+<!-- CTA -->
 <div class="cta-section">
-  <h2>今すぐ始める</h2>
-  <p>Webブラウザですぐに使い始められます。アカウント登録不要。</p>
-  <a href="https://teppei19980914.github.io/GrowthEngine/" class="cta">無料で体験する →</a>
+  <h2>3週間で作ったアプリの品質、<br>自分の目で確かめてみてください</h2>
+  <p>Webブラウザですぐに開けます。登録不要・完全無料。</p>
+  <a href="https://teppei19980914.github.io/GrowthEngine/" class="cta">成果物を見る →</a>
 </div>
 
 <div class="footer">

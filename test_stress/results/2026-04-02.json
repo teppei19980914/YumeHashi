@@ -1,0 +1,125 @@
+{
+  "timestamp": "2026-04-02T14:33:33.614647",
+  "threshold_ms": 2000,
+  "total_measurements": 19,
+  "passed_count": 19,
+  "failed_count": 0,
+  "all_passed": true,
+  "measurements": [
+    {
+      "label": "夢 10件",
+      "ms": 87,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "目標 100件",
+      "ms": 197,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "タスク 1000件",
+      "ms": 657,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "活動ログ 10000件",
+      "ms": 1198,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "書籍 100件",
+      "ms": 35,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "通知 500件",
+      "ms": 80,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "ストリーク計算",
+      "ms": 153,
+      "threshold_ms": 2000,
+      "passed": true
+    },
+    {
+      "label": "自己ベスト計算",
+      "ms": 235,
+      "threshold_ms": 2000,
+      "passed": true
+    },
+    {
+      "label": "日別アクティビティ",
+      "ms": 121,
+      "threshold_ms": 2000,
+      "passed": true
+    },
+    {
+      "label": "月別アクティビティ",
+      "ms": 1384,
+      "threshold_ms": 2000,
+      "passed": true
+    },
+    {
+      "label": "年別アクティビティ",
+      "ms": 326,
+      "threshold_ms": 2000,
+      "passed": true
+    },
+    {
+      "label": "実績判定",
+      "ms": 117,
+      "threshold_ms": 2000,
+      "passed": true
+    },
+    {
+      "label": "エクスポート（1000ログ+50書籍）",
+      "ms": 23,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "インポート（同データ）",
+      "ms": 279,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "全削除（500ログ+200通知）",
+      "ms": 64,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "existsByDedupKey × 500回",
+      "ms": 64,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "リマインダーチェック（500件）",
+      "ms": 130,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "未読カウント（500件中）",
+      "ms": 7,
+      "threshold_ms": 30000,
+      "passed": true
+    },
+    {
+      "label": "SQL SUM（10000件）",
+      "ms": 1,
+      "threshold_ms": 30000,
+      "passed": true
+    }
+  ],
+  "bottlenecks": []
+}

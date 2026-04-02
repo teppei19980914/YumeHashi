@@ -64,7 +64,7 @@ void main() {
     });
 
     group('getUnscheduledBooks', () {
-      test('活動予定なし書籍のみ返す', () async {
+      test('読了以外の書籍を返す（スケジュール有無に関わらず）', () async {
         await bookService.createBook('Book 1'); // no schedule
         final book2 = await bookService.createBook('Book 2');
         final updated = book2.copyWith(
@@ -76,10 +76,18 @@ void main() {
               startDate: Value(updated.startDate),
               endDate: Value(updated.endDate),
             ));
+        // 読了書籍は除外される
+        final book3 = await bookService.createBook('Book 3');
+        await bookService.completeBook(
+          bookId: book3.id,
+          summary: '要約',
+          impressions: '感想',
+        );
 
-        final unscheduled = await service.getUnscheduledBooks();
-        expect(unscheduled.length, 1);
-        expect(unscheduled.first.title, 'Book 1');
+        final result = await service.getUnscheduledBooks();
+        // Book 1（未読）、Book 2（スケジュール済み・未読）が返る。Book 3（読了）は除外。
+        expect(result.length, 2);
+        expect(result.map((b) => b.title), containsAll(['Book 1', 'Book 2']));
       });
     });
 

@@ -1,0 +1,165 @@
+name: Stress Test (Weekly)
+
+on:
+  schedule:
+    # 毎週日曜 03:00 UTC（日本時間 12:00）
+    - cron: '0 3 * * 0'
+  workflow_dispatch:  # 手動実行も可能
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  stress-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Run data volume stress tests
+        run: flutter test test_stress/data_volume_stress_test.dart
+        continue-on-error: true
+
+      - name: Run rendering stress tests
+        run: flutter test test_stress/rendering_stress_test.dart
+        continue-on-error: true
+
+      - name: Run concurrent access stress tests
+        run: flutter test test_stress/concurrent_access_stress_test.dart
+        continue-on-error: true
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-test-results
+          path: test_stress/results/
+        if: always()
+
+      - name: Commit results
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add test_stress/results/
+          git diff --cached --quiet || git commit -m "Stress test results $(date +%Y-%m-%d) [skip ci]"
+          git push
+        if: always()
+
+      - name: Check for bottlenecks and create issue
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const files = [
+              'test_stress/results/latest.json',
+              'test_stress/results/latest_rendering.json',
+              'test_stress/results/latest_concurrent.json',
+            ];
+
+            // 全結果ファイルを読み込み・統合
+            const allMeasurements = [];
+            for (const path of files) {
+              if (!fs.existsSync(path)) continue;
+              const report = JSON.parse(fs.readFileSync(path, 'utf8'));
+              const type = report.test_type || 'data_volume';
+              for (const m of report.measurements) {
+                allMeasurements.push({ ...m, test_type: type });
+              }
+            }
+
+            if (allMeasurements.length === 0) {
+              console.log('No result files found, skipping');
+              return;
+            }
+
+            const failed = allMeasurements.filter(m => !m.passed);
+            if (failed.length === 0) {
+              console.log(`All ${allMeasurements.length} measurements passed.`);
+              return;
+            }
+
+            // ボトルネック一覧を作成
+            const bottlenecks = failed
+              .map(m => `| ${m.label} | ${m.ms}ms | ${m.threshold_ms}ms | **FAIL** |`)
+              .join('\n');
+
+            const allResults = allMeasurements
+              .map(m => `| ${m.test_type} | ${m.label} | ${m.ms}ms | ${m.threshold_ms}ms | ${m.passed ? 'PASS' : '**FAIL**'} |`)
+              .join('\n');
+
+            const body = `## パフォーマンスボトルネック検出
+
+            週次ストレステストで閾値超過が検出されました。
+
+            ### ボトルネック（閾値超過）
+
+            | 操作 | 計測値 | 閾値 | 判定 |
+            |---|---|---|---|
+            ${bottlenecks}
+
+            ### 全計測結果
+
+            | テスト種別 | 操作 | 計測値 | 閾値 | 判定 |
+            |---|---|---|---|---|
+            ${allResults}
+
+            ### 対応方法
+
+            Claude Code セッションで以下を実行してください:
+
+            \`\`\`
+            /fix-performance
+            \`\`\`
+
+            このスキルが \`test_stress/results/latest.json\` を読み込み、ボトルネックの特定→修正→再計測を実施します。
+
+            ### パフォーマンス閾値
+
+            - **ユーザー体感基準: 全操作1秒以内**
+            - テスト環境（インメモリSQLite）閾値: 2秒以内
+            - Web WASM 環境はインメモリの3〜5倍遅いため、テスト2秒 ≒ 実環境1秒
+
+            ---
+            *このIssueは週次ストレステスト (GitHub Actions) により自動作成されました。*
+            `.replace(/^            /gm, '');
+
+            // 既存の未クローズIssueを検索（重複防止）
+            const { data: existingIssues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'performance',
+              state: 'open',
+            });
+
+            if (existingIssues.length > 0) {
+              // 既存Issueにコメント追加
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssues[0].number,
+                body: `### ${report.timestamp} の再検出\n\n${bottlenecks}\n\n前回から未解決のため再検出されました。`,
+              });
+              console.log(`Updated existing issue #${existingIssues[0].number}`);
+            } else {
+              // 新規Issue作成
+              const failedLabels = failed
+                .map(m => m.label)
+                .join(', ');
+
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `[Performance] ボトルネック検出: ${failedLabels}`,
+                body: body,
+                labels: ['performance', 'bug'],
+              });
+              console.log('Created new performance issue');
+            }
