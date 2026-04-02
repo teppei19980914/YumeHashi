@@ -27,14 +27,13 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
     String description = '',
   }) async {
     final service = ref.read(bookServiceProvider);
-    final book = await service.createBook(
+    await service.createBook(
       title,
       category: category,
       why: why,
       description: description,
     );
-    final current = state.valueOrNull ?? [];
-    state = AsyncData([...current, book]);
+    ref.invalidateSelf();
     SyncManager().requestSync();
   }
 
@@ -47,34 +46,22 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
     required String description,
   }) async {
     final service = ref.read(bookServiceProvider);
-    final updated = await service.updateBookInfo(
+    await service.updateBookInfo(
       bookId,
       title: title,
       category: category,
       why: why,
       description: description,
     );
-    if (updated != null) {
-      final current = state.valueOrNull ?? [];
-      state = AsyncData([
-        for (final b in current)
-          if (b.id == bookId) updated else b,
-      ]);
-    }
+    ref.invalidateSelf();
     SyncManager().requestSync();
   }
 
   /// Bookのステータスを更新する.
   Future<void> updateStatus(String bookId, BookStatus status) async {
     final service = ref.read(bookServiceProvider);
-    final updated = await service.updateStatus(bookId, status);
-    if (updated != null) {
-      final current = state.valueOrNull ?? [];
-      state = AsyncData([
-        for (final b in current)
-          if (b.id == bookId) updated else b,
-      ]);
-    }
+    await service.updateStatus(bookId, status);
+    ref.invalidateSelf();
     SyncManager().requestSync();
   }
 
@@ -86,19 +73,13 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
     DateTime? completedDate,
   }) async {
     final service = ref.read(bookServiceProvider);
-    final updated = await service.completeBook(
+    await service.completeBook(
       bookId: bookId,
       summary: summary,
       impressions: impressions,
       completedDate: completedDate,
     );
-    if (updated != null) {
-      final current = state.valueOrNull ?? [];
-      state = AsyncData([
-        for (final b in current)
-          if (b.id == bookId) updated else b,
-      ]);
-    }
+    ref.invalidateSelf();
     SyncManager().requestSync();
   }
 
@@ -106,11 +87,7 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
   Future<void> deleteBook(String bookId) async {
     final service = ref.read(bookServiceProvider);
     await service.deleteBook(bookId);
-    final current = state.valueOrNull ?? [];
-    state = AsyncData([
-      for (final b in current)
-        if (b.id != bookId) b,
-    ]);
+    ref.invalidateSelf();
     SyncManager().requestSync();
   }
 }
