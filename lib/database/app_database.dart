@@ -28,7 +28,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -52,9 +52,13 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(dreams, dreams.category);
           }
           if (from < 7) {
-            // addColumn が失敗するケース（既に存在等）に備えて直接SQLで実行
             await customStatement(
               'ALTER TABLE goals ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0',
+            ).catchError((_) {/* カラムが既に存在する場合は無視 */});
+          }
+          if (from < 8) {
+            await customStatement(
+              'ALTER TABLE dreams ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0',
             ).catchError((_) {/* カラムが既に存在する場合は無視 */});
           }
         },

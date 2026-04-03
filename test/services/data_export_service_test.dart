@@ -28,6 +28,18 @@ void main() {
 
   Future<void> insertSampleData() async {
     final now = DateTime.now();
+    await db.dreamDao.insertDream(
+      DreamsCompanion(
+        id: const Value('dream-1'),
+        title: const Value('テスト夢'),
+        description: const Value('テスト説明'),
+        why: const Value('テスト動機'),
+        category: const Value('career'),
+        sortOrder: const Value(5),
+        createdAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
     await db.goalDao.insertGoal(
       GoalsCompanion(
         id: const Value('goal-1'),
@@ -37,6 +49,7 @@ void main() {
         whenType: const Value('date'),
         what: const Value('テスト内容'),
         how: const Value('テスト方法'),
+        sortOrder: const Value(3),
         createdAt: Value(now),
         updatedAt: Value(now),
       ),
@@ -88,6 +101,7 @@ void main() {
         final data = json.decode(jsonStr) as Map<String, dynamic>;
         expect(data['version'], 1);
         expect(data['exported_at'], isNotEmpty);
+        expect((data['dreams'] as List).length, 1);
         expect((data['goals'] as List).length, 1);
         expect((data['tasks'] as List).length, 1);
         expect((data['books'] as List).length, 1);
@@ -113,17 +127,36 @@ void main() {
         expect(goals, isEmpty);
 
         final result = await service.importData(exported);
+        expect(result.dreamCount, 1);
         expect(result.goalCount, 1);
         expect(result.taskCount, 1);
         expect(result.bookCount, 1);
         expect(result.studyLogCount, 1);
         expect(result.notificationCount, 1);
-        expect(result.total, 5);
+        expect(result.total, 6);
 
         // DBを確認
         final importedGoals = await db.goalDao.getAll();
         expect(importedGoals.length, 1);
         expect(importedGoals.first.why, 'テスト理由');
+      });
+
+      test('sortOrderがエクスポート/インポートで保持される', () async {
+        await insertSampleData();
+        final exported = await service.exportData();
+
+        await service.clearAllData();
+        await service.importData(exported);
+
+        // Dream の sortOrder が保持される
+        final dreams = await db.dreamDao.getAll();
+        expect(dreams.length, 1);
+        expect(dreams.first.sortOrder, 5);
+
+        // Goal の sortOrder が保持される
+        final goals = await db.goalDao.getAll();
+        expect(goals.length, 1);
+        expect(goals.first.sortOrder, 3);
       });
 
       test('不正なJSONでArgumentError', () async {
@@ -153,6 +186,7 @@ void main() {
         final exported = await service.exportData();
         final result = service.validateJson(exported);
         expect(result.valid, isTrue);
+        expect(result.counts['dreams'], 1);
         expect(result.counts['goals'], 1);
         expect(result.counts['tasks'], 1);
       });
@@ -173,8 +207,9 @@ void main() {
       test('全データを削除する', () async {
         await insertSampleData();
         final deleted = await service.clearAllData();
-        expect(deleted, 5); // goal + task + book + log + notification
+        expect(deleted, 6); // dream + goal + task + book + log + notification
 
+        expect(await db.dreamDao.getAll(), isEmpty);
         expect(await db.goalDao.getAll(), isEmpty);
         expect(await db.taskDao.getAll(), isEmpty);
         expect(await db.bookDao.getAll(), isEmpty);

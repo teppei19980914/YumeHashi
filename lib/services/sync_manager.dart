@@ -9,7 +9,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
-import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb, visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'data_export_service.dart';

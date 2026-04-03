@@ -250,6 +250,7 @@ class DataExportService {
       'what': goal.what,
       'how': goal.how,
       'color': goal.color,
+      'sort_order': goal.sortOrder,
       'created_at': goal.createdAt.toIso8601String(),
       'updated_at': goal.updatedAt.toIso8601String(),
     };
@@ -265,6 +266,7 @@ class DataExportService {
       what: Value(map['what'] as String? ?? ''),
       how: Value(map['how'] as String? ?? ''),
       color: Value(map['color'] as String? ?? '#89B4FA'),
+      sortOrder: Value((map['sort_order'] as int?) ?? 0),
       createdAt: Value(DateTime.parse(map['created_at'] as String)),
       updatedAt: Value(DateTime.parse(map['updated_at'] as String)),
     );
