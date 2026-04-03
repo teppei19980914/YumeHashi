@@ -109,6 +109,19 @@ class SyncManager {
     try {
       final json = await _exportService!.exportData();
 
+      // 空データでクラウドのバックアップを上書きしない（データ消失防止）
+      final decoded = jsonDecode(json) as Map<String, dynamic>;
+      final totalItems = ((decoded['dreams'] as List?)?.length ?? 0) +
+          ((decoded['goals'] as List?)?.length ?? 0) +
+          ((decoded['tasks'] as List?)?.length ?? 0) +
+          ((decoded['books'] as List?)?.length ?? 0) +
+          ((decoded['study_logs'] as List?)?.length ?? 0);
+      if (totalItems == 0) {
+        debugPrint('[SyncManager] 空データのため同期をスキップ');
+        _dirty = false;
+        return;
+      }
+
       // ハッシュ比較: 前回と同じならアップロードをスキップ
       final hash = sha256.convert(utf8.encode(json)).toString();
       if (hash == _lastHash) {
