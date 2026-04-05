@@ -20,6 +20,7 @@ import '../providers/service_providers.dart';
 import '../services/trial_limit_service.dart';
 import '../services/tutorial_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_snackbar.dart';
 import '../widgets/tutorial/tutorial_banner.dart';
 import '../widgets/tutorial/tutorial_target_keys.dart';
 
@@ -58,15 +59,23 @@ class GoalPage extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 onSelected: (value) {
                   if (value == 'discovery') {
-                    _openGoalGuide(context, ref);
+                    showInfoSnackBar(
+                        context, AppLabels.discoveryGuideComingSoon);
                   }
                 },
-                itemBuilder: (_) => [
-                  const PopupMenuItem(
+                itemBuilder: (ctx) => [
+                  PopupMenuItem(
                     value: 'discovery',
                     child: ListTile(
-                      leading: Icon(Icons.explore, size: 20),
-                      title: Text(AppLabels.goalDiscoveryGuide),
+                      leading: Icon(Icons.explore, size: 20,
+                          color: Theme.of(ctx).disabledColor),
+                      title: Text(AppLabels.goalDiscoveryGuide,
+                          style: TextStyle(
+                              color: Theme.of(ctx).disabledColor)),
+                      trailing: Text('開発中',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(ctx).colorScheme.primary)),
                       dense: true,
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -143,6 +152,7 @@ class GoalPage extends ConsumerWidget {
     return ref.read(dreamListProvider).valueOrNull ?? [];
   }
 
+  // ignore: unused_element
   Future<void> _openGoalGuide(BuildContext context, WidgetRef ref) async {
     final dreams = _getDreams(ref);
     final result = await showGoalDiscoveryDialog(context, dreams: dreams);
@@ -253,8 +263,8 @@ class GoalPage extends ConsumerWidget {
           ),
           OutlinedButton.icon(
             icon: const Icon(Icons.explore, size: 18),
-            label: const Text(AppLabels.goalEmptyAction),
-            onPressed: () => Navigator.pop(context, true),
+            label: const Text('${AppLabels.goalEmptyAction}（開発中）'),
+            onPressed: null,
           ),
           FilledButton.icon(
             icon: const Icon(Icons.edit, size: 18),

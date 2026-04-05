@@ -84,6 +84,7 @@ class AppLabels {
   static const dreamEmptyAction = 'ガイドで見つける';
   static const dreamPageDesc = '将来の夢を設定し、夢の実現に向けた目標を管理します。';
   static const dreamDiscoveryGuide = '発見ガイド';
+  static const discoveryGuideComingSoon = '発見ガイドは現在リニューアル中です。より良い体験をお届けできるよう開発を進めていますので、お楽しみに！';
   static const dreamAddButton = '夢を追加';
   static const dreamEmptyHeading = 'やりたいことを見つけよう';
   static const dreamEmptyHint = '「夢を追加」ボタンから直接追加するか、\n「発見ガイド」でやりたいことを見つけましょう';
@@ -732,8 +733,8 @@ class AppLabels {
   static const helpFaqNoDreamQ = '夢がなくても使えますか？';
   static const helpFaqNoDreamA =
       'はい、目標やタスクだけでも利用できます。\n\n'
-      'やりたいことが見つからない場合は、夢ページの「⋮」メニュー内にある'
-      '「発見ガイド」で質問に答えるだけで見つける手助けができます。';
+      'やりたいことが見つからない場合は、'
+      '「発見ガイド」機能が見つけるお手伝いをします（現在リニューアル中）。';
   static const helpFaqScheduleQ = '活動予定とは何ですか？';
   static const helpFaqScheduleA =
       'タスクの期間と進捗を横棒グラフで一覧表示する機能です。\n\n'
@@ -865,6 +866,10 @@ class AppLabels {
       '画面右上のトロフィーアイコンから確認できます。\n\n'
       '活動時間や連続日数に応じて実績が解除されます。\n'
       '新しい実績を達成するとアイコンにバッジが表示されます。';
+  static const helpFaqDevThoughtQ = '開発者の思いはどこで読めますか？';
+  static const helpFaqDevThoughtA =
+      '画面右上の「?」アイコン →「アプリについて」タブの下部に掲載しています。\n\n'
+      'このアプリを作った理由や、ユーザーの皆さんへのメッセージを載せています。';
 
   // ── ヘルプ・アプリについてタブ ──────────────────────────────────
   static const helpAboutAnonymousTitle = '完全匿名でご利用いただけます';
@@ -885,6 +890,26 @@ class AppLabels {
   static const helpAboutBackupTip =
       '大切なデータは定期的に書き出して'
       'バックアップすることをおすすめします。';
+
+  // ── 開発者の思い ──────────────────────────────────
+  static const helpDevThoughtTitle = '開発者の思い';
+  static const helpDevThoughtMessage =
+      '「夢を持つことで、大きな壁も乗り越えられる」\n\n'
+      '私は学生時代、夢を持てず将来に希望を見出せませんでした。\n'
+      'あの頃の自分のように、やりたいことが見つからない人や、'
+      '見つけても一歩を踏み出せない人の力になりたい。\n'
+      'そんな思いから、このアプリを作りました。\n\n'
+      '夢は頭の中に閉じ込めておくと、いつの間にか薄れてしまいます。\n'
+      '言葉にして外に出すことで、脳が認識し、行動につながる。\n'
+      'ユメログは、その「言語化」と「行動」をつなぐ道具です。\n\n'
+      '人は慣性で動きます。\n'
+      '止まっている人を動かすこと、動いている人を支えること。\n'
+      'このアプリが、あなたの一歩目になれたら嬉しいです。\n\n'
+      'このアプリは私一人で開発しています。\n'
+      '一人の視点では気づけないことがたくさんあります。\n'
+      '皆さんと一緒に、もっと良いアプリに育てていきたいと思っていますので、\n'
+      'ぜひ気軽にご感想やご要望をお聞かせください。';
+  static const helpDevThoughtDeveloper = '開発者: 須山 哲平';
 
   // ── ヘルプ・スタータープランタブ ──────────────────────────────────
   static const helpPlanRegistrationLimit = '登録上限';
@@ -942,6 +967,10 @@ class AppLabels {
       '活動の積み重ねが星座として可視化されます';
 
   // ── タスク発見ガイド ──────────────────────────────────────────
+  static const taskEmptyTitle = 'どんなタスクを追加しますか？';
+  static const taskEmptyAction = 'ガイドで見つける';
+  static const taskTutorialGuideChoice = '目標を達成するための具体的なアクションを設定します。\nまだ決まっていない方は、ガイドが一緒に見つけるお手伝いをします。';
+  static const taskTutorialSelfInput = '自分で入力する';
   static const taskDiscoveryTitle = 'タスク発見ガイド';
   static const taskDiscoveryGoalQuestion = 'どの目標に向けたタスクですか？';
   static const taskDiscoveryGoalDesc =

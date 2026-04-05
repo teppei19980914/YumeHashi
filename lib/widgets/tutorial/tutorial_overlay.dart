@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_labels.dart';
 import '../../providers/dream_providers.dart';
+import '../../providers/goal_providers.dart';
 import '../../providers/service_providers.dart';
 import '../../services/tutorial_service.dart';
 import 'tutorial_banner.dart';
@@ -121,8 +122,17 @@ class _TutorialOverlayState extends ConsumerState<TutorialOverlay> {
 
   Future<void> _stopTutorial(WidgetRef ref) async {
     final tutorialService = ref.read(tutorialServiceProvider);
+    final taskId = tutorialService.tutorialTaskId;
+    final goalId = tutorialService.tutorialGoalId;
     final dreamId = tutorialService.tutorialDreamId;
 
+    // タスク → 目標 → 夢の順に削除（カスケード漏れ防止）
+    if (taskId != null) {
+      await ref.read(taskServiceProvider).deleteTask(taskId);
+    }
+    if (goalId != null) {
+      await ref.read(goalListProvider.notifier).deleteGoal(goalId);
+    }
     if (dreamId != null) {
       await ref.read(dreamListProvider.notifier).deleteDream(dreamId);
     }

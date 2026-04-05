@@ -276,6 +276,12 @@ class _FaqTabState extends State<_FaqTab> {
       answer: AppLabels.helpFaqAchievementA,
       keywords: ['実績', 'マイルストーン', 'トロフィー', '達成', 'バッジ'],
     ),
+    _FaqItem(
+      category: 'その他',
+      question: AppLabels.helpFaqDevThoughtQ,
+      answer: AppLabels.helpFaqDevThoughtA,
+      keywords: ['開発者', '思い', 'コンセプト', '理念', 'メッセージ'],
+    ),
   ];
 
   List<_FaqItem> get _filteredFaqs {
@@ -482,6 +488,38 @@ class _AboutTab extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Divider(),
+          const SizedBox(height: 12),
+          // 開発者の思い
+          Row(
+            children: [
+              Icon(Icons.favorite, size: 20,
+                  color: theme.colorScheme.error.withAlpha(180)),
+              const SizedBox(width: 8),
+              Text(
+                AppLabels.helpDevThoughtTitle,
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            AppLabels.helpDevThoughtMessage,
+            style: theme.textTheme.bodySmall?.copyWith(height: 1.7),
+          ),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              AppLabels.helpDevThoughtDeveloper,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

@@ -150,7 +150,8 @@ class _GanttPageState extends ConsumerState<GanttPage> {
                     case 'jump':
                       _pickJumpDate(context);
                     case 'discovery':
-                      _openTaskDiscovery(context, ref);
+                      showInfoSnackBar(
+                          context, AppLabels.discoveryGuideComingSoon);
                     case 'export':
                       _showExportMenu(context, ref);
                   }
@@ -175,12 +176,20 @@ class _GanttPageState extends ConsumerState<GanttPage> {
                     ),
                   ),
                   if (showTaskActions)
-                    const PopupMenuItem(
+                    PopupMenuItem(
                       value: 'discovery',
                       child: ListTile(
-                        leading:
-                            Icon(Icons.lightbulb_outline, size: 20),
-                        title: Text(AppLabels.ganttDiscoveryGuide),
+                        leading: Icon(Icons.lightbulb_outline, size: 20,
+                            color: Theme.of(context).disabledColor),
+                        title: Text(AppLabels.ganttDiscoveryGuide,
+                            style: TextStyle(
+                                color: Theme.of(context).disabledColor)),
+                        trailing: Text('開発中',
+                            style: TextStyle(
+                                fontSize: 11,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .primary)),
                         dense: true,
                         contentPadding: EdgeInsets.zero,
                       ),
@@ -321,6 +330,7 @@ class _GanttPageState extends ConsumerState<GanttPage> {
     return Color(int.parse('FF$code', radix: 16));
   }
 
+  // ignore: unused_element
   Future<void> _openTaskDiscovery(
     BuildContext context,
     WidgetRef ref,
@@ -386,13 +396,21 @@ class _GanttPageState extends ConsumerState<GanttPage> {
       }
     }
 
+    // チュートリアル中: ガイドを使うか自分で入力するかを選択
+    if (isTutorial) {
+      if (!context.mounted) return;
+      final useGuide = await _showTutorialTaskChoice(context);
+      if (useGuide == null || !context.mounted) return;
+      // ガイドは開発中のため、自分で入力のみ有効
+    }
+
     final books = await ref.read(bookServiceProvider).getAllBooks();
     if (!context.mounted) return;
 
     final result = await showTaskDialog(context, books: books);
     if (result == null) return;
 
-    await ref.read(taskServiceProvider).createTask(
+    final task = await ref.read(taskServiceProvider).createTask(
           goalId: goalId,
           title: result.title,
           startDate: result.startDate,
@@ -401,8 +419,10 @@ class _GanttPageState extends ConsumerState<GanttPage> {
           bookId: result.bookId,
         );
 
-    // チュートリアル: タスク追加後にステップを進める
+    // チュートリアル: タスクIDを記録してステップを進める
     if (isTutorial) {
+      final tutorialService = ref.read(tutorialServiceProvider);
+      await tutorialService.setTutorialTaskId(task.id);
       await ref.read(tutorialStateProvider.notifier).advanceStep();
     }
     ref.invalidate(ganttTasksProvider);
@@ -688,6 +708,39 @@ class _GanttPageState extends ConsumerState<GanttPage> {
     }
   }
 
+
+  /// チュートリアル中のタスク追加で、ガイドを使うか自分で入力するかを選択.
+  Future<bool?> _showTutorialTaskChoice(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.lightbulb_outline, size: 24),
+            SizedBox(width: 8),
+            Expanded(child: Text(AppLabels.taskEmptyTitle)),
+          ],
+        ),
+        content: const Text(AppLabels.taskTutorialGuideChoice),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text(AppLabels.btnCancel),
+          ),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.explore, size: 18),
+            label: const Text('${AppLabels.taskEmptyAction}（開発中）'),
+            onPressed: null,
+          ),
+          FilledButton.icon(
+            icon: const Icon(Icons.edit, size: 18),
+            label: const Text(AppLabels.taskTutorialSelfInput),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<bool?> _confirmDelete(BuildContext context, String title) {
     return showDialog<bool>(

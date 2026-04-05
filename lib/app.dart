@@ -396,7 +396,15 @@ class _AppShellState extends ConsumerState<_AppShell> {
 
       // 既存のチュートリアルデータを削除してリセット
       final tutorialService = ref.read(tutorialServiceProvider);
+      final taskId = tutorialService.tutorialTaskId;
+      final goalId = tutorialService.tutorialGoalId;
       final dreamId = tutorialService.tutorialDreamId;
+      if (taskId != null) {
+        await ref.read(taskServiceProvider).deleteTask(taskId);
+      }
+      if (goalId != null) {
+        await ref.read(goalListProvider.notifier).deleteGoal(goalId);
+      }
       if (dreamId != null) {
         await ref.read(dreamListProvider.notifier).deleteDream(dreamId);
       }
@@ -547,12 +555,7 @@ class _AppShellState extends ConsumerState<_AppShell> {
             ),
             actions: [
               IconButton(
-                icon: CustomPaint(
-                  size: const Size(22, 22),
-                  painter: _BeginnerMarkPainter(
-                    color: IconTheme.of(context).color ?? Colors.white,
-                  ),
-                ),
+                icon: const Icon(Icons.menu_book_outlined),
                 tooltip: AppLabels.tooltipHowToUse,
                 onPressed: () => showAppGuideDialog(
                   context,
@@ -596,78 +599,3 @@ class _AppShellState extends ConsumerState<_AppShell> {
   }
 }
 
-/// 初心者マーク（若葉マーク）のカスタムペインター.
-class _BeginnerMarkPainter extends CustomPainter {
-  _BeginnerMarkPainter({required this.color});
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-
-    // 若葉マーク: 上が尖り、左右に膨らみ、下が尖ったV字盾型
-    // 左半分
-    final leftPath = Path()
-      ..moveTo(w * 0.5, h * 0.02) // 上の頂点
-      ..cubicTo(
-        w * 0.1, h * 0.15, // 左上に膨らむ
-        w * 0.05, h * 0.55, // 左の最大膨らみ
-        w * 0.5, h * 0.98, // 下の頂点
-      )
-      ..lineTo(w * 0.5, h * 0.02)
-      ..close();
-
-    // 右半分
-    final rightPath = Path()
-      ..moveTo(w * 0.5, h * 0.02) // 上の頂点
-      ..cubicTo(
-        w * 0.9, h * 0.15, // 右上に膨らむ
-        w * 0.95, h * 0.55, // 右の最大膨らみ
-        w * 0.5, h * 0.98, // 下の頂点
-      )
-      ..lineTo(w * 0.5, h * 0.02)
-      ..close();
-
-    // 左半分を塗る（やや薄く）
-    final leftFill = Paint()
-      ..color = color.withAlpha(100)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(leftPath, leftFill);
-
-    // 右半分を塗る（やや濃く）
-    final rightFill = Paint()
-      ..color = color.withAlpha(180)
-      ..style = PaintingStyle.fill;
-    canvas.drawPath(rightPath, rightFill);
-
-    // 全体の輪郭
-    final outline = Path()
-      ..moveTo(w * 0.5, h * 0.02)
-      ..cubicTo(w * 0.1, h * 0.15, w * 0.05, h * 0.55, w * 0.5, h * 0.98)
-      ..cubicTo(w * 0.95, h * 0.55, w * 0.9, h * 0.15, w * 0.5, h * 0.02)
-      ..close();
-
-    final strokePaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5
-      ..strokeJoin = StrokeJoin.round;
-    canvas.drawPath(outline, strokePaint);
-
-    // 中央の縦線
-    final linePaint = Paint()
-      ..color = color
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
-    canvas.drawLine(
-      Offset(w * 0.5, h * 0.1),
-      Offset(w * 0.5, h * 0.9),
-      linePaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_BeginnerMarkPainter oldDelegate) =>
-      color != oldDelegate.color;
-}

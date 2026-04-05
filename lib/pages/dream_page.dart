@@ -18,6 +18,7 @@ import '../providers/service_providers.dart';
 import '../services/trial_limit_service.dart';
 import '../services/tutorial_service.dart';
 import '../theme/app_theme.dart';
+import '../widgets/app_snackbar.dart';
 import '../widgets/tutorial/tutorial_banner.dart';
 import '../widgets/tutorial/tutorial_target_keys.dart';
 
@@ -56,15 +57,23 @@ class DreamPage extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 onSelected: (value) {
                   if (value == 'discovery') {
-                    _openDiscoveryGuide(context, ref);
+                    showInfoSnackBar(
+                        context, AppLabels.discoveryGuideComingSoon);
                   }
                 },
-                itemBuilder: (_) => [
-                  const PopupMenuItem(
+                itemBuilder: (ctx) => [
+                  PopupMenuItem(
                     value: 'discovery',
                     child: ListTile(
-                      leading: Icon(Icons.explore, size: 20),
-                      title: Text(AppLabels.dreamDiscoveryGuide),
+                      leading: Icon(Icons.explore, size: 20,
+                          color: Theme.of(ctx).disabledColor),
+                      title: Text(AppLabels.dreamDiscoveryGuide,
+                          style: TextStyle(
+                              color: Theme.of(ctx).disabledColor)),
+                      trailing: Text('開発中',
+                          style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(ctx).colorScheme.primary)),
                       dense: true,
                       contentPadding: EdgeInsets.zero,
                     ),
@@ -154,6 +163,7 @@ class DreamPage extends ConsumerWidget {
     );
   }
 
+  // ignore: unused_element
   Future<void> _openDiscoveryGuide(
     BuildContext context,
     WidgetRef ref,
@@ -280,8 +290,8 @@ class DreamPage extends ConsumerWidget {
           ),
           OutlinedButton.icon(
             icon: const Icon(Icons.explore, size: 18),
-            label: const Text(AppLabels.dreamEmptyAction),
-            onPressed: () => Navigator.pop(context, true),
+            label: const Text('${AppLabels.dreamEmptyAction}（開発中）'),
+            onPressed: null,
           ),
           FilledButton.icon(
             icon: const Icon(Icons.edit, size: 18),

@@ -13,6 +13,7 @@ const _tutorialActiveKey = 'tutorial_active';
 const _tutorialStepKey = 'tutorial_step';
 const _tutorialDreamIdKey = 'tutorial_dream_id';
 const _tutorialGoalIdKey = 'tutorial_goal_id';
+const _tutorialTaskIdKey = 'tutorial_task_id';
 
 /// チュートリアルのステップ.
 enum TutorialStep {
@@ -99,12 +100,16 @@ class TutorialService {
   /// チュートリアルで作成した目標のID.
   String? get tutorialGoalId => _prefs.getString(_tutorialGoalIdKey);
 
+  /// チュートリアルで作成したタスクのID.
+  String? get tutorialTaskId => _prefs.getString(_tutorialTaskIdKey);
+
   /// チュートリアルを開始する.
   Future<void> start() async {
     await _prefs.setBool(_tutorialActiveKey, true);
     await _prefs.setInt(_tutorialStepKey, 0);
     await _prefs.remove(_tutorialDreamIdKey);
     await _prefs.remove(_tutorialGoalIdKey);
+    await _prefs.remove(_tutorialTaskIdKey);
   }
 
   /// 次のステップに進む.
@@ -127,17 +132,24 @@ class TutorialService {
     await _prefs.setString(_tutorialGoalIdKey, goalId);
   }
 
+  /// チュートリアルで作成したタスクのIDを記録する.
+  Future<void> setTutorialTaskId(String taskId) async {
+    await _prefs.setString(_tutorialTaskIdKey, taskId);
+  }
+
   /// チュートリアルを終了する.
   Future<void> finish() async {
     await _prefs.setBool(_tutorialActiveKey, false);
     await _prefs.remove(_tutorialStepKey);
     await _prefs.remove(_tutorialDreamIdKey);
     await _prefs.remove(_tutorialGoalIdKey);
+    await _prefs.remove(_tutorialTaskIdKey);
   }
 
   /// チュートリアルのデータIDをクリアする（データ保持時）.
   Future<void> clearDataIds() async {
     await _prefs.remove(_tutorialDreamIdKey);
     await _prefs.remove(_tutorialGoalIdKey);
+    await _prefs.remove(_tutorialTaskIdKey);
   }
 }
