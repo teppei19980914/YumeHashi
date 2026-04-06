@@ -21,15 +21,25 @@
 
 ## 1. 日常的な改修フロー
 
+### ブランチ運用ルール
+
+- **main への直接プッシュは禁止**。必ずブランチ → PR → マージの流れで行う
+- ブランチ名: `feature/機能名` または `fix/修正内容`
+- PR 作成時に CI が自動実行（テスト + バージョンチェック）
+- CI 通過後にマージ → GitHub Pages に自動デプロイ
+
 ### 手順
 
 ```
-1. ソースコード修正 + 対応するテストコード追加・修正
-2. ローカル確認: flutter analyze（エラー0件）
-3. ローカル確認: run_windows.bat で動作確認
-4. main ブランチにコミット & プッシュ
-5. GitHub Actions が自動で テスト → ビルド → GitHub Pages デプロイ
-6. ブラウザで https://teppei19980914.github.io/GrowthEngine/ を動作確認
+1. ブランチを作成: git checkout -b feature/xxx
+2. ソースコード修正 + 対応するテストコード追加・修正
+3. ローカル確認: flutter analyze（エラー0件）
+4. ローカル確認: run_windows.bat で動作確認
+5. バージョン4点セットを更新（2. リリース手順 参照）
+6. ブランチにコミット & プッシュ → main へ PR 作成
+7. CI が テスト + バージョンチェック を自動実行
+8. CI 通過後にマージ → GitHub Pages に自動デプロイ
+9. ブラウザで https://teppei19980914.github.io/GrowthEngine/ を動作確認
 ```
 
 ### コミットルール
@@ -287,6 +297,23 @@ dart run build_runner build --delete-conflicting-outputs
 ---
 
 ## 9. GitHub Actions（自動処理）
+
+### test.yml（PR 時 — テスト + バージョンチェック）
+
+```
+┌─ lint-and-test ──────────────────────────────┐
+│  flutter analyze → flutter test --coverage    │
+└──────────────────────────────────────────────┘
+┌─ version-check ──────────────────────────────┐
+│  1. pubspec.yaml のバージョンが main と異なるか │
+│  2. app_version.dart の appVersion が一致するか │
+│  3. releaseHistory にエントリがあるか           │
+│  4. announcements.json にエントリがあるか       │
+│  → 1つでも漏れがあれば CI 失敗（マージ不可）     │
+└──────────────────────────────────────────────┘
+```
+
+**バージョン4点セットの更新漏れは CI が自動検知し、PR のマージを阻止する。**
 
 ### deploy.yml（main push 時）
 

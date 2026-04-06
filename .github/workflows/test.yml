@@ -1,14 +1,16 @@
-name: Test
+name: CI
 
 on:
   pull_request:
     branches: [main]
 
 jobs:
-  test:
+  lint-and-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: subosito/flutter-action@v2
         with:
@@ -32,43 +34,67 @@ jobs:
               pct=$((hit_lines * 100 / total_lines))
               echo "**Overall: ${pct}% (${hit_lines}/${total_lines} lines)**" >> $GITHUB_STEP_SUMMARY
             fi
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| File | Coverage |" >> $GITHUB_STEP_SUMMARY
-            echo "|------|----------|" >> $GITHUB_STEP_SUMMARY
-            current_file=""
-            file_total=0
-            file_hit=0
-            while IFS= read -r line; do
-              case "$line" in
-                SF:*)
-                  if [ -n "$current_file" ] && [ "$file_total" -gt 0 ]; then
-                    file_pct=$((file_hit * 100 / file_total))
-                    short=$(echo "$current_file" | sed 's|^lib/||')
-                    echo "| ${short} | ${file_pct}% |" >> $GITHUB_STEP_SUMMARY
-                  fi
-                  current_file="${line#SF:}"
-                  file_total=0
-                  file_hit=0
-                  ;;
-                DA:*)
-                  file_total=$((file_total + 1))
-                  count="${line##*,}"
-                  if [ "$count" != "0" ]; then
-                    file_hit=$((file_hit + 1))
-                  fi
-                  ;;
-                end_of_record)
-                  if [ -n "$current_file" ] && [ "$file_total" -gt 0 ]; then
-                    file_pct=$((file_hit * 100 / file_total))
-                    short=$(echo "$current_file" | sed 's|^lib/||')
-                    echo "| ${short} | ${file_pct}% |" >> $GITHUB_STEP_SUMMARY
-                  fi
-                  current_file=""
-                  file_total=0
-                  file_hit=0
-                  ;;
-              esac
-            done < coverage/lcov.info
           else
             echo "No coverage data generated." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version update (4-file set)
+        run: |
+          echo "## Version Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          errors=0
+
+          # 1. pubspec.yaml のバージョンが main と異なるか
+          MAIN_VERSION=$(git show origin/main:pubspec.yaml | grep '^version:' | sed 's/version: //' | sed 's/+.*//')
+          PR_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/+.*//')
+          if [ "$MAIN_VERSION" = "$PR_VERSION" ]; then
+            echo "::error::pubspec.yaml のバージョンが更新されていません（現在: $PR_VERSION）"
+            echo "- :x: pubspec.yaml のバージョン未更新（$PR_VERSION）" >> $GITHUB_STEP_SUMMARY
+            errors=$((errors + 1))
+          else
+            echo "- :white_check_mark: pubspec.yaml: $MAIN_VERSION → $PR_VERSION" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # 2. app_version.dart の appVersion が PR バージョンと一致するか
+          APP_VERSION=$(grep "const appVersion" lib/app_version.dart | sed "s/.*= '//;s/'.*//" )
+          if [ "$APP_VERSION" != "$PR_VERSION" ]; then
+            echo "::error::app_version.dart の appVersion ($APP_VERSION) が pubspec.yaml ($PR_VERSION) と不一致"
+            echo "- :x: app_version.dart: appVersion=$APP_VERSION（期待: $PR_VERSION）" >> $GITHUB_STEP_SUMMARY
+            errors=$((errors + 1))
+          else
+            echo "- :white_check_mark: app_version.dart: appVersion=$APP_VERSION" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # 3. releaseHistory に PR バージョンのエントリがあるか
+          if grep -q "version: '$PR_VERSION'" lib/app_version.dart; then
+            echo "- :white_check_mark: releaseHistory にエントリあり" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::error::app_version.dart の releaseHistory に v$PR_VERSION のエントリがありません"
+            echo "- :x: releaseHistory にエントリなし" >> $GITHUB_STEP_SUMMARY
+            errors=$((errors + 1))
+          fi
+
+          # 4. announcements.json に PR バージョンのエントリがあるか
+          if grep -q "release:$PR_VERSION" assets/announcements.json; then
+            echo "- :white_check_mark: announcements.json にエントリあり" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::error::announcements.json に release:$PR_VERSION のエントリがありません"
+            echo "- :x: announcements.json にエントリなし" >> $GITHUB_STEP_SUMMARY
+            errors=$((errors + 1))
+          fi
+
+          # 結果
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "$errors" -gt 0 ]; then
+            echo "**:x: $errors 件のバージョン更新漏れがあります**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "**:white_check_mark: バージョン更新チェック OK**" >> $GITHUB_STEP_SUMMARY
           fi
