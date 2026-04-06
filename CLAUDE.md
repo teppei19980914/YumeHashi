@@ -8,15 +8,20 @@
 
 ## 運用フロー
 
-1. Claude Code がソースコード修正 + テスト追加（`/fix-issue` スキル参照）
-2. ユーザーが `run_windows.bat` で動作確認 → main にコミット & プッシュ
-3. GitHub Actions が自動テスト → GitHub Pages デプロイ
+1. `feature/*` または `fix/*` ブランチを作成して開発
+2. Claude Code がソースコード修正 + テスト追加（`/fix-issue` スキル参照）
+3. ユーザーが `run_windows.bat` で動作確認
+4. **リリース前にバージョン4点セットを更新**（pubspec.yaml / app_version.dart / announcements.json / テスト）
+5. main へ PR 作成 → CI がテスト + バージョンチェックを自動実行
+6. CI 通過後にマージ → GitHub Pages に自動デプロイ
 
 ## コミットルール
 
 - テストコードの追加・修正を伴わないソースコード変更はコミットしない
 - コミットメッセージは変更内容を端的に記述する
-- コミット & プッシュはユーザーが手動で実施
+- **main への直接プッシュは禁止。必ず PR 経由でマージする**
+- main ブランチでファイル編集しようとすると **PreToolUse Hook が自動ブロック** する
+- ブロックされた場合、`git checkout -b feature/xxx` でブランチを作成してから開発を再開する
 
 ## コミット前チェック（毎回必須）
 
