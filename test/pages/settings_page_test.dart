@@ -75,12 +75,12 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.scrollUntilVisible(
-      find.text('1.2.0'),
+      find.text('1.2.1'),
       200,
       scrollable: find.byType(Scrollable).first,
     );
 
-    expect(find.text('1.2.0'), findsOneWidget);
+    expect(find.text('1.2.1'), findsOneWidget);
   });
 
   testWidgets('全削除をタップすると確認ダイアログが表示される', (tester) async {
