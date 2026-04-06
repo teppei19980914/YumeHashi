@@ -2,6 +2,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_labels.dart';
 import '../services/html_launcher_service.dart';
 import '../services/release_notes_page_service.dart';
@@ -512,13 +513,51 @@ class _AboutTab extends StatelessWidget {
             AppLabels.helpDevThoughtMessage,
             style: theme.textTheme.bodySmall?.copyWith(height: 1.7),
           ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              AppLabels.helpDevThoughtDeveloper,
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
+          const SizedBox(height: 16),
+          // ホームページリンクカード
+          InkWell(
+            onTap: () => launchUrl(
+              Uri.parse(AppLabels.helpDevHomepageUrl),
+              mode: LaunchMode.externalApplication,
+            ),
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: theme.colorScheme.primary.withAlpha(40),
+                ),
+                color: theme.colorScheme.primary.withAlpha(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.language, size: 28,
+                      color: theme.colorScheme.primary),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          AppLabels.helpDevHomepageLabel,
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          AppLabels.helpDevHomepageUrl,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.open_in_new, size: 18,
+                      color: theme.colorScheme.primary.withAlpha(150)),
+                ],
               ),
             ),
           ),

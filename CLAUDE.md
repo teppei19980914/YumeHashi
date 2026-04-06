@@ -30,6 +30,12 @@
 3. **パフォーマンスチェック** — N+1禁止、Paint キャッシュ、RepaintBoundary
 4. **デプロイチェック** — `flutter analyze` → `flutter test` → `flutter build web` をローカルで実行し全て成功を確認
 5. **単体テスト** — テスト数の増減を確認、旧ラベル文字列の残留を `grep` で検索
+6. **ドキュメント最新化** — 変更内容に応じて以下を必ず最新化する:
+   - `docs/REQUIREMENTS.md` — 機能要件・非機能要件の追加・変更
+   - `docs/SPECIFICATION.md` — 画面仕様・受信ボックス・体験版制限の変更
+   - `docs/DESIGN.md` — アーキテクチャ・データモデル・Provider・テスト構成の変更
+   - `docs/OPERATIONS.md` — 運用手順・リリース手順・トラブルシューティングの変更
+   - `docs/INFRASTRUCTURE.md` — インフラ構成・外部サービス・コストの変更
 
 ## テスト注意事項
 
