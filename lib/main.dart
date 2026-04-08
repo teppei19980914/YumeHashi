@@ -66,14 +66,29 @@ Future<void> main() async {
     ),
   );
 
-  // 初回フレーム描画が完了した後に外部通信を開始する.
+  // 初回フレーム描画が完了した後に外部通信・データクリーンアップを開始する.
   // これによりペイント直前のネットワーク競合を避け、First Paint を最速化する.
   WidgetsBinding.instance.addPostFrameCallback((_) {
     _initRemoteConfigAsync(prefs, container);
     _initInviteCodeAsync(prefs);
     _verifySubscriptionAsync(prefs);
     _initAnonymousAuth();
+    _runDataRetentionCleanup(container);
   });
+}
+
+/// データ保持期間を超えた古いデータを物理削除する.
+///
+/// 既読かつ 30 日以上経過した通知、および完了済みかつ 30 日以上更新されて
+/// いないタスクを削除する. 起動時に 1 回だけ実行. 失敗してもアプリ本体には
+/// 影響しない (例外は DataRetentionService 内で吸収).
+Future<void> _runDataRetentionCleanup(ProviderContainer container) async {
+  try {
+    final service = container.read(dataRetentionServiceProvider);
+    await service.cleanup();
+  } on Object {
+    // クリーンアップの失敗はアプリ動作に影響させない
+  }
 }
 
 /// URLキーをSharedPreferencesに保存する（同期的）.
@@ -145,7 +160,7 @@ Future<void> _initInviteCodeAsync(SharedPreferences prefs) async {
 /// 必ずサーバーに問い合わせて Stripe の実契約状態を検証し、
 /// ローカル状態を更新する. URL パラメータだけでは有効化しない.
 ///
-/// 呼び出し前に [_applyCachedPremiumState] がキャッシュ値を適用しているため、
+/// 呼び出し前に [applyCachedPremiumState] がキャッシュ値を適用しているため、
 /// この関数は「キャッシュとサーバーの差分を埋める」役割のみを担う.
 /// そのため起動クリティカルパスから外して [addPostFrameCallback] 経由で
 /// 実行される（初回描画をブロックしない）.
