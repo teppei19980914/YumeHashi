@@ -8,7 +8,7 @@ library;
 /// アプリの現在バージョン番号.
 ///
 /// pubspec.yaml の version と一致させること.
-const appVersion = '2.0.1';
+const appVersion = '2.0.2';
 
 /// 最終デプロイ日時.
 ///
@@ -25,6 +25,16 @@ const deployedAt = '---';
 ///
 /// 最新エントリ（先頭）がリリースノートポップアップに使用される.
 const releaseHistory = <ReleaseEntry>[
+  ReleaseEntry(
+    version: '2.0.2',
+    date: '2026-04-08',
+    notes: [
+      '初回アクセス時の体感速度を改善（動作への影響なし）',
+      'プレミアム階層をキャッシュから即座に反映するよう変更（サーバー検証は背景で継続）',
+      '外部通信（Stripe検証・リモート設定・匿名認証）を初回描画後に遅延実行',
+      'index.html に preconnect / preload ヒントを追加して CDN・Firebase への接続を並列化',
+    ],
+  ),
   ReleaseEntry(
     version: '2.0.1',
     date: '2026-04-07',
