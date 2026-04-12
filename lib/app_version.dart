@@ -8,7 +8,7 @@ library;
 /// アプリの現在バージョン番号.
 ///
 /// pubspec.yaml の version と一致させること.
-const appVersion = '2.1.1';
+const appVersion = '2.2.0';
 
 /// 最終デプロイ日時.
 ///
@@ -25,6 +25,16 @@ const deployedAt = '---';
 ///
 /// 最新エントリ（先頭）がリリースノートポップアップに使用される.
 const releaseHistory = <ReleaseEntry>[
+  ReleaseEntry(
+    version: '2.2.0',
+    date: '2026-04-12',
+    notes: [
+      '統計画面を fl_chart でグラフ可視化にリニューアル（棒グラフ・円グラフ・ドーナツチャート）',
+      'メモ欄の縦幅を全ダイアログで拡大（書籍メモ8行・夢の説明6行・タスクメモ5行 等）',
+      'タスク編集ダイアログの「目標」を最上部に移動',
+      'FAQ を 22 → 30 項目に充実（ダッシュボード・グラフ・ソート・フィルタ・プライバシー等）',
+    ],
+  ),
   ReleaseEntry(
     version: '2.1.1',
     date: '2026-04-12',

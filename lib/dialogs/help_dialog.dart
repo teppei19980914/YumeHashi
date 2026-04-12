@@ -171,6 +171,36 @@ class _FaqTabState extends State<_FaqTab> {
       answer: AppLabels.helpFaqBookA,
       keywords: ['書籍', '本', '登録', '追加', '読書'],
     ),
+    _FaqItem(
+      category: '基本的な使い方',
+      question: AppLabels.helpFaqDashboardCustomQ,
+      answer: AppLabels.helpFaqDashboardCustomA,
+      keywords: ['ダッシュボード', 'カスタマイズ', '並び替え', 'ウィジェット', '編集', 'レイアウト'],
+    ),
+    _FaqItem(
+      category: '基本的な使い方',
+      question: AppLabels.helpFaqStatsChartQ,
+      answer: AppLabels.helpFaqStatsChartA,
+      keywords: ['統計', 'グラフ', 'チャート', '棒グラフ', '円グラフ', 'ドーナツ', '実施率', '活動'],
+    ),
+    _FaqItem(
+      category: '基本的な使い方',
+      question: AppLabels.helpFaqBookSortQ,
+      answer: AppLabels.helpFaqBookSortA,
+      keywords: ['書籍', 'ソート', '並び替え', '順番', '50音', '登録日', '更新日'],
+    ),
+    _FaqItem(
+      category: '基本的な使い方',
+      question: AppLabels.helpFaqScheduleFilterQ,
+      answer: AppLabels.helpFaqScheduleFilterA,
+      keywords: ['活動予定', 'フィルタ', '完了', '非表示', '表示', 'タスク', 'メニュー'],
+    ),
+    _FaqItem(
+      category: '基本的な使い方',
+      question: AppLabels.helpFaqNotificationQ,
+      answer: AppLabels.helpFaqNotificationA,
+      keywords: ['受信ボックス', '通知', 'お知らせ', 'リマインダー', '実績', 'ベル'],
+    ),
 
     // ── データ管理 ──
     _FaqItem(
@@ -272,6 +302,28 @@ class _FaqTabState extends State<_FaqTab> {
       question: AppLabels.helpFaqBrowserQ,
       answer: AppLabels.helpFaqBrowserA,
       keywords: ['ブラウザ', '対応', 'Chrome', 'Edge', 'Safari', 'Firefox', '推奨'],
+    ),
+
+    // ── データ管理（プライバシー） ──
+    _FaqItem(
+      category: 'データ管理',
+      question: AppLabels.helpFaqPrivacyQ,
+      answer: AppLabels.helpFaqPrivacyA,
+      keywords: ['プライバシー', '安全', 'セキュリティ', '個人情報', '暗号化', '匿名', '広告'],
+    ),
+
+    // ── 端末・環境（追加） ──
+    _FaqItem(
+      category: '端末・環境',
+      question: AppLabels.helpFaqOfflineQ,
+      answer: AppLabels.helpFaqOfflineA,
+      keywords: ['オフライン', 'インターネット', '接続', '通信', 'Wi-Fi'],
+    ),
+    _FaqItem(
+      category: '端末・環境',
+      question: AppLabels.helpFaqSlowLoadQ,
+      answer: AppLabels.helpFaqSlowLoadA,
+      keywords: ['遅い', '読み込み', 'ロード', '時間', 'キャッシュ', '起動', '速度'],
     ),
 
     // ── その他 ──
