@@ -8,7 +8,7 @@ library;
 /// アプリの現在バージョン番号.
 ///
 /// pubspec.yaml の version と一致させること.
-const appVersion = '2.1.0';
+const appVersion = '2.1.1';
 
 /// 最終デプロイ日時.
 ///
@@ -25,6 +25,13 @@ const deployedAt = '---';
 ///
 /// 最新エントリ（先頭）がリリースノートポップアップに使用される.
 const releaseHistory = <ReleaseEntry>[
+  ReleaseEntry(
+    version: '2.1.1',
+    date: '2026-04-12',
+    notes: [
+      'ヘルプ画面「開発者の思い」のリンク先をユメハシ開発者ページに変更',
+    ],
+  ),
   ReleaseEntry(
     version: '2.1.0',
     date: '2026-04-08',
