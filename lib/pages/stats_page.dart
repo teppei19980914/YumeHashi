@@ -1,7 +1,8 @@
 /// 統計ページ.
 ///
-/// サマリー、自己ベスト、実施率、アクティビティチャート、
-/// 最近の活動ログを表示する.
+/// サマリー、アクティビティチャート、実施率、目標別統計、
+/// 自己ベスト、書籍統計、最近の活動ログを表示する.
+/// fl_chart を使用したチャート可視化で UX を向上（v2.1.0）.
 library;
 
 import 'package:flutter/material.dart';
@@ -16,6 +17,9 @@ import '../services/study_stats_calculator.dart';
 import '../services/study_stats_types.dart';
 import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
+import '../widgets/charts/activity_bar_chart.dart';
+import '../widgets/charts/book_pie_chart.dart';
+import '../widgets/charts/consistency_donut_chart.dart';
 
 import '../providers/theme_provider.dart' show sharedPreferencesProvider;
 import '../services/remote_config_service.dart';
@@ -63,24 +67,24 @@ class StatsPage extends ConsumerWidget {
           _SummarySection(colors: colors),
           const SizedBox(height: 16),
 
+          // アクティビティチャート（プレミアム機能）— 最も注目度が高いので上位
+          const _ActivityChartPremiumSection(),
+          const SizedBox(height: 16),
+
+          // 実施率（ドーナツチャート）
+          _ConsistencySection(colors: colors),
+          const SizedBox(height: 16),
+
+          // 目標別統計（プレミアム機能・PieChart）
+          const _GoalStatsPremiumSection(),
+          const SizedBox(height: 16),
+
           // 自己ベスト
           _PersonalRecordSection(colors: colors),
           const SizedBox(height: 16),
 
-          // 実施率
-          _ConsistencySection(colors: colors),
-          const SizedBox(height: 16),
-
-          // 目標別統計（プレミアム機能）
-          const _GoalStatsPremiumSection(),
-          const SizedBox(height: 16),
-
-          // 書籍統計
+          // 書籍統計（PieChart）
           _BookStatsSection(colors: colors),
-          const SizedBox(height: 16),
-
-          // アクティビティチャート（プレミアム機能）
-          const _ActivityChartPremiumSection(),
           const SizedBox(height: 16),
 
           // 最近の活動ログ
@@ -357,35 +361,12 @@ class _ConsistencySection extends ConsumerWidget {
             consistAsync.when(
               data: (data) => Column(
                 children: [
-                  // 全体実施率
-                  Row(
-                    children: [
-                      Text(AppLabels.statsOverall, style: theme.textTheme.bodyMedium),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: data.overallRate.clamp(0.0, 1.0),
-                            minHeight: 10,
-                            backgroundColor: colors.border,
-                            valueColor:
-                                AlwaysStoppedAnimation(colors.accent),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      SizedBox(
-                        width: 50,
-                        child: Text(
-                          '${(data.overallRate * 100).toStringAsFixed(0)}%',
-                          style: theme.textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.end,
-                        ),
-                      ),
-                    ],
+                  // 全体実施率ドーナツチャート
+                  Center(
+                    child: ConsistencyDonutChart(
+                      rate: data.overallRate,
+                      colors: colors,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   // 今週 / 今月
@@ -585,17 +566,18 @@ class _ActivityChartSection extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             chartAsync.when(
-              data: (data) => SizedBox(
-                height: 160,
-                child: _BarChart(data: data, colors: colors),
+              data: (data) => ActivityBarChart(
+                data: data,
+                colors: colors,
+                height: 200,
               ),
               loading: () =>
                   const SizedBox(
-                    height: 160,
+                    height: 200,
                     child: Center(child: CircularProgressIndicator()),
                   ),
               error: (_, _) =>
-                  const SizedBox(height: 160, child: Center(child: Text(AppLabels.errorGeneral))),
+                  const SizedBox(height: 200, child: Center(child: Text(AppLabels.errorGeneral))),
             ),
           ],
         ),
@@ -604,113 +586,6 @@ class _ActivityChartSection extends ConsumerWidget {
   }
 }
 
-/// バーチャート.
-class _BarChart extends StatelessWidget {
-  const _BarChart({required this.data, required this.colors});
-
-  final ActivityChartData data;
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    if (data.buckets.isEmpty || data.maxMinutes == 0) {
-      return Center(
-        child: Text(
-          AppLabels.statsNoData,
-          style: TextStyle(color: colors.textMuted),
-        ),
-      );
-    }
-
-    final theme = Theme.of(context);
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final barSpacing = 4.0;
-        final labelHeight = 24.0;
-        final chartHeight = constraints.maxHeight - labelHeight;
-        final barWidth = (constraints.maxWidth -
-                (data.buckets.length - 1) * barSpacing) /
-            data.buckets.length;
-
-        return Column(
-          children: [
-            SizedBox(
-              height: chartHeight,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  for (var i = 0; i < data.buckets.length; i++) ...[
-                    if (i > 0) SizedBox(width: barSpacing),
-                    SizedBox(
-                      width: barWidth,
-                      child: Tooltip(
-                        message:
-                            '${data.buckets[i].label}: ${_formatMinutes(data.buckets[i].totalMinutes)}',
-                        child: FractionallySizedBox(
-                          heightFactor:
-                              (data.buckets[i].totalMinutes / data.maxMinutes)
-                                  .clamp(0.0, 1.0),
-                          alignment: Alignment.bottomCenter,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: data.buckets[i].totalMinutes > 0
-                                  ? colors.accent
-                                  : colors.border.withAlpha(50),
-                              borderRadius: BorderRadius.circular(2),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            SizedBox(
-              height: labelHeight,
-              child: Row(
-                children: [
-                  for (var i = 0; i < data.buckets.length; i++) ...[
-                    if (i > 0) SizedBox(width: barSpacing),
-                    SizedBox(
-                      width: barWidth,
-                      child: Text(
-                        _shouldShowLabel(i, data.buckets.length)
-                            ? data.buckets[i].label
-                            : '',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontSize: 9,
-                          color: colors.textMuted,
-                        ),
-                        textAlign: TextAlign.center,
-                        overflow: TextOverflow.clip,
-                        maxLines: 1,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  bool _shouldShowLabel(int index, int total) {
-    if (total <= 12) return true;
-    // For 30 buckets, show every 5th label
-    return index % 5 == 0 || index == total - 1;
-  }
-
-  String _formatMinutes(int minutes) {
-    final h = minutes ~/ 60;
-    final m = minutes % 60;
-    if (h > 0) return '${h}h${m}m';
-    return '${m}m';
-  }
-}
 
 /// 最近の活動ログセクション.
 class _RecentLogsSection extends ConsumerWidget {
@@ -844,29 +719,12 @@ class _BookStatsSection extends ConsumerWidget {
       data: (books) {
         if (books.isEmpty) return const SizedBox.shrink();
 
-        final total = books.length;
         final completed =
             books.where((b) => b.status == BookStatus.completed).length;
         final reading =
             books.where((b) => b.status == BookStatus.reading).length;
         final unread =
             books.where((b) => b.status == BookStatus.unread).length;
-        final completionRate =
-            total > 0 ? (completed / total * 100).round() : 0;
-
-        // カテゴリ別集計
-        final categoryMap = <BookCategory, int>{};
-        final categoryCompletedMap = <BookCategory, int>{};
-        for (final book in books) {
-          categoryMap[book.category] =
-              (categoryMap[book.category] ?? 0) + 1;
-          if (book.status == BookStatus.completed) {
-            categoryCompletedMap[book.category] =
-                (categoryCompletedMap[book.category] ?? 0) + 1;
-          }
-        }
-        final sortedCategories = categoryMap.entries.toList()
-          ..sort((a, b) => b.value.compareTo(a.value));
 
         return Card(
           child: Padding(
@@ -878,87 +736,32 @@ class _BookStatsSection extends ConsumerWidget {
                   children: [
                     Icon(Icons.menu_book, size: 20, color: colors.accent),
                     const SizedBox(width: 8),
-                    Text(AppLabels.statsBookStats, style: theme.textTheme.titleSmall),
-                  ],
-                ),
-                const Divider(),
-                Row(
-                  children: [
-                    _BookStatTile(
-                        label: AppLabels.statsRegistered, value: AppLabels.unitBooks(total),
-                        color: colors.textPrimary),
-                    _BookStatTile(
-                        label: AppLabels.statsCompleted, value: AppLabels.unitBooks(completed),
-                        color: colors.success),
-                    _BookStatTile(
-                        label: AppLabels.statsReading, value: AppLabels.unitBooks(reading),
-                        color: colors.accent),
-                    _BookStatTile(
-                        label: AppLabels.statsUnread, value: AppLabels.unitBooks(unread),
-                        color: colors.textMuted),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Text(AppLabels.statsCompletionRate, style: theme.textTheme.bodySmall),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: total > 0 ? completed / total : 0,
-                          minHeight: 8,
-                          backgroundColor: colors.textMuted.withAlpha(30),
-                          color: colors.success,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text('$completionRate%',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.bold)),
+                    Text(AppLabels.statsBookStats, style: theme.textTheme.titleMedium),
                   ],
                 ),
                 const SizedBox(height: 16),
-                Text(AppLabels.statsCategory, style: theme.textTheme.labelLarge),
-                const SizedBox(height: 8),
-                ...sortedCategories.map((entry) {
-                  final cat = entry.key;
-                  final count = entry.value;
-                  final completedInCat = categoryCompletedMap[cat] ?? 0;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 90,
-                          child: Text(cat.label,
-                              style: theme.textTheme.bodySmall),
-                        ),
-                        Expanded(
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(3),
-                            child: LinearProgressIndicator(
-                              value: count / total,
-                              minHeight: 6,
-                              backgroundColor:
-                                  colors.textMuted.withAlpha(30),
-                              color: colors.accent.withAlpha(180),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        SizedBox(
-                          width: 70,
-                          child: Text(AppLabels.unitBooksSlash(completedInCat, count),
-                              style: theme.textTheme.labelSmall,
-                              textAlign: TextAlign.end),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
+                Center(
+                  child: BookPieChart(
+                    entries: [
+                      BookStatusEntry(
+                        label: AppLabels.statsCompleted,
+                        count: completed,
+                        color: colors.success,
+                      ),
+                      BookStatusEntry(
+                        label: AppLabels.statsReading,
+                        count: reading,
+                        color: colors.warning,
+                      ),
+                      BookStatusEntry(
+                        label: AppLabels.statsUnread,
+                        count: unread,
+                        color: colors.textMuted,
+                      ),
+                    ],
+                    colors: colors,
+                  ),
+                ),
               ],
             ),
           ),
@@ -975,30 +778,3 @@ class _BookStatsSection extends ConsumerWidget {
   }
 }
 
-/// 書籍統計の個別タイル.
-class _BookStatTile extends StatelessWidget {
-  const _BookStatTile({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Expanded(
-      child: Column(
-        children: [
-          Text(value,
-              style: theme.textTheme.titleMedium?.copyWith(
-                  color: color, fontWeight: FontWeight.bold)),
-          Text(label, style: theme.textTheme.labelSmall),
-        ],
-      ),
-    );
-  }
-}

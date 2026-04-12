@@ -8,6 +8,7 @@ import '../../l10n/app_labels.dart';
 import '../../providers/dashboard_providers.dart';
 import '../../services/study_stats_types.dart';
 import '../../theme/app_theme.dart';
+import '../charts/goal_pie_chart.dart';
 
 
 /// 目標別統計の表示用データ.
@@ -110,6 +111,26 @@ class _GoalStatsSectionState extends ConsumerState<GoalStatsSection> {
                 }
                 return Column(
                   children: [
+                    // 時間配分 PieChart
+                    if (items.any((item) => item.stats.totalMinutes > 0))
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Center(
+                          child: GoalPieChart(
+                            entries: [
+                              for (final item in items)
+                                if (item.stats.totalMinutes > 0)
+                                  GoalChartEntry(
+                                    name: item.name,
+                                    minutes: item.stats.totalMinutes,
+                                    color: _parseColor(item.color),
+                                  ),
+                            ],
+                            colors: colors,
+                          ),
+                        ),
+                      ),
+                    // 詳細リスト
                     for (var i = 0; i < items.length; i++) ...[
                       if (i > 0) const Divider(height: 16),
                       _GoalStatsCard(data: items[i], colors: colors),
@@ -126,6 +147,11 @@ class _GoalStatsSectionState extends ConsumerState<GoalStatsSection> {
       ),
     );
   }
+}
+
+Color _parseColor(String hex) {
+  final hexStr = hex.replaceAll('#', '');
+  return Color(int.parse('FF$hexStr', radix: 16));
 }
 
 class _GoalStatsCard extends StatelessWidget {
@@ -208,8 +234,4 @@ class _GoalStatsCard extends StatelessWidget {
     return '${m}min';
   }
 
-  Color _parseColor(String hex) {
-    final hexStr = hex.replaceAll('#', '');
-    return Color(int.parse('FF$hexStr', radix: 16));
-  }
 }
