@@ -21,12 +21,6 @@ import '../widgets/charts/activity_bar_chart.dart';
 import '../widgets/charts/book_pie_chart.dart';
 import '../widgets/charts/consistency_donut_chart.dart';
 
-import '../providers/theme_provider.dart' show sharedPreferencesProvider;
-import '../services/remote_config_service.dart';
-import '../services/stripe_service.dart' show verifySubscriptionOnAccess;
-import '../services/trial_limit_service.dart'
-    show isPremium, isTrialMode, setSubscriptionPremium;
-import '../widgets/premium/premium_gate.dart';
 import '../widgets/stats/goal_stats_section.dart';
 
 /// アクティビティ期間Provider.
@@ -47,14 +41,6 @@ class StatsPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // プレミアム画面アクセス時にサブスク状態をバックグラウンド検証
-    final prefs = ref.read(sharedPreferencesProvider);
-    verifySubscriptionOnAccess(
-      prefs: prefs,
-      userKey: RemoteConfigService(prefs).savedUserKey,
-      onStateChanged: (active) => setSubscriptionPremium(enabled: active),
-    );
-
     final theme = Theme.of(context);
     final colors = theme.appColors;
 
@@ -67,16 +53,16 @@ class StatsPage extends ConsumerWidget {
           _SummarySection(colors: colors),
           const SizedBox(height: 16),
 
-          // アクティビティチャート（プレミアム機能）— 最も注目度が高いので上位
-          const _ActivityChartPremiumSection(),
+          // アクティビティチャート
+          _ActivityChartSection(colors: colors),
           const SizedBox(height: 16),
 
           // 実施率（ドーナツチャート）
           _ConsistencySection(colors: colors),
           const SizedBox(height: 16),
 
-          // 目標別統計（プレミアム機能・PieChart）
-          const _GoalStatsPremiumSection(),
+          // 目標別統計（PieChart）
+          const GoalStatsSection(),
           const SizedBox(height: 16),
 
           // 自己ベスト
@@ -451,50 +437,6 @@ class _PeriodCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// 目標別統計のプレミアムラッパー.
-class _GoalStatsPremiumSection extends ConsumerWidget {
-  const _GoalStatsPremiumSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (!isTrialMode || isPremium) {
-      return const GoalStatsSection();
-    }
-    return const PremiumSectionGate(
-      featureName: AppLabels.statsGoalStatsPremiumName,
-      featureIcon: Icons.bar_chart,
-      premiumPoints: [
-        AppLabels.statsGoalStatsPremiumPoint1,
-        AppLabels.statsGoalStatsPremiumPoint2,
-        AppLabels.statsGoalStatsPremiumPoint3,
-      ],
-    );
-  }
-}
-
-/// アクティビティチャートのプレミアムラッパー.
-class _ActivityChartPremiumSection extends ConsumerWidget {
-  const _ActivityChartPremiumSection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final colors = theme.appColors;
-    if (!isTrialMode || isPremium) {
-      return _ActivityChartSection(colors: colors);
-    }
-    return const PremiumSectionGate(
-      featureName: AppLabels.statsActivityPremiumName,
-      featureIcon: Icons.show_chart,
-      premiumPoints: [
-        AppLabels.statsActivityPremiumPoint1,
-        AppLabels.statsActivityPremiumPoint2,
-        AppLabels.statsActivityPremiumPoint3,
-      ],
     );
   }
 }

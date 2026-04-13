@@ -10,14 +10,12 @@ import 'package:intl/intl.dart' show DateFormat;
 
 import '../dialogs/goal_dialog.dart';
 import '../dialogs/goal_discovery_dialog.dart';
-import '../dialogs/trial_limit_dialog.dart';
 import '../l10n/app_labels.dart';
 import '../models/dream.dart';
 import '../models/goal.dart';
 import '../providers/dream_providers.dart';
 import '../providers/goal_providers.dart';
 import '../providers/service_providers.dart';
-import '../services/trial_limit_service.dart';
 import '../services/tutorial_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_snackbar.dart';
@@ -174,24 +172,6 @@ class GoalPage extends ConsumerWidget {
     final tutorialState = ref.read(tutorialStateProvider);
     final isTutorial = tutorialState.isActive &&
         tutorialState.step == TutorialStep.addGoal;
-
-    // チュートリアル中は制限をバイパス
-    if (!isTutorial) {
-      final goals = await ref.read(goalListProvider.future);
-      final level = ref.read(unlockLevelProvider);
-      if (!canAddGoal(currentGoalCount: goals.length, unlockLevel: level)) {
-        if (!context.mounted) return;
-        await showTrialLimitDialog(
-          context,
-          itemName: AppLabels.pageGoals,
-          currentCount: goals.length,
-          maxCount: maxGoals(level),
-          feedbackService: ref.read(feedbackServiceProvider),
-        );
-        ref.invalidate(feedbackServiceProvider);
-        return;
-      }
-    }
 
     if (!context.mounted) return;
 

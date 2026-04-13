@@ -6,11 +6,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../dialogs/book_dialog.dart';
-import '../dialogs/trial_limit_dialog.dart';
 import '../models/book.dart';
 import '../providers/book_providers.dart';
-import '../providers/service_providers.dart';
-import '../services/trial_limit_service.dart';
 import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 
@@ -26,22 +23,6 @@ class BookPage extends ConsumerStatefulWidget {
 
 class _BookPageState extends ConsumerState<BookPage> {
   Future<void> _addBook() async {
-    final books = await ref.read(bookListProvider.future);
-    final currentCount = books.length;
-    final level = ref.read(unlockLevelProvider);
-    if (!canAddBook(currentCount: currentCount, unlockLevel: level)) {
-      if (!mounted) return;
-      await showTrialLimitDialog(
-        context,
-        itemName: AppLabels.pageBooks,
-        currentCount: currentCount,
-        maxCount: maxBooks(level),
-        feedbackService: ref.read(feedbackServiceProvider),
-      );
-      ref.invalidate(feedbackServiceProvider);
-      return;
-    }
-
     if (!mounted) return;
     final result = await showBookDialog(context);
     if (result == null) return;

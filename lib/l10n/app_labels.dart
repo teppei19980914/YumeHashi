@@ -744,8 +744,7 @@ class AppLabels {
   static const helpFaqScheduleA =
       'タスクの期間と進捗を横棒グラフで一覧表示する機能です。\n\n'
       '各タスクの開始日・終了日・進捗を視覚的に確認でき、'
-      '全体の活動予定管理に役立ちます。\n'
-      '※プレミアムプランで利用できます。';
+      '全体の活動予定管理に役立ちます。';
   static const helpFaqActivityLogQ = '活動ログはどうやって記録しますか？';
   static const helpFaqActivityLogA =
       '活動予定のタスクをタップ →「活動時間を記録」から記録できます。\n\n'
@@ -796,28 +795,12 @@ class AppLabels {
       'クラウド同期（メール連携）を利用していれば、同じアカウントで'
       'ログインしている端末間で復元できます。';
 
-  // FAQ Q&A: プラン・料金
-  static const helpFaqPremiumSubscribeQ =
-      'プレミアムプランを契約したい場合はどうすればよいですか？';
-  static const helpFaqPremiumSubscribeA =
-      '設定 →「プランのアップグレード」から申し込めます。\n\n'
-      '【手順】\n'
-      '1. 画面左上の「≡」→「設定」を開く\n'
-      '2.「プランのアップグレード」をタップ\n'
-      '3.「7日間無料で試す」または「申し込む」を選択\n\n'
-      '月額200円（税込）で全機能が利用できます。';
-  static const helpFaqStarterLimitQ = 'スタータープランの制限を解除するには？';
-  static const helpFaqStarterLimitA =
-      'アプリの感想を送信すると段階的に制限が解除されます。\n\n'
-      'すべての制限を解除するには、プレミアムプラン（月額200円）へ'
-      'アップグレードしてください。\n'
-      '設定 →「プランのアップグレード」から申し込めます。';
-  static const helpFaqPremiumCancelQ =
-      'プレミアムプランを解約したい場合はどうすればよいですか？';
-  static const helpFaqPremiumCancelA =
-      '設定 →「サブスクリプション管理」から解約できます。\n\n'
-      '解約後は次回更新日まで利用でき、その後スタータープランに移行します。\n'
-      '登録済みのデータはそのまま残ります。';
+  // FAQ Q&A: 料金
+  static const helpFaqFreeQ = 'このアプリは無料ですか？';
+  static const helpFaqFreeA =
+      'はい、全機能を完全無料でご利用いただけます。\n\n'
+      'アカウント登録も不要です。URLを開くだけですぐに使えます。\n'
+      '広告やトラッキングも一切ありません。';
 
   // FAQ Q&A: 問い合わせ・アプリの感想
   static const helpFaqInquiryQ = '問い合わせをしたい場合はどうすればよいですか？';
@@ -862,10 +845,7 @@ class AppLabels {
   static const helpFaqQuitA =
       'ユーザー登録がないため、退会手続きは不要です。\n\n'
       '設定 →「全データを削除」でデータを消去し、'
-      'ブックマークを削除すれば完了です。\n\n'
-      '※プレミアムプランご契約中の場合は、'
-      '必ず先に「サブスクリプション管理」から解約してください。'
-      '解約しないと毎月の請求が継続されます。';
+      'ブックマークを削除すれば完了です。';
 
   // FAQ Q&A: 書籍
   static const helpFaqBookQ = '書籍はどこから登録できますか？';
@@ -947,7 +927,6 @@ class AppLabels {
       '閲覧・編集ができます。\n\n'
       'ただし以下の機能はインターネット接続が必要です。\n'
       '・クラウド同期（メール連携時）\n'
-      '・サブスクリプション契約・検証\n'
       '・開発者通知の受信';
 
   static const helpFaqSlowLoadQ = '初回の読み込みが遅いのですが';
@@ -984,8 +963,7 @@ class AppLabels {
   static const helpAboutDeviceTitle = '別の端末・ブラウザではデータを引き継げません';
   static const helpAboutDeviceDesc =
       'データはブラウザごとに独立して保存されます。\n'
-      'プレミアムプランでは設定画面の書き出し/読み込み機能で'
-      'データ移行が可能です。';
+      '設定画面の書き出し/読み込み機能でデータ移行が可能です。';
   static const helpAboutBackupTip =
       '大切なデータは定期的に書き出して'
       'バックアップすることをおすすめします。';
@@ -1137,6 +1115,9 @@ class AppLabels {
   static const settingsPremiumPlanNoAuth = 'プレミアムプラン（未認証）';
   static const settingsPremiumPlan = 'プレミアムプラン';
   static const settingsStarterPlan = 'スタータープラン';
+
+  /// v3.0.0: 完全無料プランの表示ラベル.
+  static const settingsFreePlan = '全機能無料（制限なし）';
   static const settingsAnonymousUser = '匿名ユーザー';
   static const settingsLinkEmailDesc = 'メール連携するとデータを安全に保護できます';
   static const settingsLinkEmailButton = 'メールアドレスを連携する';

@@ -1,9 +1,8 @@
-/// Web体験版の制限管理.
+/// 機能制限管理.
 ///
-/// Web版アプリでのみデータ追加数を制限する.
-/// ネイティブデスクトップ版では全て無制限.
-/// フィードバック送信により段階的に制限が解除される.
-/// プレミアム機能（ガントチャート・高度な統計等）はネイティブ版専用.
+/// v3.0.0 で完全無料化。全ユーザーが全機能を制限なく利用できる.
+/// 旧体験版/プレミアム分岐は撤廃済み.
+/// Stripe / 招待コード関連のセッター関数は休眠コードとして残す（将来の再導入用）.
 library;
 
 import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
@@ -69,21 +68,20 @@ int get trialMaxTasksPerGoal => _levelLimits[0]!.tasksPerGoal;
 int get trialMaxBooks => _levelLimits[0]!.books;
 
 /// Web体験版かどうか.
+///
+/// v3.0.0 で完全無料化したため、実質的には `isPremium` が常に true となり
+/// この値が使われることはない. 内部ロジックの互換性維持のために残す.
 bool get isTrialMode => kIsWeb || _testTrialMode;
 
-/// プレミアム機能が利用可能かどうか.
+/// 全機能が利用可能かどうか.
 ///
-/// サブスクプラン加入時はtrue.
-/// Web体験版では有料プランへのアップグレードが必要.
-/// 招待コード有効時はプロバイダ経由で判定する.
-bool get isPremium =>
-    !isTrialMode ||
-    _invitePremium ||
-    _subscriptionPremium ||
-    _trialPremium ||
-    _developerMode;
+/// v3.0.0 で完全無料化。常に true を返す.
+/// 旧ロジック: `!isTrialMode || _invitePremium || _subscriptionPremium || _trialPremium || _developerMode`
+// ignore: avoid_returning_true
+bool get isPremium => true;
 
-/// 招待コードによるプレミアム状態（プロバイダから設定される）.
+/// 招待コードによるプレミアム状態（v3.0.0 で休眠。将来の再導入用に残す）.
+// ignore: unused_element
 bool _invitePremium = false;
 
 /// 招待コードによるプレミアム状態を設定する.
@@ -91,7 +89,8 @@ void setInvitePremium({required bool enabled}) {
   _invitePremium = enabled;
 }
 
-/// サブスクリプションによるプレミアム状態.
+/// サブスクリプションによるプレミアム状態（v3.0.0 で休眠。将来の再導入用に残す）.
+// ignore: unused_element
 bool _subscriptionPremium = false;
 
 /// サブスクリプションによるプレミアム状態を設定する.
@@ -99,7 +98,8 @@ void setSubscriptionPremium({required bool enabled}) {
   _subscriptionPremium = enabled;
 }
 
-/// 無料トライアルによるプレミアム状態.
+/// 無料トライアルによるプレミアム状態（v3.0.0 で休眠。将来の再導入用に残す）.
+// ignore: unused_element
 bool _trialPremium = false;
 
 /// 無料トライアルによるプレミアム状態を設定する.
@@ -118,11 +118,11 @@ void setDeveloperMode({required bool enabled}) {
   _developerMode = enabled;
 }
 
-/// ガントチャート機能が利用可能か.
-bool get canUseGanttChart => isPremium;
+/// ガントチャート機能が利用可能か（v3.0.0: 常に true）.
+bool get canUseGanttChart => true;
 
-/// 高度な統計機能が利用可能か.
-bool get canUseAdvancedStats => isPremium;
+/// 高度な統計機能が利用可能か（v3.0.0: 常に true）.
+bool get canUseAdvancedStats => true;
 
 /// 夢の追加が可能か判定する.
 bool canAddDream({required int currentCount, int unlockLevel = 0}) {

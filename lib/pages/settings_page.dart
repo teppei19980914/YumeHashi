@@ -11,12 +11,9 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:url_launcher/url_launcher.dart';
 
 import '../app_version.dart';
-import '../services/stripe_service.dart';
 import '../dialogs/cloud_auth_dialog.dart';
-import '../dialogs/upgrade_dialog.dart';
 import '../providers/book_providers.dart';
 import '../providers/dream_providers.dart';
 import '../providers/goal_providers.dart';
@@ -25,10 +22,6 @@ import '../services/file_save_service.dart' as file_io;
 import '../services/firestore_sync_service.dart';
 import '../providers/service_providers.dart';
 import '../providers/theme_provider.dart';
-import '../services/invite_service.dart';
-import '../services/remote_config_service.dart';
-import '../services/trial_limit_service.dart'
-    show isTrialMode, isPremium, isDeveloperMode;
 import '../l10n/app_labels.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_snackbar.dart';
@@ -43,24 +36,6 @@ final _notificationsEnabledProvider = FutureProvider<bool>((ref) async {
 class SettingsPage extends ConsumerWidget {
   /// SettingsPageを作成する.
   const SettingsPage({super.key});
-
-  bool _isSubscriptionActive(WidgetRef ref) {
-    final prefs = ref.read(sharedPreferencesProvider);
-    return StripeService(prefs).isSubscriptionActive;
-  }
-
-  Future<void> _openCustomerPortal(BuildContext context, WidgetRef ref) async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    final stripeService = StripeService(prefs);
-    final userKey = RemoteConfigService(prefs).savedUserKey;
-    final url = await stripeService.createCustomerPortalUrl(userKey: userKey);
-    if (url != null) {
-      portalOpenPending = true;
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-    } else if (context.mounted) {
-      showErrorSnackBar(context, AppLabels.errorRetryLater);
-    }
-  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -143,21 +118,11 @@ class SettingsPage extends ConsumerWidget {
               ListTile(
                 leading: Icon(
                   Icons.file_download_outlined,
-                  color: isPremium ? colors.success : colors.textMuted,
+                  color: colors.success,
                 ),
-                title: Text(
-                  AppLabels.settingsImportData,
-                  style: TextStyle(
-                    color: isPremium ? null : colors.textMuted,
-                  ),
-                ),
-                subtitle: Text(
-                  isPremium ? AppLabels.settingsImportRestoreDesc : AppLabels.settingsImportPremiumOnly,
-                  style: TextStyle(
-                    color: isPremium ? null : colors.textMuted,
-                  ),
-                ),
-                onTap: isPremium ? () => _importData(context, ref) : null,
+                title: const Text(AppLabels.settingsImportData),
+                subtitle: const Text(AppLabels.settingsImportRestoreDesc),
+                onTap: () => _importData(context, ref),
               ),
               const Divider(height: 1),
               ListTile(
@@ -197,46 +162,18 @@ class SettingsPage extends ConsumerWidget {
                 // ご利用プラン
                 ListTile(
                   leading: Icon(
-                    isPremium ? Icons.workspace_premium : Icons.rocket_launch,
-                    color: isPremium ? colors.warning : colors.accent,
+                    Icons.workspace_premium,
+                    color: colors.success,
                   ),
                   title: const Text(AppLabels.settingsPlan),
-                  subtitle: Text(_getPlanName(ref)),
+                  subtitle: const Text(AppLabels.settingsFreePlan),
                 ),
-                // アップグレード（体験版かつ未加入時のみ）
-                if (isTrialMode && !isPremium) ...[
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Icon(Icons.star, color: colors.accent),
-                    title: const Text(AppLabels.settingsUpgradeTitle),
-                    subtitle: const Text(AppLabels.settingsUpgradeDesc),
-                    trailing: Icon(Icons.arrow_forward_ios,
-                        size: 16, color: colors.textMuted),
-                    onTap: () => showUpgradeDialog(context),
-                  ),
-                ],
-                // サブスク管理（サブスク契約者 or 開発者のみ）
-                if (_isSubscriptionActive(ref) || isDeveloperMode) ...[
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: Icon(Icons.manage_accounts, color: colors.accent),
-                    title: const Text(AppLabels.settingsManageSubscription),
-                    subtitle: const Text(AppLabels.settingsManageSubscriptionDesc),
-                    trailing: Icon(Icons.open_in_new,
-                        size: 16, color: colors.textMuted),
-                    onTap: isDeveloperMode && !_isSubscriptionActive(ref)
-                        ? null
-                        : () => _openCustomerPortal(context, ref),
-                  ),
-                ],
               ],
             ),
           ),
           const SizedBox(height: 24),
         ],
 
-        // 招待プラン
-        _InviteStatusCard(ref: ref, colors: colors),
 
         // バージョン情報
         _SectionHeader(title: AppLabels.settingsAppInfo, icon: Icons.info_outlined),
@@ -323,30 +260,6 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
-  String _getPlanName(WidgetRef ref) {
-    // 招待プラン
-    final prefs = ref.watch(sharedPreferencesProvider);
-    final inviteService = InviteService(prefs);
-    final inviteStatus = inviteService.getStatus();
-    if (inviteStatus.isActive) {
-      return AppLabels.settingsInvitePlanDays(inviteStatus.remainingDays ?? 0);
-    }
-
-    // プレミアムプラン
-    if (isPremium) {
-      if (kIsWeb) {
-        final syncService = FirestoreSyncService();
-        return syncService.isSignedIn
-            ? AppLabels.settingsPremiumPlanAuth
-            : AppLabels.settingsPremiumPlanNoAuth;
-      }
-      return AppLabels.settingsPremiumPlan;
-    }
-
-    // スタータープラン
-    return AppLabels.settingsStarterPlan;
-  }
-
   Future<void> _exportData(BuildContext context, WidgetRef ref) async {
     try {
       final service = ref.read(dataExportServiceProvider);
@@ -372,26 +285,6 @@ class SettingsPage extends ConsumerWidget {
   }
 
   Future<void> _importData(BuildContext context, WidgetRef ref) async {
-    if (isTrialMode && !isPremium) {
-      await showDialog<void>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text(AppLabels.importUnavailable),
-          content: Text(
-            '${AppLabels.importUnavailableMsg}\n'
-            '${AppLabels.settingsImportUpgradeMsg}',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(AppLabels.btnClose),
-            ),
-          ],
-        ),
-      );
-      return;
-    }
-
     final bytes = await file_io.pickFile(allowedExtensions: ['json']);
     if (bytes == null) return;
 
@@ -573,51 +466,6 @@ Future<void> _linkAccountAction(BuildContext context, WidgetRef ref) async {
     showSuccessSnackBar(context, AppLabels.cloudAccountLinked);
   }
   (context as Element).markNeedsBuild();
-}
-
-class _InviteStatusCard extends StatelessWidget {
-  const _InviteStatusCard({required this.ref, required this.colors});
-
-  final WidgetRef ref;
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    final inviteStatus = ref.watch(inviteStatusProvider);
-    if (!inviteStatus.isActive && inviteStatus.expiredAt == null) {
-      return const SizedBox.shrink();
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SectionHeader(
-          title: AppLabels.settingsInvitePlanSection,
-          icon: Icons.card_giftcard_outlined,
-        ),
-        Card(
-          child: ListTile(
-            leading: Icon(
-              inviteStatus.isActive ? Icons.verified : Icons.timer_off,
-              color: inviteStatus.isActive ? colors.success : colors.error,
-            ),
-            title: Text(
-              inviteStatus.isActive ? AppLabels.settingsInviteActive : AppLabels.settingsInviteExpired,
-            ),
-            subtitle: Text(
-              inviteStatus.isActive
-                  ? AppLabels.settingsInviteActiveDesc(
-                      inviteStatus.name ?? '',
-                      inviteStatus.remainingDays ?? 0,
-                    )
-                  : AppLabels.settingsInviteExpiredDesc,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
 }
 
 /// セクションヘッダー.

@@ -6,7 +6,6 @@ import 'package:url_launcher/url_launcher.dart';
 import '../l10n/app_labels.dart';
 import '../services/html_launcher_service.dart';
 import '../services/release_notes_page_service.dart';
-import '../services/trial_limit_service.dart';
 
 /// ヘルプダイアログを表示する.
 Future<void> showHelpDialog(BuildContext context) async {
@@ -26,7 +25,6 @@ class _HelpDialog extends StatefulWidget {
 class _HelpDialogState extends State<_HelpDialog>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final bool _showTrialTab = isTrialMode && !isPremium;
 
   Future<void> _openReleaseNotes() async {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -37,10 +35,7 @@ class _HelpDialogState extends State<_HelpDialog>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(
-      length: _showTrialTab ? 3 : 2,
-      vsync: this,
-    );
+    _tabController = TabController(length: 2, vsync: this);
   }
 
   @override
@@ -80,7 +75,6 @@ class _HelpDialogState extends State<_HelpDialog>
               tabs: [
                 const Tab(text: AppLabels.helpTabAbout),
                 const Tab(text: AppLabels.helpTabFaq),
-                if (_showTrialTab) const Tab(text: AppLabels.helpTabPlan),
               ],
             ),
             Expanded(
@@ -89,7 +83,6 @@ class _HelpDialogState extends State<_HelpDialog>
                 children: [
                   const _AboutTab(),
                   const _FaqTab(),
-                  if (_showTrialTab) const _TrialInfoTab(),
                 ],
               ),
             ),
@@ -127,7 +120,7 @@ class _FaqTabState extends State<_FaqTab> {
   static const _categoryOrder = [
     '基本的な使い方',
     'データ管理',
-    'プラン・料金',
+    '料金',
     '問い合わせ・感想',
     '端末・環境',
     'その他',
@@ -250,24 +243,12 @@ class _FaqTabState extends State<_FaqTab> {
       ],
     ),
 
-    // ── プラン・料金 ──
+    // ── 料金 ──
     _FaqItem(
-      category: 'プラン・料金',
-      question: AppLabels.helpFaqPremiumSubscribeQ,
-      answer: AppLabels.helpFaqPremiumSubscribeA,
-      keywords: ['プレミアム', '契約', '申し込み', '料金', '価格', '200', 'サブスク', 'アップグレード'],
-    ),
-    _FaqItem(
-      category: 'プラン・料金',
-      question: AppLabels.helpFaqStarterLimitQ,
-      answer: AppLabels.helpFaqStarterLimitA,
-      keywords: ['制限', '解除', 'フィードバック', 'プレミアム', '無料', 'スターター', 'アップグレード'],
-    ),
-    _FaqItem(
-      category: 'プラン・料金',
-      question: AppLabels.helpFaqPremiumCancelQ,
-      answer: AppLabels.helpFaqPremiumCancelA,
-      keywords: ['解約', 'キャンセル', '退会', '課金', '停止', 'やめる', '問い合わせ'],
+      category: '料金',
+      question: AppLabels.helpFaqFreeQ,
+      answer: AppLabels.helpFaqFreeA,
+      keywords: ['無料', '料金', '価格', 'サブスク', 'プラン', '課金', '費用'],
     ),
 
     // ── 問い合わせ・感想 ──
@@ -627,99 +608,6 @@ class _AboutTab extends StatelessWidget {
                       color: theme.colorScheme.primary.withAlpha(150)),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── スタータープランタブ ──────────────────────────────────────
-
-class _TrialInfoTab extends StatelessWidget {
-  const _TrialInfoTab();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLabels.helpPlanRegistrationLimit,
-            style: theme.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _InfoRow(
-            icon: Icons.auto_awesome,
-            color: Colors.blue,
-            title: AppLabels.helpPlanDreamLimit,
-            subtitle: null,
-          ),
-          _InfoRow(
-            icon: Icons.flag,
-            color: Colors.green,
-            title: AppLabels.helpPlanGoalLimit,
-            subtitle: null,
-          ),
-          _InfoRow(
-            icon: Icons.menu_book,
-            color: Colors.purple,
-            title: AppLabels.helpPlanBookLimit,
-            subtitle: null,
-          ),
-          _InfoRow(
-            icon: Icons.lock_outline,
-            color: Colors.red,
-            title: AppLabels.helpPlanLockedFeatures,
-            subtitle: AppLabels.helpPlanFeedbackUnlock,
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primary.withAlpha(15),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(
-                color: theme.colorScheme.primary.withAlpha(40),
-              ),
-            ),
-            child: Column(
-              children: [
-                Icon(Icons.workspace_premium,
-                    size: 28, color: theme.colorScheme.primary),
-                const SizedBox(height: 8),
-                Text(
-                  AppLabels.helpPlanPremiumName,
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  AppLabels.helpPlanPremiumDesc,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  AppLabels.helpPlanPremiumUpgradeHint,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.hintColor,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
             ),
           ),
         ],
