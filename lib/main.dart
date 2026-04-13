@@ -12,24 +12,12 @@ import 'firebase_options.dart';
 import 'providers/service_providers.dart';
 import 'providers/theme_provider.dart';
 import 'services/firestore_sync_service.dart';
-import 'services/invite_service.dart';
 import 'services/remote_config_service.dart';
-import 'services/startup_premium_sync.dart';
-import 'services/stripe_service.dart';
-import 'services/trial_limit_service.dart';
 
 /// アプリケーションのエントリポイント.
 ///
-/// SharedPreferencesの初期化のみを同期的に待ち、
-/// リモート設定は非同期で取得してアプリを即座に起動する.
-///
-/// v2.0.2: 起動時の体感パフォーマンスを改善するため以下の順序で処理する.
-/// 1. Firebase 初期化 + SharedPreferences ロード（必須、同期）
-/// 2. ローカルキャッシュされたプレミアム状態を同期的に適用
-///    → UI 初期描画時点で正しいプレミアム階層が反映される
-/// 3. runApp() で即座に UI を表示
-/// 4. 初回フレーム描画完了後に Apps Script / Firebase Auth 等の
-///    外部通信を走らせる（クリティカルパスから外す）
+/// v3.0.0: 完全無料化に伴い、Stripe 検証・招待コード処理・プレミアム状態
+/// キャッシュ適用を削除. 起動時の外部通信は匿名認証とリモート設定のみ.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (kIsWeb) {
@@ -41,13 +29,6 @@ Future<void> main() async {
 
   // URLキーの保存は同期的に実施（軽量なSharedPreferences操作のみ）
   _saveUrlKeyIfPresent(prefs);
-
-  // キャッシュされたプレミアム状態を即座に適用する.
-  // これにより verifySubscription (~1.8秒) の完了を待たずに
-  // 正しいプレミアム階層で UI をレンダリングできる.
-  if (kIsWeb) {
-    applyCachedPremiumState(prefs);
-  }
 
   // リモート設定をバックグラウンドで取得
   // デフォルト設定で即座にアプリを起動し、取得完了後にプロバイダを更新する
@@ -67,11 +48,8 @@ Future<void> main() async {
   );
 
   // 初回フレーム描画が完了した後に外部通信・データクリーンアップを開始する.
-  // これによりペイント直前のネットワーク競合を避け、First Paint を最速化する.
   WidgetsBinding.instance.addPostFrameCallback((_) {
     _initRemoteConfigAsync(prefs, container);
-    _initInviteCodeAsync(prefs);
-    _verifySubscriptionAsync(prefs);
     _initAnonymousAuth();
     _runDataRetentionCleanup(container);
   });
@@ -119,11 +97,6 @@ Future<void> _initRemoteConfigAsync(
       remoteConfigProvider.overrideWithValue(config),
     ]);
 
-    // unlimited: プレミアム機能を解放（開発者用）
-    if (config.unlimited) {
-      setSubscriptionPremium(enabled: true);
-    }
-
     // resetOnAccess: アクセス時にデータをリセット
     if (config.resetOnAccess) {
       await service.clearPreferencesExceptKey();
@@ -131,70 +104,6 @@ Future<void> _initRemoteConfigAsync(
     }
   } on Exception {
     // リモート設定取得失敗時はデフォルト設定のまま動作する
-  }
-}
-
-/// 招待コードを非同期で処理する.
-///
-/// URLパラメータ `?invite=CODE` から招待コードを取得し、
-/// Gistで有効性を検証してからブラウザに保存する.
-Future<void> _initInviteCodeAsync(SharedPreferences prefs) async {
-  if (!kIsWeb) return;
-
-  final inviteCode = _getUrlParam('invite');
-  if (inviteCode == null || inviteCode.isEmpty) return;
-
-  final inviteService = InviteService(prefs);
-  // 既に同じコードで有効化済みならスキップ
-  if (inviteService.savedCode == inviteCode) return;
-
-  final configService = RemoteConfigService(prefs);
-  final inviteConfig = await configService.fetchInviteConfig(inviteCode);
-  if (inviteConfig == null) return;
-
-  await inviteService.activate(inviteCode, inviteConfig);
-}
-
-/// サブスクリプション状態をサーバー検証して同期する.
-///
-/// 必ずサーバーに問い合わせて Stripe の実契約状態を検証し、
-/// ローカル状態を更新する. URL パラメータだけでは有効化しない.
-///
-/// 呼び出し前に [applyCachedPremiumState] がキャッシュ値を適用しているため、
-/// この関数は「キャッシュとサーバーの差分を埋める」役割のみを担う.
-/// そのため起動クリティカルパスから外して [addPostFrameCallback] 経由で
-/// 実行される（初回描画をブロックしない）.
-Future<void> _verifySubscriptionAsync(SharedPreferences prefs) async {
-  if (!kIsWeb) return;
-
-  final stripeService = StripeService(prefs);
-  final configService = RemoteConfigService(prefs);
-  final userKey = configService.savedUserKey;
-
-  final subscriptionParam = _getUrlParam('subscription');
-
-  // サーバーに問い合わせてStripe実契約状態を検証・同期
-  // userKeyがある場合のみ検証（匿名ユーザーは検証不可）
-  if (userKey != null && userKey.isNotEmpty) {
-    await stripeService.verifySubscription(userKey: userKey);
-  }
-
-  // 検証結果をローカル状態に反映
-  if (stripeService.isSubscriptionActive) {
-    setSubscriptionPremium(enabled: true);
-  } else {
-    // 解約済みの場合は明示的にプレミアムを無効化
-    setSubscriptionPremium(enabled: false);
-  }
-
-  // 無料トライアル有効ならプレミアム機能を解放
-  if (stripeService.isTrialActive) {
-    setTrialPremium(enabled: true);
-  }
-
-  // Stripe Checkout 復帰時はクラウド認証フラグを立てる
-  if (subscriptionParam == 'success') {
-    await prefs.setBool('cloud_auth_pending', true);
   }
 }
 

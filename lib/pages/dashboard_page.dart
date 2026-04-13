@@ -15,7 +15,6 @@ import '../providers/dashboard_providers.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/constellation/constellation_painter.dart';
 import '../widgets/tutorial/tutorial_banner.dart';
-import '../widgets/web/web_trial_banner.dart';
 import '../providers/service_providers.dart';
 import '../services/dashboard_layout_service.dart';
 import '../widgets/notification/notification_button.dart';
@@ -45,7 +44,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     final colors = theme.appColors;
     final prefs = ref.watch(sharedPreferencesProvider);
 
-    // 初回アクセス: オンボーディング → 体験版ダイアログ → チュートリアル確認
+    // 初回アクセス: オンボーディング → チュートリアル確認
     if (!_webDialogChecked) {
       _webDialogChecked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -55,14 +54,8 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
         final onboarded = await showOnboardingDialog(context, prefs);
         if (!context.mounted) return;
 
-        // ダイアログ間にゆったりとした間を入れる
-        if (onboarded) {
-          await Future<void>.delayed(const Duration(milliseconds: 400));
-          if (!context.mounted) return;
-        }
-
-        final shown = await showWebTrialDialogIfNeeded(context, prefs);
-        if (!shown || !context.mounted) return;
+        // オンボーディングが表示されなかった場合はチュートリアルも不要
+        if (!onboarded) return;
 
         await Future<void>.delayed(const Duration(milliseconds: 400));
         if (!context.mounted) return;
@@ -113,8 +106,6 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
     return layoutAsync.when(
       data: (layout) => Column(
         children: [
-          // Web体験版バナー
-          WebTrialBanner(prefs: prefs),
           // 挨拶ヘッダー + 編集ボタン
           _GreetingBar(editMode: _editMode, onToggle: () => setState(() => _editMode = !_editMode), onReset: () => ref.read(dashboardLayoutProvider.notifier).resetToDefault(), colors: colors),
           // ウィジェットグリッド

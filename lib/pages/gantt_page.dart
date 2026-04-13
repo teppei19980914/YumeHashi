@@ -12,7 +12,6 @@ import '../l10n/app_labels.dart';
 import '../dialogs/reading_log_dialog.dart';
 import '../dialogs/task_dialog.dart';
 import '../dialogs/task_discovery_dialog.dart';
-import '../dialogs/trial_limit_dialog.dart';
 import '../models/goal.dart';
 import '../models/task.dart' show Task, bookGanttGoalId;
 import '../services/book_gantt_service.dart' show bookGanttColor;
@@ -20,16 +19,11 @@ import '../services/study_stats_types.dart' show GanttMilestone;
 import '../providers/dashboard_providers.dart';
 import '../providers/gantt_providers.dart';
 import '../providers/service_providers.dart';
-import '../providers/theme_provider.dart' show sharedPreferencesProvider;
 import '../services/file_save_service.dart' as file_io;
 import '../services/task_study_log_logic.dart';
-import '../services/remote_config_service.dart';
-import '../services/stripe_service.dart' show verifySubscriptionOnAccess;
-import '../services/trial_limit_service.dart';
 import '../services/tutorial_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/gantt/gantt_chart.dart';
-import '../widgets/premium/premium_gate.dart';
 import '../widgets/tutorial/tutorial_banner.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/tutorial/tutorial_target_keys.dart';
@@ -48,31 +42,6 @@ class _GanttPageState extends ConsumerState<GanttPage> {
 
   @override
   Widget build(BuildContext context) {
-    // プレミアム画面アクセス時にサブスク状態をバックグラウンド検証
-    final prefs = ref.read(sharedPreferencesProvider);
-    verifySubscriptionOnAccess(
-      prefs: prefs,
-      userKey: RemoteConfigService(prefs).savedUserKey,
-      onStateChanged: (active) {
-        setSubscriptionPremium(enabled: active);
-        if (mounted) setState(() {});
-      },
-    );
-
-    // プレミアム機能: Web体験版ではゲートを表示
-    if (!canUseGanttChart) {
-      return const PremiumGate(
-        featureName: AppLabels.pageSchedule,
-        featureIcon: Icons.view_timeline_outlined,
-        premiumPoints: [
-          AppLabels.ganttPremiumPoint1,
-          AppLabels.ganttPremiumPoint2,
-          AppLabels.ganttPremiumPoint3,
-          AppLabels.ganttPremiumPoint4,
-        ],
-      );
-    }
-
     final viewState = ref.watch(ganttViewStateProvider);
     final tasksAsync = ref.watch(ganttTasksProvider);
     final goalsAsync = ref.watch(ganttGoalListProvider);
@@ -394,26 +363,6 @@ class _GanttPageState extends ConsumerState<GanttPage> {
     final tutorialState = ref.read(tutorialStateProvider);
     final isTutorial = tutorialState.isActive &&
         tutorialState.step == TutorialStep.addTask;
-
-    // 体験版: タスク数の制限チェック
-    if (!isTutorial && goalId.isNotEmpty) {
-      final allTasks = await ref.read(ganttTasksProvider.future);
-      final tasksForGoal = allTasks.where((t) => t.goalId == goalId).length;
-      final level = ref.read(unlockLevelProvider);
-      if (!canAddTask(
-          currentTaskCountForGoal: tasksForGoal, unlockLevel: level)) {
-        if (!context.mounted) return;
-        await showTrialLimitDialog(
-          context,
-          itemName: AppLabels.ganttTrialLimitTask(tasksForGoal),
-          currentCount: tasksForGoal,
-          maxCount: maxTasksPerGoal(level),
-          feedbackService: ref.read(feedbackServiceProvider),
-        );
-        ref.invalidate(feedbackServiceProvider);
-        return;
-      }
-    }
 
     // チュートリアル中: ガイドを使うか自分で入力するかを選択
     if (isTutorial) {

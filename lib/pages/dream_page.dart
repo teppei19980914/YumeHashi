@@ -9,13 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../dialogs/dream_dialog.dart';
 import '../dialogs/dream_discovery_dialog.dart';
-import '../dialogs/trial_limit_dialog.dart';
 import '../l10n/app_labels.dart';
 import '../models/dream.dart';
 import '../providers/dream_providers.dart';
 import '../providers/goal_providers.dart';
 import '../providers/service_providers.dart';
-import '../services/trial_limit_service.dart';
 import '../services/tutorial_service.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_snackbar.dart';
@@ -184,25 +182,6 @@ class DreamPage extends ConsumerWidget {
     final tutorialState = ref.read(tutorialStateProvider);
     final isTutorial = tutorialState.isActive &&
         tutorialState.step == TutorialStep.addDream;
-
-    // チュートリアル中は制限をバイパス
-    if (!isTutorial) {
-      final dreams = await ref.read(dreamListProvider.future);
-      final currentCount = dreams.length;
-      final level = ref.read(unlockLevelProvider);
-      if (!canAddDream(currentCount: currentCount, unlockLevel: level)) {
-        if (!context.mounted) return;
-        await showTrialLimitDialog(
-          context,
-          itemName: AppLabels.pageDreams,
-          currentCount: currentCount,
-          maxCount: maxDreams(level),
-          feedbackService: ref.read(feedbackServiceProvider),
-        );
-        ref.invalidate(feedbackServiceProvider);
-        return;
-      }
-    }
 
     if (!context.mounted) return;
 
