@@ -80,7 +80,8 @@ bool get isTrialMode => kIsWeb || _testTrialMode;
 // ignore: avoid_returning_true
 bool get isPremium => true;
 
-/// 招待コードによるプレミアム状態（プロバイダから設定される）.
+/// 招待コードによるプレミアム状態（v3.0.0 で休眠。将来の再導入用に残す）.
+// ignore: unused_element
 bool _invitePremium = false;
 
 /// 招待コードによるプレミアム状態を設定する.
@@ -88,7 +89,8 @@ void setInvitePremium({required bool enabled}) {
   _invitePremium = enabled;
 }
 
-/// サブスクリプションによるプレミアム状態.
+/// サブスクリプションによるプレミアム状態（v3.0.0 で休眠。将来の再導入用に残す）.
+// ignore: unused_element
 bool _subscriptionPremium = false;
 
 /// サブスクリプションによるプレミアム状態を設定する.
@@ -96,7 +98,8 @@ void setSubscriptionPremium({required bool enabled}) {
   _subscriptionPremium = enabled;
 }
 
-/// 無料トライアルによるプレミアム状態.
+/// 無料トライアルによるプレミアム状態（v3.0.0 で休眠。将来の再導入用に残す）.
+// ignore: unused_element
 bool _trialPremium = false;
 
 /// 無料トライアルによるプレミアム状態を設定する.
