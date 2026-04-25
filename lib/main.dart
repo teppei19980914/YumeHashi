@@ -1,30 +1,23 @@
 /// ユメハシ アプリケーションのエントリポイント.
 library;
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
-import 'firebase_options.dart';
 import 'providers/service_providers.dart';
 import 'providers/theme_provider.dart';
-import 'services/firestore_sync_service.dart';
 import 'services/remote_config_service.dart';
 
 /// アプリケーションのエントリポイント.
 ///
-/// v3.0.0: 完全無料化に伴い、Stripe 検証・招待コード処理・プレミアム状態
-/// キャッシュ適用を削除. 起動時の外部通信は匿名認証とリモート設定のみ.
+/// v3.1.0: 認証機能（Firebase Auth）とクラウド同期（Firestore）を停止.
+/// データはブラウザ内 SQLite (WASM) のみで管理する.
+/// Firebase 初期化・匿名認証・クラウド同期処理を全て削除.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  if (kIsWeb) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  }
   final prefs = await SharedPreferences.getInstance();
 
   // URLキーの保存は同期的に実施（軽量なSharedPreferences操作のみ）
@@ -47,10 +40,9 @@ Future<void> main() async {
     ),
   );
 
-  // 初回フレーム描画が完了した後に外部通信・データクリーンアップを開始する.
+  // 初回フレーム描画が完了した後にデータクリーンアップを開始する.
   WidgetsBinding.instance.addPostFrameCallback((_) {
     _initRemoteConfigAsync(prefs, container);
-    _initAnonymousAuth();
     _runDataRetentionCleanup(container);
   });
 }
@@ -104,19 +96,6 @@ Future<void> _initRemoteConfigAsync(
     }
   } on Exception {
     // リモート設定取得失敗時はデフォルト設定のまま動作する
-  }
-}
-
-/// Web起動時にFirebase匿名認証を自動実行する.
-///
-/// ユーザー操作なしでUIDが発行され、以降のデータ同期の基盤となる.
-/// 既にサインイン済み（匿名・メール問わず）の場合は何もしない.
-Future<void> _initAnonymousAuth() async {
-  if (!kIsWeb) return;
-  try {
-    await FirestoreSyncService().ensureSignedIn();
-  } on Exception {
-    // 認証失敗時はローカルのみで動作（次回起動時にリトライ）
   }
 }
 

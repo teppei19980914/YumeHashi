@@ -4,7 +4,6 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/dream.dart';
-import '../services/sync_manager.dart';
 import 'service_providers.dart';
 
 /// 全Dream一覧を取得・管理するProvider.
@@ -35,7 +34,6 @@ class DreamListNotifier extends AsyncNotifier<List<Dream>> {
       category: category,
     );
     ref.invalidateSelf();
-    SyncManager().requestSync();
     return dream.id;
   }
 
@@ -56,7 +54,6 @@ class DreamListNotifier extends AsyncNotifier<List<Dream>> {
       category: category,
     );
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// Dreamを削除する.
@@ -64,7 +61,6 @@ class DreamListNotifier extends AsyncNotifier<List<Dream>> {
     final service = ref.read(dreamServiceProvider);
     await service.deleteDream(dreamId);
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// 夢の並び順を更新する.
@@ -73,6 +69,5 @@ class DreamListNotifier extends AsyncNotifier<List<Dream>> {
     final service = ref.read(dreamServiceProvider);
     await service.updateDreamOrders(orders);
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 }

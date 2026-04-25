@@ -13,13 +13,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
 import '../app_version.dart';
-import '../dialogs/cloud_auth_dialog.dart';
 import '../providers/book_providers.dart';
 import '../providers/dream_providers.dart';
 import '../providers/goal_providers.dart';
 import '../services/data_export_service.dart' show buildBackupFileName;
 import '../services/file_save_service.dart' as file_io;
-import '../services/firestore_sync_service.dart';
 import '../providers/service_providers.dart';
 import '../providers/theme_provider.dart';
 import '../l10n/app_labels.dart';
@@ -135,40 +133,19 @@ class SettingsPage extends ConsumerWidget {
                 subtitle: const Text(AppLabels.settingsDeleteWarning),
                 onTap: () => _clearAllData(context, ref),
               ),
-              // クラウドデータ復元（Web + サインイン済み）
-              if (kIsWeb && FirestoreSyncService().isSignedIn) ...[
-                const Divider(height: 1),
-                ListTile(
-                  leading: Icon(Icons.cloud_download, color: colors.success),
-                  title: const Text(AppLabels.settingsCloudRestore),
-                  subtitle: const Text(AppLabels.settingsCloudRestoreDesc),
-                  onTap: () => _restoreFromCloud(context, ref),
-                ),
-              ],
             ],
           ),
         ),
         const SizedBox(height: 24),
 
-        // アカウント情報（Web限定）
+        // ご利用プラン（v3.1.0 で全機能無料・認証なし）
         if (kIsWeb) ...[
-          _SectionHeader(title: AppLabels.settingsAccount, icon: Icons.person_outlined),
+          _SectionHeader(title: AppLabels.settingsPlan, icon: Icons.workspace_premium),
           Card(
-            child: Column(
-              children: [
-                // アカウント連携状態
-                ...buildAccountTiles(ref, colors, context),
-                const Divider(height: 1),
-                // ご利用プラン
-                ListTile(
-                  leading: Icon(
-                    Icons.workspace_premium,
-                    color: colors.success,
-                  ),
-                  title: const Text(AppLabels.settingsPlan),
-                  subtitle: const Text(AppLabels.settingsFreePlan),
-                ),
-              ],
+            child: ListTile(
+              leading: Icon(Icons.workspace_premium, color: colors.success),
+              title: const Text(AppLabels.settingsFreePlan),
+              subtitle: const Text(AppLabels.settingsFreePlanDesc),
             ),
           ),
           const SizedBox(height: 24),
@@ -210,55 +187,6 @@ class SettingsPage extends ConsumerWidget {
   }
 
 
-
-  Future<void> _restoreFromCloud(BuildContext context, WidgetRef ref) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text(AppLabels.settingsCloudRestore),
-        content: const Text(
-          AppLabels.settingsCloudRestoreConfirm,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text(AppLabels.btnCancel),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(AppLabels.settingsRestoreButton),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed != true || !context.mounted) return;
-
-    try {
-      final syncService = FirestoreSyncService();
-      final json = await syncService.downloadData();
-
-      if (json == null) {
-        if (!context.mounted) return;
-        showInfoSnackBar(context, AppLabels.cloudNoBackup);
-        return;
-      }
-
-      final exportService = ref.read(dataExportServiceProvider);
-      await exportService.importData(json);
-
-      // 全Providerを更新
-      ref.invalidate(dreamListProvider);
-      ref.invalidate(goalListProvider);
-      ref.invalidate(bookListProvider);
-
-      if (!context.mounted) return;
-      showSuccessSnackBar(context, AppLabels.cloudRestored);
-    } on Exception catch (e) {
-      if (!context.mounted) return;
-      showErrorSnackBar(context, AppLabels.settingsRestoreError('$e'));
-    }
-  }
 
   Future<void> _exportData(BuildContext context, WidgetRef ref) async {
     try {
@@ -395,77 +323,6 @@ class SettingsPage extends ConsumerWidget {
       showErrorSnackBar(context, AppLabels.settingsDeleteError('$e'));
     }
   }
-}
-
-/// 招待プラン状態カード.
-///
-/// 招待コードが有効な場合のみ表示する.
-
-/// アカウント連携のタイル一覧を構築する.
-List<Widget> buildAccountTiles(WidgetRef ref, AppColors colors, BuildContext context) {
-  final syncService = FirestoreSyncService();
-  final isLinked = syncService.isLinked;
-  final email = syncService.email;
-
-  return [
-    ListTile(
-      leading: Icon(
-        isLinked ? Icons.verified_user : Icons.person_outline,
-        color: isLinked ? colors.success : colors.warning,
-      ),
-      title: Text(isLinked ? AppLabels.authLinked : AppLabels.settingsAnonymousUser),
-      subtitle: Text(
-        isLinked
-            ? email ?? ''
-            : AppLabels.settingsLinkEmailDesc,
-      ),
-    ),
-    if (!isLinked)
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: SizedBox(
-          width: double.infinity,
-          child: ElevatedButton.icon(
-            onPressed: () => _linkAccountAction(context, ref),
-            icon: const Icon(Icons.link, size: 18),
-            label: const Text(AppLabels.settingsLinkEmailButton),
-          ),
-        ),
-      ),
-  ];
-}
-
-/// アカウント連携処理.
-Future<void> _linkAccountAction(BuildContext context, WidgetRef ref) async {
-  final result = await showCloudAuthDialog(context);
-  if (result == null || result == CloudAuthResult.skipped) return;
-  if (!context.mounted) return;
-
-  final syncService = FirestoreSyncService();
-  final exportService = ref.read(dataExportServiceProvider);
-
-  if (result == CloudAuthResult.loggedIn) {
-    try {
-      final json = await syncService.downloadData();
-      if (json != null) {
-        await exportService.importData(json);
-        ref.invalidate(dreamListProvider);
-        ref.invalidate(goalListProvider);
-        ref.invalidate(bookListProvider);
-      }
-      if (!context.mounted) return;
-      showSuccessSnackBar(context, AppLabels.cloudLoginRestored);
-    } on Exception {
-      if (!context.mounted) return;
-      showErrorSnackBar(context, AppLabels.cloudLoginRestoreFailed);
-    }
-  } else {
-    final json = await exportService.exportData();
-    await syncService.uploadData(json);
-    if (!context.mounted) return;
-    showSuccessSnackBar(context, AppLabels.cloudAccountLinked);
-  }
-  (context as Element).markNeedsBuild();
 }
 
 /// セクションヘッダー.

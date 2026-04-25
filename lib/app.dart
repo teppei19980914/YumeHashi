@@ -11,8 +11,6 @@ import 'package:go_router/go_router.dart';
 
 import 'dialogs/app_guide_dialog.dart';
 import 'services/demo_data_service.dart' show isDemoDataSeeded, seedDemoData;
-import 'services/firestore_sync_service.dart' show FirestoreSyncService;
-import 'services/sync_manager.dart';
 import 'dialogs/help_dialog.dart';
 import 'dialogs/monitor_submission_dialog.dart';
 import 'services/invite_service.dart';
@@ -171,7 +169,6 @@ class _AppShellState extends ConsumerState<_AppShell> {
   bool _resetChecked = false;
   bool _demoChecked = false;
   bool _monitorChecked = false;
-  bool _cloudAuthChecked = false;
   bool _inboxChecked = false;
 
 
@@ -247,45 +244,6 @@ class _AppShellState extends ConsumerState<_AppShell> {
     } on Object {
       // 受信ボックスチェック失敗はアプリ起動に影響させない
     }
-  }
-
-  /// クラウド同期の初期化（匿名認証ベース）.
-  ///
-  /// SyncManagerを初期化し、起動時の初回同期を実行する.
-  /// ライフサイクル監視で離脱時にも未同期データを保存する.
-  void _checkCloudAuth() {
-    if (_cloudAuthChecked) return;
-    _cloudAuthChecked = true;
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (!mounted || !kIsWeb) return;
-
-      // SyncManager初期化
-      final syncManager = SyncManager();
-      syncManager.init(
-        ref.read(dataExportServiceProvider),
-        prefs: ref.read(sharedPreferencesProvider),
-      );
-
-      // ライフサイクル監視: アプリ離脱時に未同期データを保存
-      // AppLifecycleListenerは自動でBindingに登録される
-      AppLifecycleListener(
-        onHide: () => syncManager.syncOnExit(),
-        onPause: () => syncManager.syncOnExit(),
-      );
-
-      // 開発者判定: 認証メールが開発者のものなら全機能解放
-      final syncService = FirestoreSyncService();
-      await syncService.ensureSignedIn();
-      setDeveloperMode(
-        enabled: syncService.email == 'teppei09141998@gmail.com',
-      );
-      // プレミアム状態が変わった場合、UIを再描画してバナーを更新
-      if (mounted && isPremium) setState(() {});
-
-      // 起動時の初回同期
-      await syncManager.syncNow();
-    });
   }
 
   /// モニターデータ提出の確認.
@@ -494,9 +452,6 @@ class _AppShellState extends ConsumerState<_AppShell> {
 
     // 受信ボックス: リマインダー・お知らせチェック
     _checkInbox();
-
-    // クラウド認証の確認
-    _checkCloudAuth();
 
     // チュートリアル: ルート変更を検知してステップを自動進行
     final tutorialState = ref.watch(tutorialStateProvider);

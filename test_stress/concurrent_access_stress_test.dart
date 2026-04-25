@@ -1,13 +1,12 @@
 /// 同時アクセスストレステスト.
 ///
 /// 複数ユーザーが同時にアプリを操作した場合の
-/// 外部API・DB・同期処理の耐性を計測する.
+/// 外部API・DB の耐性を計測する.
 ///
 /// このアプリはクライアントサイド完結型（ブラウザ内SQLite）のため、
 /// 「同時アクセス」の影響は以下に限定される:
 ///   1. 外部API（Stripe / Remote Config / Feedback）への同時リクエスト
-///   2. Firestore 同期の競合
-///   3. DB への同時読み書き（同一ブラウザタブ内）
+///   2. DB への同時読み書き（同一ブラウザタブ内）
 ///
 /// 実行方法:
 ///   flutter test test_stress/concurrent_access_stress_test.dart
@@ -27,12 +26,9 @@ import 'package:yume_hashi/database/app_database.dart' hide Book, StudyLog;
 import 'package:yume_hashi/models/goal.dart' show WhenType;
 import 'package:yume_hashi/services/data_export_service.dart';
 import 'package:yume_hashi/services/dream_service.dart';
-import 'package:yume_hashi/services/firestore_sync_service.dart'
-    show CloudSyncClient;
 import 'package:yume_hashi/services/goal_service.dart';
 import 'package:yume_hashi/services/stripe_service.dart';
 import 'package:yume_hashi/services/study_log_service.dart';
-import 'package:yume_hashi/services/sync_manager.dart';
 import 'package:yume_hashi/services/task_service.dart';
 
 // ── テストパラメータ ──────────────────────────────
@@ -44,7 +40,6 @@ const _apiTimeoutMs = 15000; // API タイムアウト
 // ── 許容時間（ミリ秒） ──────────────────────────────
 const _thresholdApiConcurrentMs = 5000; // 同時APIリクエスト
 const _thresholdDbConcurrentMs = 3000; // 同時DB操作
-const _thresholdSyncMs = 5000; // 同期処理
 
 /// 計測結果を収集するリスト.
 final _results = <Map<String, dynamic>>[];
@@ -390,110 +385,13 @@ void main() {
       print(
           '  [エクスポート/インポート競合] ${sw.elapsedMilliseconds}ms');
       _record('エクスポート/インポート競合', sw.elapsedMilliseconds,
-          _thresholdSyncMs);
-      expect(sw.elapsedMilliseconds, lessThan(_thresholdSyncMs));
+          _thresholdDbConcurrentMs);
+      expect(sw.elapsedMilliseconds, lessThan(_thresholdDbConcurrentMs));
     });
   });
 
   // ══════════════════════════════════════════════════════════
-  // 3. クラウド同期の同時実行
-  // ══════════════════════════════════════════════════════════
-  group('クラウド同期の同時実行', () {
-    test('requestSync の大量デバウンス', () async {
-      // ignore: avoid_print
-      print('\n=== クラウド同期 ===');
-
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final db = _createDb();
-      final exportService = DataExportService(
-        dreamDao: db.dreamDao,
-        goalDao: db.goalDao,
-        taskDao: db.taskDao,
-        bookDao: db.bookDao,
-        studyLogDao: db.studyLogDao,
-        notificationDao: db.notificationDao,
-      );
-
-      var uploadCount = 0;
-      final mockSync = _MockCloudSyncClient(
-        onUpload: (_) => uploadCount++,
-      );
-
-      final syncManager = SyncManager.forTest(webMode: true);
-      syncManager.init(
-        exportService,
-        prefs: prefs,
-        syncService: mockSync,
-      );
-
-      // 100回の requestSync を短時間に発行
-      final sw = Stopwatch()..start();
-      for (var i = 0; i < 100; i++) {
-        syncManager.requestSync();
-      }
-      // デバウンス待ち（3秒 + マージン）
-      await Future<void>.delayed(const Duration(seconds: 4));
-      sw.stop();
-
-      // デバウンスにより1回だけアップロードされるべき
-      // ignore: avoid_print
-      print(
-          '  [requestSync ×100 デバウンス] ${sw.elapsedMilliseconds}ms（実行回数: $uploadCount）');
-      _record('requestSync ×100 デバウンス', sw.elapsedMilliseconds,
-          _thresholdSyncMs);
-      expect(uploadCount, lessThanOrEqualTo(1));
-      expect(sw.elapsedMilliseconds, lessThan(_thresholdSyncMs));
-
-      syncManager.reset();
-      await db.close();
-    });
-
-    test('syncOnExit の即時実行', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final db = _createDb();
-      final exportService = DataExportService(
-        dreamDao: db.dreamDao,
-        goalDao: db.goalDao,
-        taskDao: db.taskDao,
-        bookDao: db.bookDao,
-        studyLogDao: db.studyLogDao,
-        notificationDao: db.notificationDao,
-      );
-
-      var uploadCount = 0;
-      final mockSync = _MockCloudSyncClient(
-        onUpload: (_) => uploadCount++,
-      );
-
-      final syncManager = SyncManager.forTest(webMode: true);
-      syncManager.init(
-        exportService,
-        prefs: prefs,
-        syncService: mockSync,
-      );
-
-      // requestSync + 即座に syncOnExit
-      syncManager.requestSync();
-      final sw = Stopwatch()..start();
-      await syncManager.syncOnExit();
-      sw.stop();
-
-      // ignore: avoid_print
-      print('  [syncOnExit 即時実行] ${sw.elapsedMilliseconds}ms');
-      _record('syncOnExit 即時実行', sw.elapsedMilliseconds,
-          _thresholdSyncMs);
-      expect(uploadCount, 1);
-      expect(sw.elapsedMilliseconds, lessThan(_thresholdSyncMs));
-
-      syncManager.reset();
-      await db.close();
-    });
-  });
-
-  // ══════════════════════════════════════════════════════════
-  // 4. APIエラー耐性
+  // 3. APIエラー耐性
   // ══════════════════════════════════════════════════════════
   group('APIエラー耐性', () {
     test('全リクエスト失敗時にアプリがクラッシュしない', () async {
@@ -559,25 +457,4 @@ void main() {
       expect(successCount, greaterThan(0));
     });
   });
-}
-
-/// テスト用のクラウド同期クライアント.
-class _MockCloudSyncClient implements CloudSyncClient {
-  _MockCloudSyncClient({this.onUpload});
-
-  final void Function(String json)? onUpload;
-
-  @override
-  bool get isSignedIn => true;
-
-  @override
-  Future<void> uploadData(String json) async {
-    onUpload?.call(json);
-  }
-
-  @override
-  Future<String?> downloadData() async => null;
-
-  @override
-  Future<DateTime?> getLastSyncTime() async => null;
 }
