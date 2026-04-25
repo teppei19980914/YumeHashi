@@ -4,7 +4,6 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/goal.dart';
-import '../services/sync_manager.dart';
 import 'service_providers.dart';
 
 /// 目標ごとのタスク進捗（goalId → {total, completed}）.
@@ -56,7 +55,6 @@ class GoalListNotifier extends AsyncNotifier<List<Goal>> {
       how: how,
     );
     ref.invalidateSelf();
-    SyncManager().requestSync();
     return goal.id;
   }
 
@@ -79,7 +77,6 @@ class GoalListNotifier extends AsyncNotifier<List<Goal>> {
       how: how,
     );
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// Goalを削除する.
@@ -87,7 +84,6 @@ class GoalListNotifier extends AsyncNotifier<List<Goal>> {
     final service = ref.read(goalServiceProvider);
     await service.deleteGoal(goalId);
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// 目標の並び順を更新する.
@@ -95,6 +91,5 @@ class GoalListNotifier extends AsyncNotifier<List<Goal>> {
     final service = ref.read(goalServiceProvider);
     await service.updateGoalOrders(orders);
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 }

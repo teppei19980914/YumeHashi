@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_labels.dart';
 import '../models/book.dart';
-import '../services/sync_manager.dart';
 import 'service_providers.dart';
 import 'theme_provider.dart' show sharedPreferencesProvider;
 
@@ -105,7 +104,6 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
       description: description,
     );
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// Bookの基本情報を更新する.
@@ -125,7 +123,6 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
       description: description,
     );
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// Bookの基本情報とステータスを一括更新する.
@@ -147,7 +144,6 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
       status: status,
     );
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// Bookのステータスを更新する.
@@ -155,7 +151,6 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
     final service = ref.read(bookServiceProvider);
     await service.updateStatus(bookId, status);
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// Bookを読了にする.
@@ -173,7 +168,6 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
       completedDate: completedDate,
     );
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 
   /// Bookを削除する.
@@ -181,6 +175,5 @@ class BookListNotifier extends AsyncNotifier<List<Book>> {
     final service = ref.read(bookServiceProvider);
     await service.deleteBook(bookId);
     ref.invalidateSelf();
-    SyncManager().requestSync();
   }
 }
