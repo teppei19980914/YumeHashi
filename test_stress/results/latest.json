@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-04T04:19:53.912585",
+  "timestamp": "2026-10-11T03:24:12.930468",
   "threshold_ms": 2000,
   "total_measurements": 19,
   "passed_count": 19,
@@ -8,43 +8,43 @@
   "measurements": [
     {
       "label": "夢 10件",
-      "ms": 87,
+      "ms": 77,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "目標 100件",
-      "ms": 177,
+      "ms": 164,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "タスク 1000件",
-      "ms": 668,
+      "ms": 616,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "活動ログ 10000件",
-      "ms": 1518,
+      "ms": 1389,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "書籍 100件",
-      "ms": 28,
+      "ms": 20,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "通知 500件",
-      "ms": 75,
+      "ms": 66,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "ストリーク計算",
-      "ms": 62,
+      "ms": 65,
       "threshold_ms": 2000,
       "passed": true
     },
@@ -62,13 +62,13 @@
     },
     {
       "label": "月別アクティビティ",
-      "ms": 577,
+      "ms": 567,
       "threshold_ms": 2000,
       "passed": true
     },
     {
       "label": "年別アクティビティ",
-      "ms": 143,
+      "ms": 144,
       "threshold_ms": 2000,
       "passed": true
     },
@@ -80,25 +80,25 @@
     },
     {
       "label": "エクスポート（1000ログ+50書籍）",
-      "ms": 22,
+      "ms": 21,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "インポート（同データ）",
-      "ms": 293,
+      "ms": 281,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "全削除（500ログ+200通知）",
-      "ms": 77,
+      "ms": 74,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "existsByDedupKey × 500回",
-      "ms": 84,
+      "ms": 79,
       "threshold_ms": 30000,
       "passed": true
     },
@@ -110,7 +110,7 @@
     },
     {
       "label": "未読カウント（500件中）",
-      "ms": 8,
+      "ms": 7,
       "threshold_ms": 30000,
       "passed": true
     },
