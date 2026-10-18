@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-11T03:24:12.930468",
+  "timestamp": "2026-10-18T03:18:04.867089",
   "threshold_ms": 2000,
   "total_measurements": 19,
   "passed_count": 19,
@@ -8,103 +8,103 @@
   "measurements": [
     {
       "label": "夢 10件",
-      "ms": 77,
+      "ms": 80,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "目標 100件",
-      "ms": 164,
+      "ms": 172,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "タスク 1000件",
-      "ms": 616,
+      "ms": 557,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "活動ログ 10000件",
-      "ms": 1389,
+      "ms": 1090,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "書籍 100件",
-      "ms": 20,
+      "ms": 23,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "通知 500件",
-      "ms": 66,
+      "ms": 48,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "ストリーク計算",
-      "ms": 65,
+      "ms": 67,
       "threshold_ms": 2000,
       "passed": true
     },
     {
       "label": "自己ベスト計算",
-      "ms": 114,
+      "ms": 125,
       "threshold_ms": 2000,
       "passed": true
     },
     {
       "label": "日別アクティビティ",
-      "ms": 49,
+      "ms": 55,
       "threshold_ms": 2000,
       "passed": true
     },
     {
       "label": "月別アクティビティ",
-      "ms": 567,
+      "ms": 647,
       "threshold_ms": 2000,
       "passed": true
     },
     {
       "label": "年別アクティビティ",
-      "ms": 144,
+      "ms": 162,
       "threshold_ms": 2000,
       "passed": true
     },
     {
       "label": "実績判定",
-      "ms": 50,
+      "ms": 55,
       "threshold_ms": 2000,
       "passed": true
     },
     {
       "label": "エクスポート（1000ログ+50書籍）",
-      "ms": 21,
+      "ms": 22,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "インポート（同データ）",
-      "ms": 281,
+      "ms": 229,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "全削除（500ログ+200通知）",
-      "ms": 74,
+      "ms": 58,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "existsByDedupKey × 500回",
-      "ms": 79,
+      "ms": 58,
       "threshold_ms": 30000,
       "passed": true
     },
     {
       "label": "リマインダーチェック（500件）",
-      "ms": 152,
+      "ms": 123,
       "threshold_ms": 30000,
       "passed": true
     },
